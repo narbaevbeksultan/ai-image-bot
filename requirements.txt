@@ -1,0 +1,6 @@
+python-telegram-bot
+replicate
+openai
+Pillow
+requests
+python-dotenv 
