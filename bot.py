@@ -3185,7 +3185,11 @@ def main():
                 webhook_url=f"https://your-app-name.railway.app/{TOKEN}"
             )
             print(f"🚀 Бот запущен на Railway на порту {port}")
-            await app.updater.idle()
+            # Держим приложение запущенным
+            try:
+                await asyncio.Event().wait()
+            except KeyboardInterrupt:
+                pass
         
         asyncio.run(start_webhook())
     else:
