@@ -1249,22 +1249,12 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             
             # Создаём промпты в зависимости от выбранной модели
             if selected_model == 'Ideogram':
-                # Для Ideogram - улучшенные промпты для логотипов и дизайна
-                # Проверяем, содержит ли тема слова, связанные с логотипами
-                topic_lower = topic.lower()
-                if any(word in topic_lower for word in ['логотип', 'logo', 'бренд', 'brand', 'дизайн', 'design']):
-                    prompts = [
-                        f"{topic}, professional logo design, clean vector graphics, modern typography, brand identity, minimalist style, high quality, scalable design",
-                        f"{topic}, corporate logo, business branding, professional design, clean composition, modern aesthetic, commercial use",
-                        f"{topic}, brand logo, design system, professional graphics, clean layout, contemporary style, premium quality"
-                    ][:max_scenes]
-                else:
-                    # Для Ideogram - фокус на тексте и социальных сетях
-                    prompts = [
-                        f"{topic}, social media design, modern typography, clean layout, professional branding, high quality",
-                        f"{topic}, poster design, bold text, eye-catching composition, commercial use, premium quality",
-                        f"{topic}, banner design, marketing material, professional graphics, contemporary style"
-                    ][:max_scenes]
+                # Для Ideogram - фокус на тексте и социальных сетях
+                prompts = [
+                    f"{topic}, social media design, modern typography, clean layout, professional branding, high quality",
+                    f"{topic}, poster design, bold text, eye-catching composition, commercial use, premium quality",
+                    f"{topic}, banner design, marketing material, professional graphics, contemporary style"
+                ][:max_scenes]
             elif selected_model == 'Bytedance (Seedream-3)':
                 # Для Bytedance Seedream-3 - нативная 2K генерация, быстрая
                 prompts = [
@@ -1351,9 +1341,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         f"{topic}, modern design, contemporary style, professional environment, high quality photography"
                     ][:max_scenes]
     elif prompt_type == 'user' and user_prompt:
-        # Используем улучшенный промпт, если он есть
-        enhanced_prompt = state.get('enhanced_prompt', user_prompt)
-        prompts = [enhanced_prompt] * min(3, max_scenes)
+        prompts = [user_prompt] * min(3, max_scenes)
     else:
         prompts = [state.get('topic', '')] * min(3, max_scenes)
     
@@ -2294,27 +2282,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ]
                     reply_markup = InlineKeyboardMarkup(keyboard)
                     
-                                    # Добавляем подсказки для "Изображения"
-                # Проверяем, содержит ли тема слова, связанные с логотипами
-                topic = state.get('topic', '').lower()
-                if any(word in topic for word in ['логотип', 'logo', 'бренд', 'brand', 'дизайн', 'design']):
-                    tips = """🎨 Советы для логотипов:
-• Укажите название компании/бренда
-• Опишите стиль (минималистичный, современный, классический)
-• Укажите цвета (синий, красный, черно-белый)
-• Добавьте символы или иконки (геометрические фигуры, буквы, животные)
-• Укажите тип (текстовый, символьный, комбинированный)
-
-✅ Примеры:
-• "Логотип для IT-компании 'TechFlow' в синем цвете с геометрическими элементами"
-• "Минималистичный логотип кафе 'Кофе' с силуэтом чашки"
-• "Современный логотип фитнес-центра с динамичными линиями"
-
-❌ Избегайте:
-• "красиво", "хорошо", "красивый логотип"
-• Слишком общие описания
-• Противоположные требования"""
-                else:
+                    # Добавляем подсказки для "Изображения"
                     tips = """💡 Советы для лучшего результата:
 • Опишите главный объект и его детали
 • Укажите стиль, материалы, цвета
@@ -2390,43 +2358,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await show_format_selection(update, context)
     elif data == "custom_image_prompt":
         USER_STATE[user_id]['step'] = 'custom_image_prompt'
-        
-        # Проверяем, содержит ли тема слова, связанные с логотипами
-        topic = state.get('topic', '').lower()
-        if any(word in topic for word in ['логотип', 'logo', 'бренд', 'brand', 'дизайн', 'design']):
-            message_text = """🎨 Опишите, что вы хотите видеть на логотипе:
-
-💡 Советы для логотипов:
-• Укажите название компании/бренда
-• Опишите стиль (минималистичный, современный, классический)
-• Укажите цвета (синий, красный, черно-белый)
-• Добавьте символы или иконки (геометрические фигуры, буквы, животные)
-• Укажите тип (текстовый, символьный, комбинированный)
-
-✅ Примеры:
-• "Логотип для IT-компании 'TechFlow' в синем цвете с геометрическими элементами"
-• "Минималистичный логотип кафе 'Кофе' с силуэтом чашки"
-• "Современный логотип фитнес-центра с динамичными линиями"
-
-Опишите ваш логотип (1-2 предложения):"""
-        else:
-            message_text = """🎨 Опишите, что вы хотите видеть на изображении:
-
-💡 Советы для лучшего результата:
-• Опишите главный объект и его детали
-• Укажите стиль, материалы, цвета
-• Добавьте информацию об освещении
-• Опишите ракурс или композицию
-• Укажите атмосферу и контекст
-
-✅ Примеры:
-• "Современный дом с большими окнами, окруженный садом, закатное освещение"
-• "Космический корабль в открытом космосе, звезды, футуристический дизайн"
-• "Цветущий сад с розами, бабочки, солнечный день"
-
-Опишите изображение (1-2 предложения):"""
-        
-        await query.edit_message_text(message_text)
+        await query.edit_message_text("Опишите, что вы хотите видеть на изображении (1-2 предложения):")
     elif data == "edit_image":
         # Перенаправляем на команду редактирования
         await edit_image_command(update, context)
@@ -2922,16 +2854,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup = InlineKeyboardMarkup(keyboard)
             await update.message.reply_text("Описание изображения содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
             return
-        
-        # Улучшаем промпт для логотипов
-        user_prompt_lower = user_prompt.lower()
-        if any(word in user_prompt_lower for word in ['логотип', 'logo', 'бренд', 'brand', 'дизайн', 'design']):
-            # Добавляем специальные ключевые слова для логотипов
-            enhanced_prompt = f"{user_prompt}, professional logo design, clean vector graphics, modern typography, brand identity, minimalist style, high quality, scalable design, no background, centered composition"
-            USER_STATE[user_id]['enhanced_prompt'] = enhanced_prompt
-        else:
-            USER_STATE[user_id]['enhanced_prompt'] = user_prompt
-            
         USER_STATE[user_id]['step'] = STEP_DONE
         await send_images(update, context, state, prompt_type='user', user_prompt=user_prompt)
     elif step == 'custom_image_style':
@@ -3036,16 +2958,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup = InlineKeyboardMarkup(keyboard)
             await update.message.reply_text("Описание изображения содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
             return
-        
-        # Улучшаем промпт для логотипов
-        user_prompt_lower = user_prompt.lower()
-        if any(word in user_prompt_lower for word in ['логотип', 'logo', 'бренд', 'brand', 'дизайн', 'design']):
-            # Добавляем специальные ключевые слова для логотипов
-            enhanced_prompt = f"{user_prompt}, professional logo design, clean vector graphics, modern typography, brand identity, minimalist style, high quality, scalable design, no background, centered composition"
-            USER_STATE[user_id]['enhanced_prompt'] = enhanced_prompt
-        else:
-            USER_STATE[user_id]['enhanced_prompt'] = user_prompt
-            
         USER_STATE[user_id]['step'] = STEP_DONE
         await update.message.reply_text('Спасибо! Генерирую изображения...')
         await send_images(update, context, state, prompt_type='user', user_prompt=user_prompt)
