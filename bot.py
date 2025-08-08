@@ -266,6 +266,7 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
         [InlineKeyboardButton("📤 Редактировать изображение", callback_data="edit_image")],
+        [InlineKeyboardButton("🎨 Советы по Ideogram", callback_data="ideogram_tips")],
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
     ]
@@ -422,7 +423,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_text = """
 ❓ Как пользоваться ботом:
 
-1️⃣ Выберите "Создать контент" или "🖼️ Просто картинка"
+1️⃣ Выберите "Создать контент" или "🖼️ Изображения"
 
 2️⃣ Выберите формат:
    📱 Instagram Reels - для коротких видео в Instagram
@@ -430,7 +431,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
    📺 YouTube Shorts - для коротких видео на YouTube
    📸 Instagram Post - для постов в Instagram
    📱 Instagram Stories - для историй в Instagram
-   🖼️ Просто картинка - для генерации только изображений
+   🖼️ Изображения - для генерации только изображений
    📄 Другое - любой другой формат
 
 3️⃣ Выберите модель генерации:
@@ -451,7 +452,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 💡 Совет: Чем подробнее описание, тем лучше результат!
 
-🖼️ Для "Просто картинка":
+🖼️ Для "Изображения":
 • Пропускается шаг выбора стиля контента
 • Сразу переходите к выбору модели и стиля изображения
 • Выбираете количество картинок (1-10)
@@ -463,6 +464,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 • Может блокировать промпты с описанием внешности людей
 • Рекомендуется использовать нейтральные слова: "женщина" вместо "красивая", "девушка" вместо "сексуальная"
 • Для портретов лучше выбрать Ideogram, Bytedance или Google Imagen
+
+🎨 **Советы по Ideogram:**
+• Используйте простые, четкие описания
+• Избегайте длинных сложных фраз
+• Фокусируйтесь на главном объекте
+• Для фотореалистичных изображений лучше используйте Bytedance или Google Imagen
 """
     
     keyboard = [
@@ -616,6 +623,75 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка при тестировании: {e}")
 
+async def ideogram_tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для получения советов по использованию Ideogram"""
+    tips_text = """
+🎨 **Советы по использованию Ideogram**
+
+## Почему Ideogram может генерировать изображения, не соответствующие описанию?
+
+### Основные причины:
+1. **Слишком сложные промпты** - Ideogram лучше работает с простыми, четкими описаниями
+2. **Перегруженность параметрами** - Множество стилей и форматов могут "забивать" основное описание
+3. **Особенности модели** - Ideogram специализируется на тексте и логотипах
+
+## ✅ Как улучшить результаты:
+
+### 1. **Используйте простые описания**
+```
+❌ Плохо: "Очень красивая девушка с длинными волнистыми каштановыми волосами, одетая в элегантное красное платье"
+✅ Хорошо: "девушка в красном платье"
+```
+
+### 2. **Фокусируйтесь на главном объекте**
+```
+❌ Плохо: "Современный дом с большими окнами, красивым садом, бассейном, гаражом"
+✅ Хорошо: "современный дом с большими окнами"
+```
+
+### 3. **Избегайте длинных фраз**
+- Используйте 3-7 ключевых слов
+- Убирайте лишние прилагательные
+- Фокусируйтесь на сути
+
+## 🎯 Лучшие практики:
+
+### Для портретов:
+- "женщина с темными волосами"
+- "мужчина в костюме"
+- "девушка в платье"
+
+### Для пейзажей:
+- "горный пейзаж"
+- "городская улица"
+- "лесная тропа"
+
+## ⚠️ Ограничения Ideogram:
+
+1. **Не идеален для фотореалистичных изображений** - лучше используйте Bytedance или Google Imagen
+2. **Медленная генерация** - может занимать до 60 секунд
+3. **Чувствителен к сложным промптам** - лучше работает с простыми описаниями
+
+## 🔄 Альтернативы:
+
+Если Ideogram не дает желаемых результатов:
+- **Bytedance (Seedream-3)** - для фотореалистичных изображений
+- **Google Imagen 4 Ultra** - для максимального качества и детализации
+- **Luma Photon** - для креативных и художественных изображений
+
+💡 **Главный совет:** Начните с простого описания и постепенно добавляйте детали!
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+    ]
+    
+    await update.message.reply_text(
+        tips_text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
 async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда для редактирования изображений с помощью FLUX.1 Kontext Pro"""
     user_id = update.effective_user.id
@@ -642,6 +718,38 @@ def is_prompt_safe(prompt):
         if word in prompt_lower:
             return False
     return True
+
+def improve_prompt_for_ideogram(prompt):
+    """
+    Улучшает промпт для лучшей работы с Ideogram
+    Ideogram лучше работает с простыми, четкими описаниями
+    """
+    if not prompt:
+        return prompt
+    
+    # Убираем лишние слова, которые могут сбивать Ideogram
+    prompt = prompt.strip()
+    
+    # Если промпт слишком длинный, сокращаем его
+    words = prompt.split()
+    if len(words) > 15:
+        # Оставляем только ключевые слова
+        important_words = []
+        for word in words:
+            if len(word) > 3 and word.lower() not in ['very', 'really', 'quite', 'rather', 'somewhat', 'rather', 'quite', 'very', 'really', 'extremely', 'incredibly', 'amazingly', 'wonderfully', 'beautifully', 'gorgeously', 'stunningly', 'magnificently', 'exquisitely', 'elegantly', 'gracefully', 'perfectly', 'absolutely', 'completely', 'totally', 'entirely', 'wholly', 'thoroughly', 'completely', 'fully', 'entirely', 'wholly', 'thoroughly', 'completely', 'fully', 'entirely', 'wholly', 'thoroughly']:
+                important_words.append(word)
+            if len(important_words) >= 10:
+                break
+        prompt = ' '.join(important_words)
+    
+    # Убираем повторяющиеся слова
+    words = prompt.split()
+    unique_words = []
+    for word in words:
+        if word.lower() not in [w.lower() for w in unique_words]:
+            unique_words.append(word)
+    
+    return ' '.join(unique_words)
 
 async def extract_scenes_from_script(script_text, format_type=None):
     """
@@ -1249,12 +1357,20 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             
             # Создаём промпты в зависимости от выбранной модели
             if selected_model == 'Ideogram':
-                # Для Ideogram - фокус на тексте и социальных сетях
-                prompts = [
-                    f"{topic}, social media design, modern typography, clean layout, professional branding, high quality",
-                    f"{topic}, poster design, bold text, eye-catching composition, commercial use, premium quality",
-                    f"{topic}, banner design, marketing material, professional graphics, contemporary style"
-                ][:max_scenes]
+                # Для Ideogram используем более простые и точные промпты
+                # Ideogram лучше работает с простыми, четкими описаниями
+                prompts = []
+                
+                # Создаем базовые промпты без лишних суффиксов
+                if max_scenes >= 1:
+                    prompts.append(f"{topic}")
+                if max_scenes >= 2:
+                    prompts.append(f"{topic}, professional design")
+                if max_scenes >= 3:
+                    prompts.append(f"{topic}, modern style")
+                
+                # Ограничиваем количество промптов
+                prompts = prompts[:max_scenes]
             elif selected_model == 'Bytedance (Seedream-3)':
                 # Для Bytedance Seedream-3 - нативная 2K генерация, быстрая
                 prompts = [
@@ -1378,10 +1494,13 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
     for idx, prompt in enumerate(safe_prompts, 1):
         if idx > max_scenes:
             break
-        # Добавляем стиль генерации к промпту
+        # Добавляем стиль генерации к промпту (упрощенная версия для Ideogram)
         image_gen_style = state.get('image_gen_style', '')
+        selected_model = state.get('image_gen_model', 'Ideogram')
         style_suffix = ''
-        if image_gen_style:
+        
+        if image_gen_style and selected_model != 'Ideogram':
+            # Для других моделей используем полные стили
             if image_gen_style == 'Фотореализм':
                 style_suffix = ', photorealistic, ultra-realistic, high detail, 8k, professional photography, sharp focus, natural lighting, cinematic, award-winning photo'
             elif image_gen_style == 'Иллюстрация':
@@ -1394,32 +1513,72 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 style_suffix = ', oil painting, canvas texture, brush strokes, artistic, traditional art'
             elif image_gen_style == 'Пиксель-арт':
                 style_suffix = ', pixel art, 8-bit, retro style, digital art'
+        elif image_gen_style and selected_model == 'Ideogram':
+            # Для Ideogram используем минимальные стили
+            if image_gen_style == 'Фотореализм':
+                style_suffix = ', realistic'
+            elif image_gen_style == 'Иллюстрация':
+                style_suffix = ', illustration'
+            elif image_gen_style == 'Минимализм':
+                style_suffix = ', minimal'
+            elif image_gen_style == 'Акварель':
+                style_suffix = ', watercolor'
+            elif image_gen_style == 'Масляная живопись':
+                style_suffix = ', oil painting'
+            elif image_gen_style == 'Пиксель-арт':
+                style_suffix = ', pixel art'
         
-        # Добавляем формат для разных типов контента
+        # Добавляем формат для разных типов контента (упрощенная версия для Ideogram)
         format_suffix = ''
         user_format = state.get('format', '').lower().replace(' ', '')
         simple_orientation = state.get('simple_orientation', None)
         
-        if user_format == 'instagramstories':
-            format_suffix = ', vertical composition, Instagram Stories format, mobile optimized, space for text overlay'
-        elif user_format == 'instagramreels':
-            format_suffix = ', vertical composition, mobile video format, dynamic composition'
-        elif user_format == 'tiktok':
-            format_suffix = ', vertical composition, TikTok format, mobile optimized, trending style'
-        elif user_format == 'youtubeshorts':
-            format_suffix = ', vertical composition, YouTube Shorts format, mobile video optimized'
-        elif user_format == 'instagrampost':
-            format_suffix = ', square composition, Instagram Post format, social media optimized'
-        elif user_format == 'изображения':
-            # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
-            if simple_orientation == 'vertical':
-                format_suffix = ', vertical composition, portrait orientation, tall vertical image'
-            elif simple_orientation == 'square':
-                format_suffix = ', square composition, balanced layout'
-            else:
-                format_suffix = ', square composition, balanced layout'  # По умолчанию квадратный
+        if selected_model == 'Ideogram':
+            # Для Ideogram используем минимальные форматные указания
+            if user_format == 'instagramstories':
+                format_suffix = ', vertical'
+            elif user_format == 'instagramreels':
+                format_suffix = ', vertical'
+            elif user_format == 'tiktok':
+                format_suffix = ', vertical'
+            elif user_format == 'youtubeshorts':
+                format_suffix = ', vertical'
+            elif user_format == 'instagrampost':
+                format_suffix = ', square'
+            elif user_format == 'изображения':
+                # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
+                if simple_orientation == 'vertical':
+                    format_suffix = ', vertical'
+                elif simple_orientation == 'square':
+                    format_suffix = ', square'
+                else:
+                    format_suffix = ', square'  # По умолчанию квадратный
+        else:
+            # Для других моделей используем полные форматные указания
+            if user_format == 'instagramstories':
+                format_suffix = ', vertical composition, Instagram Stories format, mobile optimized, space for text overlay'
+            elif user_format == 'instagramreels':
+                format_suffix = ', vertical composition, mobile video format, dynamic composition'
+            elif user_format == 'tiktok':
+                format_suffix = ', vertical composition, TikTok format, mobile optimized, trending style'
+            elif user_format == 'youtubeshorts':
+                format_suffix = ', vertical composition, YouTube Shorts format, mobile video optimized'
+            elif user_format == 'instagrampost':
+                format_suffix = ', square composition, Instagram Post format, social media optimized'
+            elif user_format == 'изображения':
+                # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
+                if simple_orientation == 'vertical':
+                    format_suffix = ', vertical composition, portrait orientation, tall vertical image'
+                elif simple_orientation == 'square':
+                    format_suffix = ', square composition, balanced layout'
+                else:
+                    format_suffix = ', square composition, balanced layout'  # По умолчанию квадратный
         
         prompt_with_style = prompt + style_suffix + format_suffix
+        
+        # Улучшаем промпт для Ideogram
+        if selected_model == 'Ideogram':
+            prompt_with_style = improve_prompt_for_ideogram(prompt_with_style)
         
         # Определяем размер изображения на основе формата и модели
         image_size = get_image_size_for_format(user_format, simple_orientation)
@@ -1441,9 +1600,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             if selected_model == 'Ideogram':
                 try:
                     if send_text:
-                        await send_text(f"Генерирую через Ideogram v3 Turbo (может занять до 45 секунд)...")
+                        await send_text(f"🎨 Генерирую через Ideogram...\n\n💡 Совет: Ideogram лучше работает с простыми, четкими описаниями")
                     
-                    # Генерация через Ideogram v3 Turbo на Replicate с таймаутом
+                    # Генерация через Ideogram на Replicate с таймаутом
                     import asyncio
                     try:
                         # Проверяем API токен
@@ -1453,37 +1612,36 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                     [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
                                 ]
                                 reply_markup = InlineKeyboardMarkup(keyboard)
-                                await send_text(f"Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
                             continue
                         
                         # Запускаем генерацию с таймаутом
                         loop = asyncio.get_event_loop()
-                        # Пробуем сначала Ideogram v3 Turbo, если не работает - Ideogram v2
+                        
+                        # Используем Ideogram v3 Turbo (более стабильная версия)
                         try:
-                            if send_text:
-                                await send_text(f"Пробуем Ideogram v3 Turbo...")
                             output = await asyncio.wait_for(
                                 loop.run_in_executor(None, lambda: replicate.run(
                                     "ideogram-ai/ideogram-v3-turbo",
                                     input={"prompt": prompt_with_style, **replicate_params}
                                 )),
-                                timeout=45.0  # Уменьшаем таймаут до 45 секунд
+                                timeout=60.0  # Увеличиваем таймаут до 60 секунд для Ideogram
                             )
                         except Exception as e:
                             # Если v3 не работает, пробуем v2
                             if send_text:
-                                await send_text(f"❌ Ideogram v3 Turbo не работает: {str(e)[:100]}...\nПробуем Ideogram v2...")
+                                await send_text(f"⚠️ Ideogram v3 Turbo недоступен, пробуем v2...")
                             try:
                                 output = await asyncio.wait_for(
                                     loop.run_in_executor(None, lambda: replicate.run(
                                         "ideogram-ai/ideogram-v2",
                                         input={"prompt": prompt_with_style, **replicate_params}
                                     )),
-                                    timeout=45.0
+                                    timeout=60.0
                                 )
                             except Exception as e2:
                                 if send_text:
-                                    await send_text(f"❌ Ideogram v2 тоже не работает: {str(e2)[:100]}...\nПопробуйте выбрать другую модель.")
+                                    await send_text(f"❌ Ideogram недоступен: {str(e2)[:100]}...\n💡 Попробуйте выбрать другую модель (Bytedance, Google Imagen)")
                                 continue
                         
                         # Обработка ответа от Replicate API
@@ -1538,7 +1696,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             
                     except asyncio.TimeoutError:
                         if send_text:
-                            await send_text(f"❌ Таймаут при генерации через Ideogram (45 секунд)\n\nIdeogram работает медленно или недоступна.")
+                            await send_text(f"⏰ Таймаут при генерации через Ideogram (60 секунд)\n\n💡 Ideogram может работать медленно. Попробуйте:\n• Выбрать другую модель (Bytedance, Google Imagen)\n• Упростить описание\n• Попробовать снова")
                         continue
                         
                 except Exception as e:
@@ -1860,6 +2018,69 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(help_filters_text, reply_markup=reply_markup)
+    elif data == "ideogram_tips":
+        tips_text = """
+🎨 **Советы по использованию Ideogram**
+
+## Почему Ideogram может генерировать изображения, не соответствующие описанию?
+
+### Основные причины:
+1. **Слишком сложные промпты** - Ideogram лучше работает с простыми, четкими описаниями
+2. **Перегруженность параметрами** - Множество стилей и форматов могут "забивать" основное описание
+3. **Особенности модели** - Ideogram специализируется на тексте и логотипах
+
+## ✅ Как улучшить результаты:
+
+### 1. **Используйте простые описания**
+```
+❌ Плохо: "Очень красивая девушка с длинными волнистыми каштановыми волосами, одетая в элегантное красное платье"
+✅ Хорошо: "девушка в красном платье"
+```
+
+### 2. **Фокусируйтесь на главном объекте**
+```
+❌ Плохо: "Современный дом с большими окнами, красивым садом, бассейном, гаражом"
+✅ Хорошо: "современный дом с большими окнами"
+```
+
+### 3. **Избегайте длинных фраз**
+- Используйте 3-7 ключевых слов
+- Убирайте лишние прилагательные
+- Фокусируйтесь на сути
+
+## 🎯 Лучшие практики:
+
+### Для портретов:
+- "женщина с темными волосами"
+- "мужчина в костюме"
+- "девушка в платье"
+
+### Для пейзажей:
+- "горный пейзаж"
+- "городская улица"
+- "лесная тропа"
+
+## ⚠️ Ограничения Ideogram:
+
+1. **Не идеален для фотореалистичных изображений** - лучше используйте Bytedance или Google Imagen
+2. **Медленная генерация** - может занимать до 60 секунд
+3. **Чувствителен к сложным промптам** - лучше работает с простыми описаниями
+
+## 🔄 Альтернативы:
+
+Если Ideogram не дает желаемых результатов:
+- **Bytedance (Seedream-3)** - для фотореалистичных изображений
+- **Google Imagen 4 Ultra** - для максимального качества и детализации
+- **Luma Photon** - для креативных и художественных изображений
+
+💡 **Главный совет:** Начните с простого описания и постепенно добавляйте детали!
+"""
+        keyboard = [
+            [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(tips_text, reply_markup=reply_markup)
     elif data == "help_image_edit":
         help_image_edit_text = (
             "📤 **Как редактировать изображения с FLUX**\n\n"
@@ -2134,6 +2355,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_model = data.split(':', 1)[1]
         USER_STATE[user_id]['image_gen_model'] = selected_model
         
+        # Добавляем специальные подсказки для Ideogram
+        ideogram_tips = ""
+        if selected_model == 'Ideogram':
+            ideogram_tips = "\n\n💡 **Советы для Ideogram:**\n• Используйте простые, четкие описания\n• Избегайте длинных сложных фраз\n• Фокусируйтесь на главном объекте\n• Ideogram лучше работает с текстом и логотипами"
+        
         # Проверяем формат для разного поведения
         user_format = state.get('format', '').lower()
         if user_format == 'изображения':
@@ -2148,7 +2374,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text(
-                f"Модель выбрана: {selected_model}\nВыберите стиль генерации изображения:",
+                f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
                 reply_markup=reply_markup
             )
         else:
@@ -2163,7 +2389,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text(
-                f"Модель выбрана: {selected_model}\nВыберите стиль генерации изображения:",
+                f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
                 reply_markup=reply_markup
             )
         return
@@ -3120,7 +3346,8 @@ async def setup_commands(application):
     """Устанавливает команды меню для бота"""
     commands = [
         BotCommand("start", "🚀 Начать работу с ботом / Перезагрузить бота"),
-        BotCommand("help", "❓ Как пользоваться ботом")
+        BotCommand("help", "❓ Как пользоваться ботом"),
+        BotCommand("ideogram_tips", "🎨 Советы по использованию Ideogram")
     ]
     
     try:
@@ -3155,6 +3382,7 @@ def main():
     # Добавляем обработчики
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('ideogram_tips', ideogram_tips_command))
     app.add_handler(CommandHandler('check_replicate', check_replicate))
     app.add_handler(CommandHandler('test_ideogram', test_ideogram))
     app.add_handler(CommandHandler('test_image_send', test_image_send))
