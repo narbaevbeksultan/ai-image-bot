@@ -8,6 +8,8 @@ import requests
 from PIL import Image
 import io
 import tempfile
+import time
+from database import analytics_db
 
 # Включаем логирование
 logging.basicConfig(
@@ -233,13 +235,24 @@ def get_format_tips(format_type):
 ❌ Плохо: "красиво" """
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Логируем нового пользователя
+    user = update.effective_user
+    analytics_db.add_user(
+        user_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    analytics_db.update_user_activity(user.id)
+    analytics_db.log_action(user.id, "start_command")
+    
     welcome_text = """
 🎨 Добро пожаловать в AI Image Generator!
 
 Я помогу вам создавать качественные изображения с помощью ИИ.
 
 💡 Быстрый старт:
-• Нажмите "🎨 Создать изображение"
+• Нажмите "🎨 Создать контент"
 • Выберите формат
 • Выберите модель
 • Опишите, что хотите создать
@@ -247,11 +260,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ❓ Если что-то непонятно - нажмите "Как пользоваться"
 🔄 Если бот завис - напишите /start
+📊 Ваша статистика - /stats
 """
     
     keyboard = [
         [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
         [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
+        [InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")],
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")]
     ]
     
@@ -622,6 +637,136 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка при тестировании: {e}")
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для просмотра статистики пользователя"""
+    user_id = update.effective_user.id
+    analytics_db.update_user_activity(user_id)
+    analytics_db.log_action(user_id, "stats_command")
+    
+    # Получаем статистику пользователя
+    user_stats = analytics_db.get_user_stats(user_id)
+    
+    if not user_stats:
+        await update.message.reply_text(
+            "📊 Статистика пока недоступна.\n\nПопробуйте создать несколько изображений!"
+        )
+        return
+    
+    # Формируем текст статистики
+    stats_text = f"""
+📊 **Ваша статистика:**
+
+🎨 **Общая статистика:**
+• Всего генераций: {user_stats['total_generations']}
+• Ошибок: {user_stats['total_errors']}
+• Первое использование: {user_stats['first_seen'][:10]}
+• Последняя активность: {user_stats['last_activity'][:10]}
+
+📈 **По моделям:**
+"""
+    
+    # Добавляем статистику по моделям
+    if user_stats['models_stats']:
+        for model, count, avg_time, successful in user_stats['models_stats'][:5]:
+            success_rate = (successful / count * 100) if count > 0 else 0
+            avg_time_str = f"{avg_time:.1f}с" if avg_time else "N/A"
+            stats_text += f"• {model}: {count} ({success_rate:.0f}% успешно, {avg_time_str})\n"
+    else:
+        stats_text += "• Нет данных\n"
+    
+    stats_text += "\n📱 **По форматам:**\n"
+    
+    # Добавляем статистику по форматам
+    if user_stats['formats_stats']:
+        for format_type, count in user_stats['formats_stats'][:5]:
+            stats_text += f"• {format_type}: {count}\n"
+    else:
+        stats_text += "• Нет данных\n"
+    
+    keyboard = [
+        [InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content")],
+        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+    ]
+    
+    await update.message.reply_text(
+        stats_text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+async def my_id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Временная команда для получения ID пользователя"""
+    user_id = update.effective_user.id
+    await update.message.reply_text(f"🆔 Ваш ID в Telegram: {user_id}\n\nСохраните этот ID - он понадобится для настройки администратора.")
+
+async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для просмотра глобальной статистики (только для админов)"""
+    user_id = update.effective_user.id
+    
+    # Проверяем, является ли пользователь админом
+    admin_ids = [int(id.strip()) for id in os.getenv('ADMIN_IDS', '').split(',') if id.strip()]
+    
+    if user_id not in admin_ids:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    analytics_db.update_user_activity(user_id)
+    analytics_db.log_action(user_id, "admin_stats_command")
+    
+    # Получаем глобальную статистику
+    global_stats = analytics_db.get_global_stats(30)
+    daily_stats = analytics_db.get_daily_stats(7)
+    
+    stats_text = f"""
+📊 **Глобальная статистика бота (30 дней):**
+
+👥 **Пользователи:**
+• Всего пользователей: {global_stats['total_users']}
+• Активных за 30 дней: {global_stats['active_users_30d']}
+
+🎨 **Генерации:**
+• Всего генераций: {global_stats['total_generations']}
+• За 30 дней: {global_stats['generations_30d']}
+• Ошибок: {global_stats['total_errors']}
+• Среднее время генерации: {global_stats['avg_generation_time']:.1f}с
+
+🔥 **Популярные модели:**
+"""
+    
+    # Добавляем популярные модели
+    if global_stats['popular_models']:
+        for model, count in global_stats['popular_models']:
+            stats_text += f"• {model}: {count}\n"
+    else:
+        stats_text += "• Нет данных\n"
+    
+    stats_text += "\n📱 **Популярные форматы:**\n"
+    
+    # Добавляем популярные форматы
+    if global_stats['popular_formats']:
+        for format_type, count in global_stats['popular_formats']:
+            stats_text += f"• {format_type}: {count}\n"
+    else:
+        stats_text += "• Нет данных\n"
+    
+    stats_text += "\n📅 **За последние 7 дней:**\n"
+    
+    # Добавляем ежедневную статистику
+    if daily_stats:
+        for date, generations, users, avg_time in daily_stats:
+            avg_time_str = f"{avg_time:.1f}с" if avg_time else "N/A"
+            stats_text += f"• {date}: {generations} генераций, {users} пользователей, {avg_time_str}\n"
+    else:
+        stats_text += "• Нет данных\n"
+    
+    keyboard = [
+        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+    ]
+    
+    await update.message.reply_text(
+        stats_text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 async def ideogram_tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда для получения советов по использованию Ideogram"""
@@ -1310,6 +1455,13 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         send_text = None
         send_media = None
     user_id = update.effective_user.id
+    
+    # Логируем начало генерации
+    analytics_db.update_user_activity(user_id)
+    analytics_db.log_action(user_id, "start_generation", f"format:{state.get('format', 'unknown')}, model:{state.get('image_gen_model', 'unknown')}")
+    
+    # Засекаем время начала генерации
+    start_time = time.time()
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     images = []
     prompts = []
@@ -1909,6 +2061,37 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await send_text("❌ Не удалось сгенерировать ни одного изображения\n\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    # Логируем результаты генерации
+    generation_time = time.time() - start_time
+    selected_model = state.get('image_gen_model', 'Ideogram')
+    format_type = state.get('format', 'unknown')
+    
+    # Логируем успешную генерацию
+    if processed_count > 0:
+        analytics_db.log_generation(
+            user_id=user_id,
+            model_name=selected_model,
+            format_type=format_type,
+            prompt=state.get('topic', 'unknown'),
+            image_count=processed_count,
+            success=True,
+            generation_time=generation_time
+        )
+        analytics_db.log_action(user_id, "generation_success", f"count:{processed_count}, time:{generation_time:.1f}s")
+    else:
+        # Логируем неудачную генерацию
+        analytics_db.log_generation(
+            user_id=user_id,
+            model_name=selected_model,
+            format_type=format_type,
+            prompt=state.get('topic', 'unknown'),
+            image_count=0,
+            success=False,
+            error_message="No images generated",
+            generation_time=generation_time
+        )
+        analytics_db.log_action(user_id, "generation_failed", f"time:{generation_time:.1f}s")
+    
     # Сохраняем сгенерированные изображения для редактирования
     if images:
         state['last_generated_images'] = images
@@ -1993,6 +2176,66 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
     state = USER_STATE.get(user_id, {})
     data = query.data
+
+    # Обработка статистики пользователя
+    if data == "user_stats":
+        analytics_db.update_user_activity(user_id)
+        analytics_db.log_action(user_id, "view_stats_button")
+        
+        # Получаем статистику пользователя
+        user_stats = analytics_db.get_user_stats(user_id)
+        
+        if not user_stats:
+            await query.edit_message_text(
+                "📊 Статистика пока недоступна.\n\nПопробуйте создать несколько изображений!",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content"),
+                    InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+                ]])
+            )
+            return
+        
+        # Формируем текст статистики
+        stats_text = f"""
+📊 **Ваша статистика:**
+
+🎨 **Общая статистика:**
+• Всего генераций: {user_stats['total_generations']}
+• Ошибок: {user_stats['total_errors']}
+• Первое использование: {user_stats['first_seen'][:10]}
+• Последняя активность: {user_stats['last_activity'][:10]}
+
+📈 **По моделям:**
+"""
+        
+        # Добавляем статистику по моделям
+        if user_stats['models_stats']:
+            for model, count, avg_time, successful in user_stats['models_stats'][:5]:
+                success_rate = (successful / count * 100) if count > 0 else 0
+                avg_time_str = f"{avg_time:.1f}с" if avg_time else "N/A"
+                stats_text += f"• {model}: {count} ({success_rate:.0f}% успешно, {avg_time_str})\n"
+        else:
+            stats_text += "• Нет данных\n"
+        
+        stats_text += "\n📱 **По форматам:**\n"
+        
+        # Добавляем статистику по форматам
+        if user_stats['formats_stats']:
+            for format_type, count in user_stats['formats_stats'][:5]:
+                stats_text += f"• {format_type}: {count}\n"
+        else:
+            stats_text += "• Нет данных\n"
+        
+        keyboard = [
+            [InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        
+        await query.edit_message_text(
+            stats_text,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
 
     # Новые обработчики навигации
     if data == "help_filters":
@@ -3347,6 +3590,7 @@ async def setup_commands(application):
     commands = [
         BotCommand("start", "🚀 Начать работу с ботом / Перезагрузить бота"),
         BotCommand("help", "❓ Как пользоваться ботом"),
+        BotCommand("stats", "📊 Ваша статистика"),
         BotCommand("ideogram_tips", "🎨 Советы по использованию Ideogram")
     ]
     
@@ -3382,6 +3626,9 @@ def main():
     # Добавляем обработчики
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('stats', stats_command))
+    app.add_handler(CommandHandler('my_id', my_id_command))  # Временная команда
+    app.add_handler(CommandHandler('admin_stats', admin_stats_command))
     app.add_handler(CommandHandler('ideogram_tips', ideogram_tips_command))
     app.add_handler(CommandHandler('check_replicate', check_replicate))
     app.add_handler(CommandHandler('test_ideogram', test_ideogram))
