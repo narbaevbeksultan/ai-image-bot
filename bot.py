@@ -1526,9 +1526,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             elif selected_model == 'Bytedance (Seedream-3)':
                 # Для Bytedance Seedream-3 - нативная 2K генерация, быстрая
                 prompts = [
-                    f"{topic}, mobile app design, trending style, fast generation, modern interface, high quality",
-                    f"{topic}, social media trend, viral content style, contemporary design, professional quality",
-                    f"{topic}, digital art, modern aesthetic, trending colors, mobile optimized"
+                    f"{topic}, high quality, professional, detailed composition, architectural design, modern aesthetic",
+                    f"{topic}, premium quality, well balanced, sharp focus, clean design, sophisticated style",
+                    f"{topic}, excellent quality, clear details, professional result, contemporary design, elegant composition"
                 ][:max_scenes]
             elif selected_model == 'Google Imagen 4 Ultra':
                 # Для Google Imagen 4 Ultra - максимальное качество и детали
@@ -1540,16 +1540,16 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             elif selected_model == 'Luma Photon':
                 # Для Luma Photon - креативные возможности, высокое качество
                 prompts = [
-                    f"{topic}, 3D rendering, volumetric lighting, architectural visualization, modern 3D design, professional quality",
-                    f"{topic}, three dimensional, depth effect, modern architecture, 3D modeling, premium visualization",
-                    f"{topic}, volumetric design, 3D art, architectural perspective, modern 3D style, professional rendering"
+                    f"{topic}, high quality, detailed, cinematic lighting, creative composition, professional result",
+                    f"{topic}, artistic style, excellent quality, creative vision, detailed composition, premium quality",
+                    f"{topic}, creative approach, high resolution, professional lighting, detailed result, artistic quality"
                 ][:max_scenes]
             elif selected_model == 'Bria 3.2':
                 # Для Bria 3.2 - коммерческое использование, 4B параметров
                 prompts = [
-                    f"{topic}, commercial photography, business use, professional marketing, corporate style, licensed content",
-                    f"{topic}, business environment, commercial application, professional branding, corporate design, licensed material",
-                    f"{topic}, commercial use, business photography, professional marketing material, corporate branding"
+                    f"{topic}, professional quality, high resolution, clean composition, commercial grade, safe content",
+                    f"{topic}, excellent quality, professional result, clear details, commercial use, premium quality",
+                    f"{topic}, high quality, professional photography, detailed composition, commercial standard, clean result"
                 ][:max_scenes]
             elif selected_model == 'Recraft AI':
                 # Для Recraft AI - дизайн, вектор, логотипы, SVG

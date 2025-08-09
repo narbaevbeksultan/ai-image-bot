@@ -295,3 +295,4 @@ class AnalyticsDB:
 
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
+
