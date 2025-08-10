@@ -3222,25 +3222,25 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
 
-           elif data == "video_image_to_video":
-               # Прямая генерация видео из изображения из главного меню
-               state['video_type'] = 'image_to_video'
-               state['step'] = STEP_VIDEO_QUALITY
-               keyboard = [
-                   [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
-                   [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
-                   [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
-               ]
-               reply_markup = InlineKeyboardMarkup(keyboard)
-               await query.edit_message_text(
-                   "🖼️ **Создание видео из изображения**\n\n"
-                   "Выберите качество видео:",
-                   reply_markup=reply_markup
-               )
-           
-           elif data == "waiting":
-               # Обработка кнопки "Генерация..." - просто игнорируем
-               await query.answer("⏳ Генерация в процессе...")
+    elif data == "video_image_to_video":
+        # Прямая генерация видео из изображения из главного меню
+        state['video_type'] = 'image_to_video'
+        state['step'] = STEP_VIDEO_QUALITY
+        keyboard = [
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "🖼️ **Создание видео из изображения**\n\n"
+            "Выберите качество видео:",
+            reply_markup=reply_markup
+        )
+
+    elif data == "waiting":
+        # Обработка кнопки "Генерация..." - просто игнорируем
+        await query.answer("⏳ Генерация в процессе...")
 
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
