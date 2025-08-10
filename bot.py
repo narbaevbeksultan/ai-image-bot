@@ -4111,7 +4111,7 @@ async def generate_video(update, context, state):
                 "width": 512 if video_quality == "480p" else 1024,
                 "height": 512 if video_quality == "480p" else 1024,
                 "num_frames": 16 if video_duration == 5 else 32,
-                "fps": 8
+                "fps": 24
             }
         else:
             # Для image-to-video нужен URL изображения
@@ -4144,8 +4144,8 @@ async def generate_video(update, context, state):
                 "image": state['selected_image_url'],
                 "width": 512 if video_quality == "480p" else 1024,
                 "height": 512 if video_quality == "480p" else 1024,
-                "num_frames": 16 if video_duration == 5 else 32,
-                "fps": 8
+                "num_frames": 16 if video_duration == "5" else 32,
+                "fps": 24
             }
         
         # Отправляем сообщение о начале генерации
