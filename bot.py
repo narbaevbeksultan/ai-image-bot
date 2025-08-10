@@ -211,7 +211,6 @@ def get_format_tips(format_type):
 • Опишите активные сцены и действия
 • Добавьте детали о людях и их деятельности
 • Укажите динамику и процессы
-• Формат: вертикальный (9:16) для мобильных устройств
 • Примеры: "турбаза с рыбалкой", "спортзал с тренирующимися", "кафе с приготовлением кофе"
 
 ✅ Хорошо: "турбаза с активными людьми, рыбалка на озере, баня с паром"
@@ -229,13 +228,11 @@ def get_format_tips(format_type):
     
     elif format_type in ['instagram stories']:
         return """💡 Советы для Stories:
-• Опишите вертикальные композиции (9:16 соотношение сторон)
 • Добавьте место для текста (обычно сверху/снизу)
 • Укажите простые, но привлекательные кадры
-• Формат: вертикальный для мобильных устройств
-• Примеры: "вертикальный кадр турбазы", "спортзал в вертикальном формате"
+• Примеры: "какр турбазы", "спортзал"
 
-✅ Хорошо: "вертикальный кадр турбазы с местом для текста, красивое освещение"
+✅ Хорошо: "кадр турбазы с местом для текста, красивое освещение"
 ❌ Плохо: "горизонтальный вид" """
     
     else:
@@ -263,12 +260,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = """
 🎨 Добро пожаловать в AI Image Generator!
 
-Я помогу вам создавать качественные изображения с помощью ИИ.
+Я помогу вам создавать качественные изображения и видео с помощью ИИ.
 
 💡 Быстрый старт:
-• Нажмите "🎨 Создать контент"
-• Выберите формат
-• Выберите модель
+• Нажмите "🎨 Создать изображения" для генерации изображений
+• Нажмите "🎬 Создать видео" для генерации видео
+• Выберите формат и модель
 • Опишите, что хотите создать
 • Получите результат!
 
@@ -278,7 +275,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 """
     
     keyboard = [
-        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+        [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
         [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
         [InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")],
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")]
@@ -293,8 +291,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает главное меню"""
     keyboard = [
-        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
-        [InlineKeyboardButton("🎬 Генерация видео", callback_data="video_generation")],
+        [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+        [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
         [InlineKeyboardButton("📤 Редактировать изображение", callback_data="edit_image")],
         [InlineKeyboardButton("🎨 Советы по Ideogram", callback_data="ideogram_tips")],
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
@@ -2489,7 +2487,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ])
             )
             return
-        elif 'format' in state:
+        else:
+            # Сохраняем стиль и переходим к выбору модели
             USER_STATE[user_id]['style'] = selected_style
             USER_STATE[user_id]['step'] = 'image_gen_model'
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
@@ -2719,6 +2718,27 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Стиль генерации выбран: {selected_img_style}\nСколько изображений сгенерировать?",
                 reply_markup=reply_markup
             )
+        elif user_format == 'изображения':
+            # Для "Изображения" переходим к выбору количества изображений
+            USER_STATE[user_id]['step'] = 'image_count_simple'
+            keyboard = [
+                [InlineKeyboardButton("1 изображение", callback_data="image_count_simple:1")],
+                [InlineKeyboardButton("2 изображения", callback_data="image_count_simple:2")],
+                [InlineKeyboardButton("3 изображения", callback_data="image_count_simple:3")],
+                [InlineKeyboardButton("4 изображения", callback_data="image_count_simple:4")],
+                [InlineKeyboardButton("5 изображений", callback_data="image_count_simple:5")],
+                [InlineKeyboardButton("Выбрать другое количество", callback_data="image_count_simple:custom")]
+            ]
+            keyboard.extend([
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ])
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(
+                f"Стиль генерации выбран: {selected_img_style}\nСколько изображений сгенерировать?",
+                reply_markup=reply_markup
+            )
         else:
             # Для остальных форматов переходим к вводу темы
             USER_STATE[user_id]['step'] = STEP_TOPIC
@@ -2798,6 +2818,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
             except ValueError:
                 await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+    elif data == "custom_image_count_simple":
+        USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+        await query.edit_message_text("Введите количество изображений (от 1 до 10):")
+        return
     elif data == "more_images":
         user_format = state.get('format', '').lower()
         if user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_scenes' in state:
@@ -3402,6 +3426,45 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 await update.message.reply_text(
                     f"Выберите модель для генерации изображений:",
+                    reply_markup=reply_markup
+                )
+            else:
+                await update.message.reply_text("Пожалуйста, введите число от 1 до 10:")
+        except ValueError:
+            await update.message.reply_text("Пожалуйста, введите число от 1 до 10:")
+    elif step == 'custom_image_count_simple':
+        try:
+            count = int(update.message.text.strip())
+            if 1 <= count <= 10:
+                USER_STATE[user_id]['image_count'] = count
+                USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                keyboard = [
+                    [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+                    [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                # Добавляем подсказки для "Изображения"
+                tips = """💡 Советы для лучшего результата:
+• Опишите главный объект и его детали
+• Укажите стиль, материалы, цвета
+• Добавьте информацию об освещении
+• Опишите ракурс или композицию
+• Укажите атмосферу и контекст
+
+✅ Примеры:
+• "Современный дом с большими окнами, окруженный садом, закатное освещение"
+• "Космический корабль в открытом космосе, звезды, футуристический дизайн"
+• "Цветущий сад с розами, бабочки, солнечный день"
+
+❌ Избегайте:
+• "красиво", "хорошо", "красивая картинка"
+• Слишком общие описания
+• Противоположные требования"""
+                
+                await update.message.reply_text(
+                    f"Количество выбрано: {count} изображений\n\nОпишите, что вы хотите видеть на картинке:\n\n{tips}",
                     reply_markup=reply_markup
                 )
             else:
