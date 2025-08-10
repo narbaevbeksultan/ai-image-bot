@@ -263,7 +263,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 Я помогу вам создавать качественные изображения и видео с помощью ИИ.
 
 💡 Быстрый старт:
-• Нажмите "🎨 Создать изображения" для генерации изображений
+• Нажмите "🎨 Создать контент" для создания видео или изображений
+• Нажмите "🖼️ Создать изображения" для быстрой генерации изображений
 • Нажмите "🎬 Создать видео" для генерации видео
 • Выберите формат и модель
 • Опишите, что хотите создать
@@ -275,7 +276,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 """
     
     keyboard = [
-        [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+        [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")],
         [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
         [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
         [InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")],
@@ -291,9 +293,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает главное меню"""
     keyboard = [
-        [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+        [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")],
         [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
-        [InlineKeyboardButton("📤 Редактировать изображение", callback_data="edit_image")],
+        [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
         [InlineKeyboardButton("🎨 Советы по Ideogram", callback_data="ideogram_tips")],
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
@@ -1480,9 +1483,63 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
     prompts = []
     processed_count = 0  # Счетчик успешно обработанных изображений
     
+    # Проверяем наличие API токенов
+    if not os.getenv('REPLICATE_API_TOKEN'):
+        if send_text:
+            keyboard = [
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await send_text("❌ Ошибка: REPLICATE_API_TOKEN не установлен\n\nОбратитесь к администратору бота.", reply_markup=reply_markup)
+        return
+    
+    # Проверяем баланс Replicate
+    try:
+        import replicate
+        replicate_client = replicate.Client(api_token=os.getenv('REPLICATE_API_TOKEN'))
+        # Попытка получить информацию об аккаунте для проверки баланса
+        try:
+            # Простая проверка доступности API
+            test_response = replicate.run(
+                "replicate/hello-world",
+                input={"text": "test"}
+            )
+            # Если дошли до сюда, значит API работает
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "insufficient_credit" in error_msg or "insufficient credit" in error_msg or "billing" in error_msg:
+                if send_text:
+                    keyboard = [
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                    ]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    await send_text("❌ Недостаточно кредитов на Replicate\n\nПополните баланс на https://replicate.com/account/billing или обратитесь к администратору.", reply_markup=reply_markup)
+                return
+            elif "unauthorized" in error_msg or "invalid" in error_msg:
+                if send_text:
+                    keyboard = [
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                    ]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    await send_text("❌ Ошибка авторизации Replicate API\n\nПроверьте токен или обратитесь к администратору.", reply_markup=reply_markup)
+                return
+    except Exception as e:
+        if send_text:
+            keyboard = [
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await send_text(f"❌ Ошибка при проверке Replicate API: {str(e)[:100]}...\n\nОбратитесь к администратору.", reply_markup=reply_markup)
+        return
+    
     # Определяем максимальное количество изображений
     user_format = state.get('format', '').lower()
     image_count = state.get('image_count', 'default')
+    
+    # Логируем параметры для отладки
+    if send_text:
+        await send_text(f"🔍 Отладка: format='{user_format}', image_count='{image_count}', prompt_type='{prompt_type}', user_prompt='{user_prompt}'")
+        await send_text(f"🔍 Состояние: {state}")
     
     # Если у нас есть сцены, используем их количество
     if scenes:
@@ -2385,6 +2442,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await show_main_menu(update, context)
     elif data == "create_content":
         await show_format_selection(update, context)
+    elif data == "create_simple_images":
+        # Для простых изображений сразу переходим к выбору модели
+        USER_STATE[user_id] = {'step': 'image_gen_model', 'format': 'изображения'}
+        await show_model_selection(update, context)
     elif data == "edit_image":
         # Начинаем процесс редактирования изображения
         USER_STATE[user_id] = {'step': 'upload_image_for_edit'}
@@ -2697,28 +2758,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Проверяем формат для разного поведения
         user_format = state.get('format', '').lower()
-        if user_format == 'просто картинка':
-            # Для "Просто картинка" переходим к выбору количества изображений
-            USER_STATE[user_id]['step'] = 'image_count_simple'
-            keyboard = [
-                [InlineKeyboardButton("1 изображение", callback_data="image_count_simple:1")],
-                [InlineKeyboardButton("2 изображения", callback_data="image_count_simple:2")],
-                [InlineKeyboardButton("3 изображения", callback_data="image_count_simple:3")],
-                [InlineKeyboardButton("4 изображения", callback_data="image_count_simple:4")],
-                [InlineKeyboardButton("5 изображений", callback_data="image_count_simple:5")],
-                [InlineKeyboardButton("Выбрать другое количество", callback_data="image_count_simple:custom")]
-            ]
-            keyboard.extend([
-                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-            ])
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text(
-                f"Стиль генерации выбран: {selected_img_style}\nСколько изображений сгенерировать?",
-                reply_markup=reply_markup
-            )
-        elif user_format == 'изображения':
+        if user_format == 'изображения':
             # Для "Изображения" переходим к выбору количества изображений
             USER_STATE[user_id]['step'] = 'image_count_simple'
             keyboard = [
@@ -3540,8 +3580,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Проверяем формат для разного поведения
         user_format = state.get('format', '').lower()
-        if user_format == 'просто картинка':
-            # Для "Просто картинка" переходим к выбору количества изображений
+        if user_format == 'изображения':
+            # Для "Изображения" переходим к выбору количества изображений
             USER_STATE[user_id]['step'] = 'image_count_simple'
             keyboard = [
                 [InlineKeyboardButton("1 изображение", callback_data="image_count_simple:1")],
@@ -3628,7 +3668,12 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup = InlineKeyboardMarkup(keyboard)
             await update.message.reply_text("Описание изображения содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
             return
+        
+        # Сохраняем промпт в состоянии
+        USER_STATE[user_id]['topic'] = user_prompt
         USER_STATE[user_id]['step'] = STEP_DONE
+        state = USER_STATE[user_id]
+        
         await update.message.reply_text('Спасибо! Генерирую изображения...')
         await send_images(update, context, state, prompt_type='user', user_prompt=user_prompt)
     
