@@ -98,3 +98,4 @@ curl -X GET "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getMe"
 2. Мониторьте логи Railway
 3. Используйте команду `/check_replicate` для проверки статуса
 4. Следите за обновлениями API сервисов
+
