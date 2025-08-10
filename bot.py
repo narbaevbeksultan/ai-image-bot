@@ -24,8 +24,12 @@ USER_STATE = {}
 STEP_FORMAT = 'format'
 STEP_STYLE = 'style'
 STEP_IMAGE_COUNT = 'image_count'
-STEP_TOPIC = 'topic'
-STEP_DONE = 'done'
+STEP_IMAGE_MODEL = 'image_model'
+STEP_IMAGE_GENERATION = 'image_generation'
+STEP_IMAGE_EDIT = 'image_edit'
+STEP_VIDEO_QUALITY = 'video_quality'
+STEP_VIDEO_DURATION = 'video_duration'
+STEP_VIDEO_GENERATION = 'video_generation'
 
 FORMATS = ['Instagram Reels', 'TikTok', 'YouTube Shorts', 'Instagram Post', 'Instagram Stories', '🖼️ Изображения']
 STYLES = ['🎯 Экспертно', '😄 Легко', '🔥 Продающе', '💡 Вдохновляюще', '🧠 Юмористично', 'Дружелюбный', 'Мотивационный', 'Развлекательный']
@@ -50,6 +54,11 @@ IMAGE_GEN_MODELS = [
     'Recraft AI'
 ]
 
+# Модели генерации видео
+VIDEO_GEN_MODELS = [
+    'Bytedance Seedance 1.0 Pro'
+]
+
 # Характеристики моделей для отображения на кнопках (краткие)
 MODEL_DESCRIPTIONS = {
     'Ideogram': 'текст и логотипы',
@@ -58,6 +67,11 @@ MODEL_DESCRIPTIONS = {
     'Luma Photon': 'кинематографичность',
     'Bria 3.2': 'коммерческое',
     'Recraft AI': 'дизайн и векторы'
+}
+
+# Характеристики моделей видео
+VIDEO_MODEL_DESCRIPTIONS = {
+    'Bytedance Seedance 1.0 Pro': 'text-to-video + image-to-video, 480p/1080p'
 }
 
 def get_image_size_for_format(format_type, simple_orientation=None):
@@ -280,6 +294,7 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает главное меню"""
     keyboard = [
         [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+        [InlineKeyboardButton("🎬 Генерация видео", callback_data="video_generation")],
         [InlineKeyboardButton("📤 Редактировать изображение", callback_data="edit_image")],
         [InlineKeyboardButton("🎨 Советы по Ideogram", callback_data="ideogram_tips")],
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
@@ -2160,6 +2175,12 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         # Кнопка для выбора конкретного количества
         keyboard.append([InlineKeyboardButton("🔢 Выбрать количество сцен", callback_data="select_scene_count")])
         
+        # Кнопки для генерации видео
+        keyboard.extend([
+            [InlineKeyboardButton("🎬 Создать видео из изображений", callback_data="create_video_from_images")],
+            [InlineKeyboardButton("🎭 Создать видео по сценарию", callback_data="create_video_from_script")],
+        ])
+        
         # Остальные кнопки
         keyboard.extend([
             [InlineKeyboardButton("Уточнить, что должно быть на картинке", callback_data="custom_image_prompt")],
@@ -3096,6 +3117,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Кнопка для выбора конкретного количества
         keyboard.append([InlineKeyboardButton("🔢 Выбрать количество сцен", callback_data="select_scene_count")])
         
+        # Кнопки для генерации видео
+        keyboard.extend([
+            [InlineKeyboardButton("🎬 Создать видео из изображений", callback_data="create_video_from_images")],
+            [InlineKeyboardButton("🎭 Создать видео по сценарию", callback_data="create_video_from_script")],
+        ])
+        
         # Остальные кнопки
         keyboard.extend([
             [InlineKeyboardButton("Уточнить, что должно быть на картинке", callback_data="custom_image_prompt")],
@@ -3104,6 +3131,116 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text("Хотите другие варианты или уточнить, что должно быть на картинке?", reply_markup=reply_markup)
+
+    # Обработчики для генерации видео
+    elif data == "video_generation":
+        # Показываем меню выбора типа генерации видео
+        keyboard = [
+            [InlineKeyboardButton("🎭 Создать видео по тексту", callback_data="video_text_to_video")],
+            [InlineKeyboardButton("🖼️ Создать видео из изображения", callback_data="video_image_to_video")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "🎬 **Генерация видео**\n\n"
+            "Выберите тип генерации видео:",
+            reply_markup=reply_markup
+        )
+
+    elif data == "create_video_from_script":
+        # Создание видео по сценарию (text-to-video)
+        state['video_type'] = 'text_to_video'
+        state['step'] = STEP_VIDEO_QUALITY
+        keyboard = [
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "🎭 **Создание видео по сценарию**\n\n"
+            "Выберите качество видео:",
+            reply_markup=reply_markup
+        )
+
+    elif data == "create_video_from_images":
+        # Создание видео из изображений (image-to-video)
+        state['video_type'] = 'image_to_video'
+        state['step'] = STEP_VIDEO_QUALITY
+        keyboard = [
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "🎬 **Создание видео из изображений**\n\n"
+            "Выберите качество видео:",
+            reply_markup=reply_markup
+        )
+
+    elif data.startswith("video_quality:"):
+        # Обработка выбора качества видео
+        quality = data.split(":")[1]
+        state['video_quality'] = quality
+        state['step'] = STEP_VIDEO_DURATION
+        
+        keyboard = [
+            [InlineKeyboardButton("⏱️ 5 секунд", callback_data="video_duration:5")],
+            [InlineKeyboardButton("⏱️ 10 секунд", callback_data="video_duration:10")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            f"🎬 **Качество выбрано: {quality}**\n\n"
+            "Выберите длительность видео:",
+            reply_markup=reply_markup
+        )
+
+    elif data.startswith("video_duration:"):
+        # Обработка выбора длительности видео
+        duration = int(data.split(":")[1])
+        state['video_duration'] = duration
+        state['step'] = STEP_VIDEO_GENERATION
+        
+        # Начинаем генерацию видео
+        await generate_video(update, context, state)
+
+    elif data == "video_text_to_video":
+        # Прямая генерация видео по тексту из главного меню
+        state['video_type'] = 'text_to_video'
+        state['step'] = STEP_VIDEO_QUALITY
+        keyboard = [
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "🎭 **Создание видео по тексту**\n\n"
+            "Выберите качество видео:",
+            reply_markup=reply_markup
+        )
+
+           elif data == "video_image_to_video":
+               # Прямая генерация видео из изображения из главного меню
+               state['video_type'] = 'image_to_video'
+               state['step'] = STEP_VIDEO_QUALITY
+               keyboard = [
+                   [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+                   [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+                   [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+               ]
+               reply_markup = InlineKeyboardMarkup(keyboard)
+               await query.edit_message_text(
+                   "🖼️ **Создание видео из изображения**\n\n"
+                   "Выберите качество видео:",
+                   reply_markup=reply_markup
+               )
+           
+           elif data == "waiting":
+               # Обработка кнопки "Генерация..." - просто игнорируем
+               await query.answer("⏳ Генерация в процессе...")
 
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -3240,6 +3377,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Для "Изображения" - старые кнопки
             keyboard = [
                 [InlineKeyboardButton("Сгенерировать изображения", callback_data="generate_images")],
+                [InlineKeyboardButton("🎭 Создать видео по сценарию", callback_data="create_video_from_script")],
                 [InlineKeyboardButton("Уточнить, что должно быть на картинке", callback_data="custom_image_prompt")],
                 [InlineKeyboardButton("Сбросить и начать заново", callback_data="reset")]
             ]
@@ -3430,6 +3568,53 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         USER_STATE[user_id]['step'] = STEP_DONE
         await update.message.reply_text('Спасибо! Генерирую изображения...')
         await send_images(update, context, state, prompt_type='user', user_prompt=user_prompt)
+    
+    elif step == STEP_VIDEO_GENERATION:
+        # Обработка ввода текста для генерации видео
+        video_prompt = update.message.text.strip()
+        if not is_prompt_safe(video_prompt):
+            keyboard = [
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await update.message.reply_text("Описание видео содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
+            return
+        
+        # Сохраняем промпт и начинаем генерацию
+        state['video_prompt'] = video_prompt
+        await generate_video(update, context, state)
+    
+    elif step == 'waiting_for_image':
+        # Обработка загрузки изображения для генерации видео
+        if update.message.photo:
+            # Получаем URL изображения
+            photo = update.message.photo[-1]  # Берем самое большое изображение
+            file = await context.bot.get_file(photo.file_id)
+            image_url = file.file_path
+            
+            # Сохраняем URL изображения в состоянии
+            state['selected_image_url'] = image_url
+            
+            # Показываем сообщение о получении изображения
+            await update.message.reply_text(
+                "🖼️ **Изображение получено!**\n\n"
+                "Теперь начинаю генерацию видео...",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("⏳ Генерация...", callback_data="waiting")
+                ]])
+            )
+            
+            # Начинаем генерацию видео
+            await generate_video(update, context, state)
+        else:
+            await update.message.reply_text(
+                "❌ **Ошибка!**\n\n"
+                "Пожалуйста, загрузите изображение в формате JPG или PNG.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                ]])
+            )
     elif step == 'custom_simple_image_count':
         try:
             count = int(update.message.text.strip())
@@ -3584,6 +3769,196 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text('📸 Вы отправили изображение, но сейчас не в режиме редактирования.\n\nНажмите кнопку "✏️ Редактировать изображение" в главном меню, чтобы начать редактирование.')
         else:
             await update.message.reply_text('Пожалуйста, следуйте инструкциям бота.')
+
+async def generate_video(update, context, state):
+    """Генерирует видео с помощью Replicate API"""
+    user_id = update.effective_user.id
+    
+    try:
+        # Получаем параметры из состояния
+        video_type = state.get('video_type', 'text_to_video')
+        video_quality = state.get('video_quality', '480p')
+        video_duration = state.get('video_duration', 5)
+        video_prompt = state.get('video_prompt', '')
+        
+        # Определяем параметры для модели
+        if video_type == 'text_to_video':
+            # Для text-to-video используем промпт из состояния
+            if not video_prompt:
+                # Если промпт не задан, запрашиваем его
+                state['step'] = STEP_VIDEO_GENERATION
+                if hasattr(update, 'callback_query') and update.callback_query:
+                    await update.callback_query.edit_message_text(
+                        "🎭 **Создание видео по тексту**\n\n"
+                        "Опишите, что должно происходить в видео:\n\n"
+                        "💡 Примеры:\n"
+                        "• Красивая природа с цветущими деревьями\n"
+                        "• Космический корабль летит среди звезд\n"
+                        "• Городской пейзаж с небоскребами",
+                        reply_markup=InlineKeyboardMarkup([[
+                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                        ]])
+                    )
+                else:
+                    await update.message.reply_text(
+                        "🎭 **Создание видео по тексту**\n\n"
+                        "Опишите, что должно происходить в видео:\n\n"
+                        "💡 Примеры:\n"
+                        "• Красивая природа с цветущими деревьями\n"
+                        "• Космический корабль летит среди звезд\n"
+                        "• Городской пейзаж с небоскребами",
+                        reply_markup=InlineKeyboardMarkup([[
+                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                        ]])
+                    )
+                return
+            
+            # Параметры для text-to-video
+            input_data = {
+                "prompt": video_prompt,
+                "width": 512 if video_quality == "480p" else 1024,
+                "height": 512 if video_quality == "480p" else 1024,
+                "num_frames": 16 if video_duration == 5 else 32,
+                "fps": 8
+            }
+        else:
+            # Для image-to-video нужен URL изображения
+            # Проверяем, есть ли изображение в состоянии
+            if 'selected_image_url' not in state:
+                # Если изображение не выбрано, запрашиваем его
+                state['step'] = 'waiting_for_image'
+                if hasattr(update, 'callback_query') and update.callback_query:
+                    await update.callback_query.edit_message_text(
+                        "🖼️ **Создание видео из изображения**\n\n"
+                        "Пожалуйста, загрузите изображение, из которого хотите создать видео.\n\n"
+                        "💡 Рекомендуется использовать качественные изображения в формате JPG или PNG.",
+                        reply_markup=InlineKeyboardMarkup([[
+                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                        ]])
+                    )
+                else:
+                    await update.message.reply_text(
+                        "🖼️ **Создание видео из изображения**\n\n"
+                        "Пожалуйста, загрузите изображение, из которого хотите создать видео.\n\n"
+                        "💡 Рекомендуется использовать качественные изображения в формате JPG или PNG.",
+                        reply_markup=InlineKeyboardMarkup([[
+                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                        ]])
+                    )
+                return
+            
+            # Параметры для image-to-video
+            input_data = {
+                "image": state['selected_image_url'],
+                "width": 512 if video_quality == "480p" else 1024,
+                "height": 512 if video_quality == "480p" else 1024,
+                "num_frames": 16 if video_duration == 5 else 32,
+                "fps": 8
+            }
+        
+        # Отправляем сообщение о начале генерации
+        if hasattr(update, 'callback_query') and update.callback_query:
+            await update.callback_query.edit_message_text(
+                f"🎬 **Генерация видео началась!**\n\n"
+                f"📝 Промпт: {video_prompt}\n"
+                f"⚡ Качество: {video_quality}\n"
+                f"⏱️ Длительность: {video_duration} сек\n\n"
+                f"⏳ Пожалуйста, подождите...\n"
+                f"Это может занять 1-3 минуты.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("⏳ Генерация...", callback_data="waiting")
+                ]])
+            )
+        else:
+            # Если это не callback_query (например, загрузка изображения)
+            await update.message.reply_text(
+                f"🎬 **Генерация видео началась!**\n\n"
+                f"📝 Промпт: {video_prompt}\n"
+                f"⚡ Качество: {video_quality}\n"
+                f"⏱️ Длительность: {video_duration} сек\n\n"
+                f"⏳ Пожалуйста, подождите...\n"
+                f"Это может занять 1-3 минуты."
+            )
+        
+        # Вызываем Replicate API для генерации видео
+        import replicate
+        
+        # Используем модель Bytedance Seedance 1.0 Pro
+        output = replicate.run(
+            "bytedance/seedance-1-pro",
+            input=input_data
+        )
+        
+        if output and len(output) > 0:
+            video_url = output[0]
+            
+            # Отправляем видео пользователю
+            await context.bot.send_video(
+                chat_id=user_id,
+                video=video_url,
+                caption=f"🎬 **Видео готово!**\n\n"
+                        f"📝 Промпт: {video_prompt}\n"
+                        f"⚡ Качество: {video_quality}\n"
+                        f"⏱️ Длительность: {video_duration} сек\n\n"
+                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
+            )
+            
+            # Показываем кнопки для дальнейших действий
+            keyboard = [
+                [InlineKeyboardButton("🎬 Создать еще видео", callback_data="video_generation")],
+                [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await context.bot.send_message(
+                chat_id=user_id,
+                text="🎉 **Видео успешно создано!**\n\n"
+                     "Что хотите сделать дальше?",
+                reply_markup=reply_markup
+            )
+            
+            # Сбрасываем состояние
+            state['step'] = None
+            state.pop('video_type', None)
+            state.pop('video_quality', None)
+            state.pop('video_duration', None)
+            state.pop('video_prompt', None)
+            
+        else:
+            raise Exception("API не вернул результат")
+            
+    except Exception as e:
+        logging.error(f"Ошибка при генерации видео: {e}")
+        
+        # Показываем сообщение об ошибке
+        keyboard = [
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="video_generation")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        if hasattr(update, 'callback_query') and update.callback_query:
+            await update.callback_query.edit_message_text(
+                f"❌ **Ошибка при генерации видео**\n\n"
+                f"Произошла ошибка: {str(e)}\n\n"
+                f"Попробуйте еще раз или обратитесь в поддержку.",
+                reply_markup=reply_markup
+            )
+        else:
+            await update.message.reply_text(
+                f"❌ **Ошибка при генерации видео**\n\n"
+                f"Произошла ошибка: {str(e)}\n\n"
+                f"Попробуйте еще раз или обратитесь в поддержку.",
+                reply_markup=reply_markup
+            )
+        
+        # Сбрасываем состояние
+        state['step'] = None
+        state.pop('video_type', None)
+        state.pop('video_quality', None)
+        state.pop('video_duration', None)
+        state.pop('video_prompt', None)
 
 async def setup_commands(application):
     """Устанавливает команды меню для бота"""
