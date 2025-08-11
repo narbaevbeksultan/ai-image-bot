@@ -4087,7 +4087,21 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def generate_video(update, context, state):
     """Генерирует видео с помощью Replicate API"""
-    user_id = update.effective_user.id
+    # Определяем chat_id и user_id
+    if hasattr(update, 'callback_query') and update.callback_query:
+        chat_id = update.callback_query.message.chat_id
+        user_id = update.callback_query.from_user.id
+    elif hasattr(update, 'message') and update.message:
+        chat_id = update.message.chat_id
+        user_id = update.message.from_user.id
+    else:
+        # Fallback
+        chat_id = None
+        user_id = None
+    
+    if not chat_id or not user_id:
+        logging.error("Не удалось определить chat_id или user_id")
+        return
     
     try:
         # Получаем параметры из состояния
@@ -4161,6 +4175,13 @@ async def generate_video(update, context, state):
         else:
             prompt_text = "🖼️ Изображение: загружено"
         
+        # Предупреждаем о возможных проблемах с размером
+        size_warning = ""
+        if video_quality == "1080p" and video_duration > 5:
+            size_warning = "\n⚠️ **Внимание:** Видео 1080p длительностью более 5 сек может быть слишком большим для прямой отправки в Telegram.\n"
+        elif video_duration > 10:
+            size_warning = "\n⚠️ **Внимание:** Длинные видео могут превышать лимиты Telegram (50 МБ).\n"
+        
         if hasattr(update, 'callback_query') and update.callback_query:
             await update.callback_query.edit_message_text(
                 f"🎬 **Генерация видео началась!**\n\n"
@@ -4168,7 +4189,7 @@ async def generate_video(update, context, state):
                 f"⚡ Качество: {video_quality}\n"
                 f"⏱️ Длительность: {video_duration} сек\n\n"
                 f"⏳ Пожалуйста, подождите...\n"
-                f"Это может занять 1-3 минуты.",
+                f"Это может занять 1-3 минуты.{size_warning}",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("⏳ Генерация...", callback_data="waiting")
                 ]])
@@ -4181,7 +4202,7 @@ async def generate_video(update, context, state):
                 f"⚡ Качество: {video_quality}\n"
                 f"⏱️ Длительность: {video_duration} сек\n\n"
                 f"⏳ Пожалуйста, подождите...\n"
-                f"Это может занять 1-3 минуты."
+                f"Это может занять 1-3 минуты.{size_warning}"
             )
         
         # Вызываем Replicate API для генерации видео
@@ -4249,6 +4270,53 @@ async def generate_video(update, context, state):
         if 'gif' in video_url.lower():
             is_video_file = False
             logging.info("Обнаружен GIF файл, будет отправлен как документ")
+        
+        # Проверяем доступность файла перед отправкой
+        try:
+            logging.info("Проверяем доступность файла...")
+            head_response = requests.head(video_url, timeout=30)
+            if head_response.status_code != 200:
+                logging.warning(f"Файл недоступен (статус: {head_response.status_code})")
+                # Продолжаем попытку отправки, возможно это временная проблема
+            else:
+                content_length = head_response.headers.get('content-length')
+                if content_length:
+                    file_size_mb = int(content_length) / (1024 * 1024)
+                    logging.info(f"Размер файла: {file_size_mb:.1f} МБ")
+                    
+                    # Предупреждаем о больших файлах
+                    if file_size_mb > 50:
+                        logging.warning(f"Файл превышает лимит Telegram: {file_size_mb:.1f} МБ")
+                    elif file_size_mb > 20:
+                        logging.info(f"Файл большой: {file_size_mb:.1f} МБ, могут быть проблемы с отправкой")
+        except Exception as check_error:
+            logging.warning(f"Не удалось проверить файл: {check_error}")
+            # Продолжаем попытку отправки
+        
+        # Дополнительная проверка: если файл недоступен, отправляем сообщение с ссылкой
+        try:
+            test_response = requests.get(video_url, timeout=10, stream=False)
+            if test_response.status_code != 200:
+                logging.error(f"Файл недоступен для скачивания (статус: {test_response.status_code})")
+                # Отправляем сообщение с инструкциями
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f"⚠️ **Файл недоступен для скачивания**\n\n"
+                         f"Статус: {test_response.status_code}\n"
+                         f"Возможно, файл был удален или недоступен\n\n"
+                         f"🔗 **Попробуйте ссылку:** {video_url}\n\n"
+                         f"💡 **Рекомендации:**\n"
+                         f"• Скопируйте ссылку в браузер\n"
+                         f"• Попробуйте позже\n"
+                         f"• Создайте новое видео",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("🔗 Попробовать ссылку", url=video_url)
+                    ]])
+                )
+                return  # Выходим из функции
+        except Exception as test_error:
+            logging.warning(f"Не удалось протестировать файл: {test_error}")
+            # Продолжаем попытку отправки
             
         # Отправляем видео пользователю
         if video_type == 'text_to_video' and video_prompt:
@@ -4257,62 +4325,219 @@ async def generate_video(update, context, state):
         else:
             prompt_caption = "🖼️ Изображение: загружено"
         
-        # Принудительно отправляем как документ для сохранения оригинального формата MP4
-        # Это предотвращает автоматическую конвертацию Telegram в GIF
+        # Улучшенная отправка видео с множественными fallback методами
         video_sent = False
         
+        # Метод 1: Пробуем отправить как видео с поддержкой стриминга
         try:
-            # Метод 1: Отправляем как документ для сохранения качества и формата
-            await context.bot.send_document(
-                chat_id=user_id,
-                document=video_url,
+            await context.bot.send_video(
+                chat_id=chat_id,
+                video=video_url,
                 caption=f"🎬 **Видео готово!**\n\n"
                         f"{prompt_caption}\n"
                         f"⚡ Качество: {video_quality}\n"
-                        f"⏱️ Длительность: {video_duration} сек\n"
-                        f"📁 Формат: MP4 (сохранен оригинал)\n\n"
-                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                        f"💡 Отправлено как документ для сохранения качества"
+                        f"⏱️ Длительность: {video_duration} сек\n\n"
+                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro",
+                supports_streaming=True,
+                has_spoiler=False
             )
             video_sent = True
-            logging.info("Видео успешно отправлено как документ (MP4)")
+            logging.info("Видео успешно отправлено как видео с поддержкой стриминга")
             
-        except Exception as doc_error:
-            logging.error(f"Не удалось отправить как документ: {doc_error}")
+        except Exception as video_error:
+            logging.error(f"Не удалось отправить как видео: {video_error}")
             
-            # Метод 2: Fallback - пробуем отправить как видео
+            # Метод 2: Пробуем отправить как документ для сохранения качества
             try:
-                await context.bot.send_video(
-                    chat_id=user_id,
-                    video=video_url,
+                await context.bot.send_document(
+                    chat_id=chat_id,
+                    document=video_url,
                     caption=f"🎬 **Видео готово!**\n\n"
                             f"{prompt_caption}\n"
                             f"⚡ Качество: {video_quality}\n"
-                            f"⏱️ Длительность: {video_duration} сек\n\n"
+                            f"⏱️ Длительность: {video_duration} сек\n"
+                            f"📁 Формат: MP4 (сохранен оригинал)\n\n"
                             f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                            f"⚠️ Отправлено как видео (может быть конвертировано)",
-                    supports_streaming=True,
-                    has_spoiler=False
+                            f"💡 Отправлено как документ для сохранения качества"
                 )
                 video_sent = True
-                logging.info("Видео отправлено как видео (fallback)")
+                logging.info("Видео успешно отправлено как документ (MP4)")
                 
-            except Exception as video_error:
-                logging.error(f"Не удалось отправить как видео: {video_error}")
+            except Exception as doc_error:
+                logging.error(f"Не удалось отправить как документ: {doc_error}")
+                
+                # Метод 3: Пробуем загрузить файл локально и отправить
+                try:
+                    logging.info("Пробуем загрузить файл локально и отправить...")
+                    
+                    # Загружаем видео во временный файл
+                    import tempfile
+                    import requests
+                    
+                    # Сначала проверяем размер файла
+                    head_response = requests.head(video_url, timeout=30)
+                    if head_response.status_code == 200:
+                        content_length = head_response.headers.get('content-length')
+                        if content_length:
+                            file_size_mb = int(content_length) / (1024 * 1024)
+                            logging.info(f"Размер файла: {file_size_mb:.1f} МБ")
+                            
+                            # Проверяем лимиты Telegram
+                            if file_size_mb > 50:
+                                logging.warning(f"Файл слишком большой для отправки: {file_size_mb:.1f} МБ")
+                                # Вместо исключения, отправляем сообщение с рекомендациями
+                                await context.bot.send_message(
+                                    chat_id=chat_id,
+                                    text=f"⚠️ **Файл слишком большой!**\n\n"
+                                         f"Размер: {file_size_mb:.1f} МБ\n"
+                                         f"Лимит Telegram: 50 МБ\n\n"
+                                         f"💡 **Рекомендации:**\n"
+                                         f"• Выберите качество 480p вместо 1080p\n"
+                                         f"• Уменьшите длительность до 5-10 секунд\n"
+                                         f"• Создайте новое видео с меньшими параметрами\n\n"
+                                         f"🔗 **Ссылка на видео:** {video_url}",
+                                    reply_markup=InlineKeyboardMarkup([[
+                                        InlineKeyboardButton("🔗 Скачать видео", url=video_url)
+                                    ]])
+                                )
+                                video_sent = True
+                                logging.info("Отправлено сообщение о большом файле")
+                                return  # Выходим из функции
+                            elif file_size_mb > 20:
+                                logging.info(f"Файл большой ({file_size_mb:.1f} МБ), могут быть проблемы с отправкой")
+                    
+                    # Загружаем файл по частям
+                    response = requests.get(video_url, timeout=60, stream=True)
+                    if response.status_code == 200:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+                            total_size = 0
+                            for chunk in response.iter_content(chunk_size=8192):
+                                if chunk:
+                                    temp_file.write(chunk)
+                                    total_size += len(chunk)
+                                    # Проверяем размер во время загрузки
+                                    if total_size > 50 * 1024 * 1024:  # 50 МБ
+                                        raise Exception("Файл превышает лимит Telegram (50 МБ)")
+                            
+                            temp_file_path = temp_file.name
+                            logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
+                        
+                        # Отправляем локальный файл
+                        with open(temp_file_path, 'rb') as video_file:
+                            await context.bot.send_video(
+                                chat_id=chat_id,
+                                video=video_file,
+                                caption=f"🎬 **Видео готово!**\n\n"
+                                        f"{prompt_caption}\n"
+                                        f"⚡ Качество: {video_quality}\n"
+                                        f"⏱️ Длительность: {video_duration} сек\n\n"
+                                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                                        f"💾 Отправлено из локального файла",
+                                supports_streaming=True,
+                                has_spoiler=False
+                            )
+                        video_sent = True
+                        logging.info("Видео успешно отправлено из локального файла")
+                        
+                        # Удаляем временный файл
+                        try:
+                            os.unlink(temp_file_path)
+                        except Exception as cleanup_error:
+                            logging.warning(f"Не удалось удалить временный файл: {cleanup_error}")
+                    else:
+                        raise Exception(f"Не удалось загрузить файл (статус: {response.status_code})")
+                        
+                except Exception as local_error:
+                    logging.error(f"Не удалось отправить из локального файла: {local_error}")
+                    
+                    # Метод 4: Пробуем отправить как анимацию (если это GIF)
+                    if file_extension == 'gif' or 'gif' in video_url.lower():
+                        try:
+                            await context.bot.send_animation(
+                                chat_id=chat_id,
+                                animation=video_url,
+                                caption=f"🎬 **Анимация готова!**\n\n"
+                                        f"{prompt_caption}\n"
+                                        f"⚡ Качество: {video_quality}\n"
+                                        f"⏱️ Длительность: {video_duration} сек\n\n"
+                                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
+                            )
+                            video_sent = True
+                            logging.info("Анимация успешно отправлена")
+                        except Exception as anim_error:
+                            logging.error(f"Не удалось отправить как анимацию: {anim_error}")
         
-        # Метод 3: В крайнем случае отправляем сообщение с ссылкой
+        # Метод 5: В крайнем случае отправляем сообщение с ссылкой и инструкциями
         if not video_sent:
+            # Создаем красивую клавиатуру с кнопкой для скачивания
+            keyboard = [
+                [InlineKeyboardButton("🔗 Скачать видео", url=video_url)],
+                [InlineKeyboardButton("🎬 Создать еще видео", callback_data="video_generation")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            # Определяем возможную причину ошибки на основе всех попыток
+            error_reasons = []
+            if 'video_error' in locals():
+                if "too large" in str(video_error).lower() or "file size" in str(video_error).lower():
+                    error_reasons.append("Файл слишком большой для Telegram")
+                if "timeout" in str(video_error).lower():
+                    error_reasons.append("Превышено время ожидания")
+                if "network" in str(video_error).lower() or "connection" in str(video_error).lower():
+                    error_reasons.append("Проблемы с сетью")
+                if "format" in str(video_error).lower() or "unsupported" in str(video_error).lower():
+                    error_reasons.append("Неподдерживаемый формат файла")
+                if "bot was blocked" in str(video_error).lower() or "bot was stopped" in str(video_error).lower():
+                    error_reasons.append("Бот заблокирован пользователем")
+                if "file" in str(video_error).lower() and "not found" in str(video_error).lower():
+                    error_reasons.append("Файл не найден на сервере")
+            
+            if not error_reasons:
+                error_reasons.append("Техническая ошибка при отправке")
+            
+            error_reason = " • ".join(error_reasons)
+            
+            # Добавляем информацию о размере файла, если доступна
+            size_info = ""
+            try:
+                head_response = requests.head(video_url, timeout=10)
+                if head_response.status_code == 200:
+                    content_length = head_response.headers.get('content-length')
+                    if content_length:
+                        file_size_mb = int(content_length) / (1024 * 1024)
+                        size_info = f"\n📏 **Размер файла:** {file_size_mb:.1f} МБ"
+            except:
+                pass
+            
             await context.bot.send_message(
                 chat_id=user_id,
                 text=f"🎬 **Видео готово!**\n\n"
                      f"{prompt_caption}\n"
                      f"⚡ Качество: {video_quality}\n"
-                     f"⏱️ Длительность: {video_duration} сек\n\n"
+                     f"⏱️ Длительность: {video_duration} сек{size_info}\n\n"
                      f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n\n"
-                     f"🔗 Ссылка на видео: {video_url}\n\n"
-                     f"⚠️ Не удалось отправить файл напрямую. Используйте ссылку для скачивания."
+                     f"⚠️ **Не удалось отправить файл напрямую**\n\n"
+                     f"🔍 **Причина:** {error_reason}\n\n"
+                     f"💡 **Решения:**\n"
+                     f"• Нажмите кнопку '🔗 Скачать видео' ниже\n"
+                     f"• Или скопируйте ссылку: `{video_url}`\n"
+                     f"• Откройте ссылку в браузере для просмотра\n\n"
+                     f"📱 **Альтернативные способы:**\n"
+                     f"• Скопируйте ссылку в браузер\n"
+                     f"• Используйте приложение для скачивания\n"
+                     f"• Попробуйте создать видео меньшего размера\n\n"
+                     f"🔄 **Попробуйте снова:**\n"
+                     f"• Выберите меньшее качество (480p вместо 1080p)\n"
+                     f"• Уменьшите длительность видео\n"
+                     f"• Создайте новое видео\n\n"
+                     f"💬 **Если проблема повторяется:**\n"
+                     f"• Попробуйте позже (возможны временные проблемы)\n"
+                     f"• Обратитесь в поддержку с описанием ошибки",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
             )
-            logging.info("Отправлена ссылка на видео")
+            logging.info("Отправлена ссылка на видео с инструкциями")
         
         # Показываем кнопки для дальнейших действий
         keyboard = [
@@ -4323,7 +4548,7 @@ async def generate_video(update, context, state):
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await context.bot.send_message(
-            chat_id=user_id,
+            chat_id=chat_id,
             text="🎉 **Видео успешно создано!**\n\n"
                  "Что хотите сделать дальше?",
             reply_markup=reply_markup
@@ -4354,8 +4579,9 @@ async def generate_video(update, context, state):
                 reply_markup=reply_markup
             )
         else:
-            await update.message.reply_text(
-                error_message,
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=error_message,
                 reply_markup=reply_markup
             )
         
