@@ -3336,7 +3336,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "💡 Примеры:\n"
                 "• Красивая природа с цветущими деревьями\n"
                 "• Космический корабль летит среди звезд\n"
-                "• Городской пейзаж с небоскребами",
+                "• Городской пейзаж с небоскребами\n\n"
+                "🌐 **Ваш промпт будет автоматически переведен на английский для лучшего качества видео**",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
                 ]])
@@ -4103,9 +4104,34 @@ async def generate_video(update, context, state):
                 logging.error(f"video_prompt не задан для text-to-video. State: {state}")
                 raise Exception("Промпт для видео не задан. Пожалуйста, попробуйте еще раз.")
             
-            # Параметры для text-to-video
+            # Переводим русский промпт на английский для лучшего качества видео
+            english_prompt = video_prompt
+            try:
+                import openai
+                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                translation_response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are an expert at creating video generation prompts. Translate the user's request from Russian to English and enhance it for video generation. Make it detailed, specific, and optimized for AI video models. Keep the exact meaning but make it more descriptive for better video results. Focus on visual elements, actions, and scenes."},
+                        {"role": "user", "content": f"Translate and enhance this video prompt: {video_prompt}"}
+                    ],
+                    max_tokens=300,
+                    temperature=0.3
+                )
+                english_prompt = translation_response.choices[0].message.content.strip()
+                
+                # Логируем оба промпта для прозрачности
+                logging.info(f"Original Russian prompt: {video_prompt}")
+                logging.info(f"Translated English prompt: {english_prompt}")
+                
+            except Exception as e:
+                logging.error(f"Translation failed: {e}, using original prompt")
+                # Fallback к оригинальному промпту если перевод не удался
+                english_prompt = video_prompt
+            
+            # Параметры для text-to-video с переведенным промптом
             input_data = {
-                "prompt": video_prompt,
+                "prompt": english_prompt,
                 "width": 512 if video_quality == "480p" else 1024,
                 "height": 512 if video_quality == "480p" else 1024,
                 "num_frames": 16 if video_duration == 5 else 32,
@@ -4129,7 +4155,11 @@ async def generate_video(update, context, state):
             }
         
         # Отправляем сообщение о начале генерации
-        prompt_text = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
+        if video_type == 'text_to_video' and video_prompt:
+            # Показываем оба промпта для прозрачности
+            prompt_text = f"📝 Оригинальный промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
+        else:
+            prompt_text = "🖼️ Изображение: загружено"
         
         if hasattr(update, 'callback_query') and update.callback_query:
             await update.callback_query.edit_message_text(
@@ -4221,13 +4251,36 @@ async def generate_video(update, context, state):
             logging.info("Обнаружен GIF файл, будет отправлен как документ")
             
         # Отправляем видео пользователю
-        prompt_caption = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
+        if video_type == 'text_to_video' and video_prompt:
+            # Показываем оба промпта для прозрачности
+            prompt_caption = f"📝 Оригинальный промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
+        else:
+            prompt_caption = "🖼️ Изображение: загружено"
         
-        # Пытаемся отправить как видео с принудительными параметрами
+        # Принудительно отправляем как документ для сохранения оригинального формата MP4
+        # Это предотвращает автоматическую конвертацию Telegram в GIF
         video_sent = False
         
-        # Метод 1: Прямая отправка как видео
-        if is_video_file:
+        try:
+            # Метод 1: Отправляем как документ для сохранения качества и формата
+            await context.bot.send_document(
+                chat_id=user_id,
+                document=video_url,
+                caption=f"🎬 **Видео готово!**\n\n"
+                        f"{prompt_caption}\n"
+                        f"⚡ Качество: {video_quality}\n"
+                        f"⏱️ Длительность: {video_duration} сек\n"
+                        f"📁 Формат: MP4 (сохранен оригинал)\n\n"
+                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                        f"💡 Отправлено как документ для сохранения качества"
+            )
+            video_sent = True
+            logging.info("Видео успешно отправлено как документ (MP4)")
+            
+        except Exception as doc_error:
+            logging.error(f"Не удалось отправить как документ: {doc_error}")
+            
+            # Метод 2: Fallback - пробуем отправить как видео
             try:
                 await context.bot.send_video(
                     chat_id=user_id,
@@ -4236,48 +4289,16 @@ async def generate_video(update, context, state):
                             f"{prompt_caption}\n"
                             f"⚡ Качество: {video_quality}\n"
                             f"⏱️ Длительность: {video_duration} сек\n\n"
-                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro",
+                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                            f"⚠️ Отправлено как видео (может быть конвертировано)",
                     supports_streaming=True,
                     has_spoiler=False
                 )
                 video_sent = True
-                logging.info("Видео успешно отправлено как видео")
+                logging.info("Видео отправлено как видео (fallback)")
+                
             except Exception as video_error:
-                logging.warning(f"Не удалось отправить как видео: {video_error}")
-        
-        # Метод 2: Если не удалось отправить как видео, пробуем как документ
-        if not video_sent:
-            try:
-                # Если это GIF, пробуем отправить как анимацию
-                if 'gif' in video_url.lower():
-                    await context.bot.send_animation(
-                        chat_id=user_id,
-                        animation=video_url,
-                        caption=f"🎬 **Анимация готова!**\n\n"
-                                f"{prompt_caption}\n"
-                                f"⚡ Качество: {video_quality}\n"
-                                f"⏱️ Длительность: {video_duration} сек\n\n"
-                                f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                                f"📱 Отправлено как анимация"
-                    )
-                    video_sent = True
-                    logging.info("GIF отправлен как анимация")
-                else:
-                    # Для других форматов отправляем как документ
-                    await context.bot.send_document(
-                        chat_id=user_id,
-                        document=video_url,
-                        caption=f"🎬 **Видео готово!**\n\n"
-                                f"{prompt_caption}\n"
-                                f"⚡ Качество: {video_quality}\n"
-                                f"⏱️ Длительность: {video_duration} сек\n\n"
-                                f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                                f"📱 Отправлено как документ для сохранения качества"
-                    )
-                    video_sent = True
-                    logging.info("Видео отправлено как документ")
-            except Exception as doc_error:
-                logging.error(f"Не удалось отправить как документ/анимацию: {doc_error}")
+                logging.error(f"Не удалось отправить как видео: {video_error}")
         
         # Метод 3: В крайнем случае отправляем сообщение с ссылкой
         if not video_sent:
