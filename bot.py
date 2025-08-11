@@ -3871,6 +3871,37 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state['video_prompt'] = video_prompt
         await generate_video(update, context, state)
     
+    elif step == 'waiting_for_video_prompt':
+        # Обработка промпта для генерации видео из изображения
+        video_prompt = update.message.text.strip()
+        
+        if not video_prompt:
+            await update.message.reply_text(
+                "❌ **Ошибка!**\n\n"
+                "Пожалуйста, опишите, какое видео вы хотите получить из изображения.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                ]])
+            )
+            return
+        
+        # Сохраняем промпт в состоянии
+        state['video_prompt'] = video_prompt
+        
+        # Показываем сообщение о начале генерации
+        await update.message.reply_text(
+            f"📝 **Промпт получен:** {video_prompt}\n\n"
+            "🎬 **Начинаю генерацию видео из изображения...**\n\n"
+            "⏳ Пожалуйста, подождите...\n"
+            "Это может занять 1-3 минуты.",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("⏳ Генерация...", callback_data="waiting")
+            ]])
+        )
+        
+        # Начинаем генерацию видео
+        await generate_video(update, context, state)
+    
     elif step == 'waiting_for_image':
         # Обработка загрузки изображения для генерации видео
         if update.message.photo:
@@ -3882,17 +3913,25 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Сохраняем URL изображения в состоянии
             state['selected_image_url'] = image_url
             
-            # Показываем сообщение о получении изображения
+            # Переходим к запросу промпта для видео
+            state['step'] = 'waiting_for_video_prompt'
+            
+            # Показываем сообщение о получении изображения и запрашиваем промпт
             await update.message.reply_text(
                 "🖼️ **Изображение получено!**\n\n"
-                "Теперь начинаю генерацию видео...",
+                "📝 **Теперь опишите, какое видео вы хотите получить из этого изображения:**\n\n"
+                "💡 **Примеры промптов:**\n"
+                "• \"Добавить движение и анимацию\"\n"
+                "• \"Сделать изображение живым с эффектами\"\n"
+                "• \"Добавить камеру и переходы\"\n"
+                "• \"Создать динамичную сцену\"\n"
+                "• \"Добавить элементы движения\"\n\n"
+                "🎬 **После описания начнется генерация видео**\n\n"
+                "⚠️ **Важно:** Чем подробнее описание, тем лучше результат!",
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("⏳ Генерация...", callback_data="waiting")
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
                 ]])
             )
-            
-            # Начинаем генерацию видео
-            await generate_video(update, context, state)
         else:
             await update.message.reply_text(
                 "❌ **Ошибка!**\n\n"
@@ -4127,6 +4166,9 @@ async def generate_video(update, context, state):
         video_duration = state.get('video_duration', 5)
         video_prompt = state.get('video_prompt', '')
         
+        # Инициализируем переменную для переведенного промпта
+        english_prompt = video_prompt
+        
         # Определяем параметры для модели
         if video_type == 'text_to_video':
             # Для text-to-video используем промпт из состояния
@@ -4169,16 +4211,48 @@ async def generate_video(update, context, state):
                 "fps": 24
             }
         else:
-            # Для image-to-video нужен URL изображения
+            # Для image-to-video нужен URL изображения И промпт
             # Проверяем, есть ли изображение в состоянии
             if 'selected_image_url' not in state:
                 # Если изображение не выбрано, это ошибка - пользователь должен был его загрузить
                 logging.error(f"selected_image_url не задан для image-to-video. State: {state}")
                 raise Exception("Изображение для видео не загружено. Пожалуйста, попробуйте еще раз.")
             
-            # Параметры для image-to-video
+            # Проверяем, есть ли промпт для image-to-video
+            if not video_prompt:
+                # Если промпт не задан, это ошибка - пользователь должен был его ввести
+                logging.error(f"video_prompt не задан для image-to-video. State: {state}")
+                raise Exception("Промпт для видео не задан. Пожалуйста, опишите, какое видео вы хотите получить из изображения.")
+            
+            # Переводим русский промпт на английский для лучшего качества видео
+            english_prompt = video_prompt
+            try:
+                import openai
+                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                translation_response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are an expert at creating video generation prompts. Translate the user's request from Russian to English and enhance it for video generation. Make it detailed, specific, and optimized for AI video models. Keep the exact meaning but make it more descriptive for better video results. Focus on visual elements, actions, and scenes."},
+                        {"role": "user", "content": f"Translate and enhance this video prompt: {video_prompt}"}
+                    ],
+                    max_tokens=300,
+                    temperature=0.3
+                )
+                english_prompt = translation_response.choices[0].message.content.strip()
+                
+                # Логируем оба промпта для прозрачности
+                logging.info(f"Original Russian prompt: {video_prompt}")
+                logging.info(f"Translated English prompt: {english_prompt}")
+                
+            except Exception as e:
+                logging.error(f"Translation failed: {e}, using original prompt")
+                # Fallback к оригинальному промпту если перевод не удался
+                english_prompt = video_prompt
+            
+            # Параметры для image-to-video с промптом
             input_data = {
                 "image": state['selected_image_url'],
+                "prompt": english_prompt,  # Добавляем промпт для image-to-video
                 "width": 512 if video_quality == "480p" else 1024,
                 "height": 512 if video_quality == "480p" else 1024,
                 "num_frames": 16 if video_duration == 5 else 32,
@@ -4189,8 +4263,15 @@ async def generate_video(update, context, state):
         if video_type == 'text_to_video' and video_prompt:
             # Показываем оба промпта для прозрачности
             prompt_text = f"📝 Оригинальный промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
+        elif video_type == 'image_to_video' and video_prompt:
+            # Показываем промпт для image-to-video
+            prompt_text = f"🖼️ Изображение: загружено\n📝 Промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
         else:
-            prompt_text = "🖼️ Изображение: загружено"
+            # Fallback для случаев, когда что-то пошло не так
+            if video_type == 'image_to_video':
+                prompt_text = "🖼️ Изображение: загружено\n⚠️ Промпт не указан"
+            else:
+                prompt_text = "🖼️ Изображение: загружено"
         
         # Предупреждаем о возможных проблемах с размером и стоимости
         size_warning = ""
@@ -4420,8 +4501,15 @@ async def generate_video(update, context, state):
         if video_type == 'text_to_video' and video_prompt:
             # Показываем оба промпта для прозрачности
             prompt_caption = f"📝 Оригинальный промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
+        elif video_type == 'image_to_video' and video_prompt:
+            # Показываем промпт для image-to-video
+            prompt_caption = f"🖼️ Изображение: загружено\n📝 Промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
         else:
-            prompt_caption = "🖼️ Изображение: загружено"
+            # Fallback для случаев, когда что-то пошло не так
+            if video_type == 'image_to_video':
+                prompt_caption = "🖼️ Изображение: загружено\n⚠️ Промпт не указан"
+            else:
+                prompt_caption = "🖼️ Изображение: загружено"
         
         # Улучшенная отправка видео с множественными fallback методами
         video_sent = False
@@ -4452,24 +4540,24 @@ async def generate_video(update, context, state):
             
             # Метод 2: Пробуем отправить как документ для сохранения качества
             try:
-                await context.bot.send_document(
-                    chat_id=chat_id,
-                    document=video_url,
-                    caption=f"🎬 **Видео готово!**\n\n"
-                            f"{prompt_caption}\n"
-                            f"⚡ Качество: {video_quality}\n"
-                            f"⏱️ Длительность: {video_duration} сек\n"
-                            f"📁 Формат: MP4 (сохранен оригинал)\n\n"
-                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                            f"💡 Отправлено как документ для сохранения качества"
-                )
-                video_sent = True
-                logging.info("Видео успешно отправлено как документ (MP4)")
-                
+            await context.bot.send_document(
+                chat_id=chat_id,
+                document=video_url,
+                caption=f"🎬 **Видео готово!**\n\n"
+                        f"{prompt_caption}\n"
+                        f"⚡ Качество: {video_quality}\n"
+                        f"⏱️ Длительность: {video_duration} сек\n"
+                        f"📁 Формат: MP4 (сохранен оригинал)\n\n"
+                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                        f"💡 Отправлено как документ для сохранения качества"
+            )
+            video_sent = True
+            logging.info("Видео успешно отправлено как документ (MP4)")
+            
             except Exception as e:
                 doc_error = e
-                logging.error(f"Не удалось отправить как документ: {doc_error}")
-                
+            logging.error(f"Не удалось отправить как документ: {doc_error}")
+            
                 # Метод 3: Пробуем загрузить файл локально и отправить
                 try:
                     logging.info("Пробуем загрузить файл локально и отправить...")
@@ -4533,19 +4621,19 @@ async def generate_video(update, context, state):
                         # Отправляем локальный файл
                         try:
                             with open(temp_file_path, 'rb') as video_file:
-                                await context.bot.send_video(
-                                    chat_id=chat_id,
-                                    video=video_file,
-                                    caption=f"🎬 **Видео готово!**\n\n"
-                                            f"{prompt_caption}\n"
-                                            f"⚡ Качество: {video_quality}\n"
-                                            f"⏱️ Длительность: {video_duration} сек\n\n"
-                                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                                            f"💾 Отправлено из локального файла",
-                                    supports_streaming=True,
-                                    has_spoiler=False
-                                )
-                            video_sent = True
+                await context.bot.send_video(
+                    chat_id=chat_id,
+                    video=video_file,
+                    caption=f"🎬 **Видео готово!**\n\n"
+                            f"{prompt_caption}\n"
+                            f"⚡ Качество: {video_quality}\n"
+                            f"⏱️ Длительность: {video_duration} сек\n\n"
+                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                            f"💾 Отправлено из локального файла",
+                    supports_streaming=True,
+                    has_spoiler=False
+                )
+                video_sent = True
                             logging.info("Видео успешно отправлено из локального файла")
                         except Exception as send_error:
                             logging.error(f"Ошибка при отправке локального файла: {send_error}")
@@ -4841,11 +4929,11 @@ async def generate_video(update, context, state):
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
         else:
-            keyboard = [
-                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="video_generation")],
+        keyboard = [
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="video_generation")],
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-            ]
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         
