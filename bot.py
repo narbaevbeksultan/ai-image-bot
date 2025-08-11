@@ -3328,8 +3328,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state['video_duration'] = duration
         state['step'] = STEP_VIDEO_GENERATION
         
-        # Начинаем генерацию видео
-        await generate_video(update, context, state)
+        # Запрашиваем промпт для видео
+        if state.get('video_type') == 'text_to_video':
+            await query.edit_message_text(
+                "🎭 **Создание видео по тексту**\n\n"
+                "Опишите, что должно происходить в видео:\n\n"
+                "💡 Примеры:\n"
+                "• Красивая природа с цветущими деревьями\n"
+                "• Космический корабль летит среди звезд\n"
+                "• Городской пейзаж с небоскребами",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                ]])
+            )
+        else:
+            # Для image-to-video переходим к загрузке изображения
+            state['step'] = 'waiting_for_image'
+            await query.edit_message_text(
+                "🖼️ **Создание видео из изображения**\n\n"
+                "Пожалуйста, загрузите изображение, из которого хотите создать видео.\n\n"
+                "💡 Рекомендуется использовать качественные изображения в формате JPG или PNG.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                ]])
+            )
 
     elif data == "video_text_to_video":
         # Прямая генерация видео по тексту из главного меню
@@ -4077,33 +4099,9 @@ async def generate_video(update, context, state):
         if video_type == 'text_to_video':
             # Для text-to-video используем промпт из состояния
             if not video_prompt:
-                # Если промпт не задан, запрашиваем его
-                state['step'] = STEP_VIDEO_GENERATION
-                if hasattr(update, 'callback_query') and update.callback_query:
-                    await update.callback_query.edit_message_text(
-                        "🎭 **Создание видео по тексту**\n\n"
-                        "Опишите, что должно происходить в видео:\n\n"
-                        "💡 Примеры:\n"
-                        "• Красивая природа с цветущими деревьями\n"
-                        "• Космический корабль летит среди звезд\n"
-                        "• Городской пейзаж с небоскребами",
-                        reply_markup=InlineKeyboardMarkup([[
-                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
-                        ]])
-                    )
-                else:
-                    await update.message.reply_text(
-                        "🎭 **Создание видео по тексту**\n\n"
-                        "Опишите, что должно происходить в видео:\n\n"
-                        "💡 Примеры:\n"
-                        "• Красивая природа с цветущими деревьями\n"
-                        "• Космический корабль летит среди звезд\n"
-                        "• Городской пейзаж с небоскребами",
-                        reply_markup=InlineKeyboardMarkup([[
-                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
-                        ]])
-                    )
-                return
+                # Если промпт не задан, это ошибка - пользователь должен был его ввести
+                logging.error(f"video_prompt не задан для text-to-video. State: {state}")
+                raise Exception("Промпт для видео не задан. Пожалуйста, попробуйте еще раз.")
             
             # Параметры для text-to-video
             input_data = {
@@ -4117,42 +4115,26 @@ async def generate_video(update, context, state):
             # Для image-to-video нужен URL изображения
             # Проверяем, есть ли изображение в состоянии
             if 'selected_image_url' not in state:
-                # Если изображение не выбрано, запрашиваем его
-                state['step'] = 'waiting_for_image'
-                if hasattr(update, 'callback_query') and update.callback_query:
-                    await update.callback_query.edit_message_text(
-                        "🖼️ **Создание видео из изображения**\n\n"
-                        "Пожалуйста, загрузите изображение, из которого хотите создать видео.\n\n"
-                        "💡 Рекомендуется использовать качественные изображения в формате JPG или PNG.",
-                        reply_markup=InlineKeyboardMarkup([[
-                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
-                        ]])
-                    )
-                else:
-                    await update.message.reply_text(
-                        "🖼️ **Создание видео из изображения**\n\n"
-                        "Пожалуйста, загрузите изображение, из которого хотите создать видео.\n\n"
-                        "💡 Рекомендуется использовать качественные изображения в формате JPG или PNG.",
-                        reply_markup=InlineKeyboardMarkup([[
-                            InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
-                        ]])
-                    )
-                return
+                # Если изображение не выбрано, это ошибка - пользователь должен был его загрузить
+                logging.error(f"selected_image_url не задан для image-to-video. State: {state}")
+                raise Exception("Изображение для видео не загружено. Пожалуйста, попробуйте еще раз.")
             
             # Параметры для image-to-video
             input_data = {
                 "image": state['selected_image_url'],
                 "width": 512 if video_quality == "480p" else 1024,
                 "height": 512 if video_quality == "480p" else 1024,
-                "num_frames": 16 if video_duration == "5" else 32,
+                "num_frames": 16 if video_duration == 5 else 32,
                 "fps": 24
             }
         
         # Отправляем сообщение о начале генерации
+        prompt_text = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
+        
         if hasattr(update, 'callback_query') and update.callback_query:
             await update.callback_query.edit_message_text(
                 f"🎬 **Генерация видео началась!**\n\n"
-                f"📝 Промпт: {video_prompt}\n"
+                f"{prompt_text}\n"
                 f"⚡ Качество: {video_quality}\n"
                 f"⏱️ Длительность: {video_duration} сек\n\n"
                 f"⏳ Пожалуйста, подождите...\n"
@@ -4165,7 +4147,7 @@ async def generate_video(update, context, state):
             # Если это не callback_query (например, загрузка изображения)
             await update.message.reply_text(
                 f"🎬 **Генерация видео началась!**\n\n"
-                f"📝 Промпт: {video_prompt}\n"
+                f"{prompt_text}\n"
                 f"⚡ Качество: {video_quality}\n"
                 f"⏱️ Длительность: {video_duration} сек\n\n"
                 f"⏳ Пожалуйста, подождите...\n"
@@ -4185,11 +4167,12 @@ async def generate_video(update, context, state):
             video_url = output[0]
             
             # Отправляем видео пользователю
+            prompt_caption = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
             await context.bot.send_video(
                 chat_id=user_id,
                 video=video_url,
                 caption=f"🎬 **Видео готово!**\n\n"
-                        f"📝 Промпт: {video_prompt}\n"
+                        f"{prompt_caption}\n"
                         f"⚡ Качество: {video_quality}\n"
                         f"⏱️ Длительность: {video_duration} сек\n\n"
                         f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
@@ -4230,18 +4213,16 @@ async def generate_video(update, context, state):
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
+        error_message = f"❌ **Ошибка при генерации видео**\n\nПроизошла ошибка: {str(e)}\n\nПопробуйте еще раз или обратитесь в поддержку."
+        
         if hasattr(update, 'callback_query') and update.callback_query:
             await update.callback_query.edit_message_text(
-                f"❌ **Ошибка при генерации видео**\n\n"
-                f"Произошла ошибка: {str(e)}\n\n"
-                f"Попробуйте еще раз или обратитесь в поддержку.",
+                error_message,
                 reply_markup=reply_markup
             )
         else:
             await update.message.reply_text(
-                f"❌ **Ошибка при генерации видео**\n\n"
-                f"Произошла ошибка: {str(e)}\n\n"
-                f"Попробуйте еще раз или обратитесь в поддержку.",
+                error_message,
                 reply_markup=reply_markup
             )
         
