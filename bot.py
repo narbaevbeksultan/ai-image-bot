@@ -32,6 +32,8 @@ STEP_IMAGE_EDIT = 'image_edit'
 STEP_VIDEO_QUALITY = 'video_quality'
 STEP_VIDEO_DURATION = 'video_duration'
 STEP_VIDEO_GENERATION = 'video_generation'
+STEP_PROMPT_REVIEW = 'prompt_review'  # Пользователь решает, улучшать ли промпт
+STEP_PROMPT_ENHANCEMENT = 'prompt_enhancement'  # Процесс улучшения промпта
 
 FORMATS = ['Instagram Reels', 'TikTok', 'YouTube Shorts', 'Instagram Post', 'Instagram Stories', '🖼️ Изображения']
 STYLES = ['🎯 Экспертно', '😄 Легко', '🔥 Продающе', '💡 Вдохновляюще', '🧠 Юмористично', 'Дружелюбный', 'Мотивационный', 'Развлекательный']
@@ -3431,6 +3433,51 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Обработка кнопки "Генерация..." - просто игнорируем
         await query.answer("⏳ Генерация в процессе...")
 
+    # Новые обработчики для контроля качества промптов
+    elif data == "enhance_prompt":
+        # Пользователь хочет улучшить промпт
+        await show_enhanced_prompt(update, context, state)
+        return
+        
+    elif data == "generate_as_is":
+        # Пользователь хочет генерировать с простым переводом
+        await generate_video(update, context, state)
+        return
+        
+    elif data == "use_enhanced":
+        # Пользователь выбрал улучшенный промпт
+        await generate_video(update, context, state)
+        return
+        
+    elif data == "show_another_enhancement":
+        # Пользователь хочет другой вариант улучшения
+        enhancement_attempt = state.get('enhancement_attempt', 1) + 1
+        if enhancement_attempt <= 3:  # Максимум 3 попытки
+            state['enhancement_attempt'] = enhancement_attempt
+            await show_enhanced_prompt(update, context, state)
+        else:
+            # Показываем сообщение о достижении лимита
+            keyboard = [
+                [InlineKeyboardButton("✅ Использовать текущий", callback_data="use_enhanced")],
+                [InlineKeyboardButton("❌ Вернуться к простому", callback_data="use_simple")]
+            ]
+            state['enhancement_attempt'] = enhancement_attempt  # Обновляем счетчик в состоянии
+            await query.edit_message_text(
+                "🔄 **Достигнут лимит попыток улучшения**\n\n"
+                "Вы можете:\n"
+                "• Использовать текущий улучшенный промпт\n"
+                "• Вернуться к простому переводу",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        return
+        
+    elif data == "use_simple":
+        # Пользователь хочет вернуться к простому переводу
+        if 'enhanced_prompt' in state:
+            del state['enhanced_prompt']  # Убираем улучшенный промпт
+        await generate_video(update, context, state)
+        return
+
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -3891,9 +3938,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Описание видео содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
             return
         
-        # Сохраняем промпт и начинаем генерацию
+        # Сохраняем промпт и показываем рецензию
         state['video_prompt'] = video_prompt
-        await generate_video(update, context, state)
+        await show_prompt_review(update, context, state)
     
     elif step == 'waiting_for_video_prompt':
         # Обработка промпта для генерации видео из изображения
@@ -3912,19 +3959,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Сохраняем промпт в состоянии
         state['video_prompt'] = video_prompt
         
-        # Показываем сообщение о начале генерации
-        await update.message.reply_text(
-            f"📝 **Промпт получен:** {video_prompt}\n\n"
-            "🎬 **Начинаю генерацию видео из изображения...**\n\n"
-            "⏳ Пожалуйста, подождите...\n"
-            "Это может занять 1-3 минуты.",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("⏳ Генерация...", callback_data="waiting")
-            ]])
-        )
-        
-        # Начинаем генерацию видео
-        await generate_video(update, context, state)
+        # Показываем рецензию промптов
+        await show_prompt_review(update, context, state)
     
     elif step == 'waiting_for_image':
         # Обработка загрузки изображения для генерации видео
@@ -4165,6 +4201,177 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text('Пожалуйста, следуйте инструкциям бота.')
 
+async def show_prompt_review(update, context, state):
+    """Показывает промпты на рецензию пользователю"""
+    try:
+        # Получаем параметры из состояния
+        video_type = state.get('video_type', 'text_to_video')
+        video_prompt = state.get('video_prompt', '')
+        english_prompt = state.get('english_prompt', '')
+        
+        if not english_prompt:
+            # Если переведенный промпт еще не готов, переводим
+            try:
+                import openai
+                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                translation_response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
+                        {"role": "user", "content": f"Translate this prompt: {video_prompt}"}
+                    ],
+                    max_tokens=150,
+                    temperature=0.1
+                )
+                english_prompt = translation_response.choices[0].message.content.strip()
+                # Сохраняем в состояние
+                state['english_prompt'] = english_prompt
+                
+                # Логируем оба промпта для прозрачности
+                logging.info(f"Original Russian prompt: {video_prompt}")
+                logging.info(f"Translated English prompt: {english_prompt}")
+                
+            except Exception as e:
+                logging.error(f"Translation failed: {e}, using original prompt")
+                english_prompt = video_prompt
+                state['english_prompt'] = english_prompt
+        
+        # Формируем текст для показа
+        if video_type == 'text_to_video':
+            prompt_text = f"📝 **Оригинальный промпт:** {video_prompt}\n🌐 **Переведенный промпт:** {english_prompt}"
+        else:  # image_to_video
+            prompt_text = f"🖼️ **Изображение:** загружено\n📝 **Промпт:** {video_prompt}\n🌐 **Переведенный промпт:** {english_prompt}"
+        
+        # Создаем клавиатуру с выбором
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Да, улучшить промпт", callback_data="enhance_prompt"),
+                InlineKeyboardButton("❌ Нет, генерировать как есть", callback_data="generate_as_is")
+            ]
+        ]
+        
+        # Отправляем сообщение с выбором
+        if hasattr(update, 'callback_query') and update.callback_query:
+            await update.callback_query.edit_message_text(
+                f"🎬 **Готов к генерации видео!**\n\n"
+                f"{prompt_text}\n\n"
+                f"❓ **Хотите ли вы добавить детали к промпту?**\n\n"
+                f"Это может улучшить качество видео, но изменит исходный замысел.",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        else:
+            await update.message.reply_text(
+                f"🎬 **Готов к генерации видео!**\n\n"
+                f"{prompt_text}\n\n"
+                f"❓ **Хотите ли вы добавить детали к промпту?**\n\n"
+                f"Это может улучшить качество видео, но изменит исходный замысел.",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        
+        # Устанавливаем состояние для ожидания выбора
+        state['current_step'] = STEP_PROMPT_REVIEW
+        state['enhancement_attempt'] = 1  # Инициализируем счетчик попыток улучшения
+        
+    except Exception as e:
+        logging.error(f"Error in show_prompt_review: {e}")
+        # Fallback к прямой генерации
+        await generate_video(update, context, state)
+
+async def enhance_prompt_with_gpt(original_prompt, english_prompt, attempt=1):
+    """Улучшает промпт с помощью GPT"""
+    try:
+        import openai
+        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        # Системный промпт для улучшения
+        system_content = f"""You are an expert at creating video generation prompts. 
+The user has provided a simple prompt that was translated from Russian to English.
+Your task is to enhance it for better video generation results while maintaining the core concept.
+
+Original Russian: {original_prompt}
+Current English: {english_prompt}
+
+Enhance the English prompt by adding visual details, scene context, and cinematic elements.
+Make it more descriptive and specific for AI video models.
+This is attempt #{attempt} - if this is a retry, make it different from previous attempts.
+
+Focus on:
+- Visual elements and composition
+- Movement and action details
+- Scene atmosphere and mood
+- Camera angles and perspectives
+
+Keep the enhancement reasonable and don't add completely new elements not implied by the original."""
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": f"Enhance this prompt for video generation: {english_prompt}"}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        
+        enhanced_prompt = response.choices[0].message.content.strip()
+        logging.info(f"Enhanced prompt (attempt {attempt}): {enhanced_prompt}")
+        
+        return enhanced_prompt
+        
+    except Exception as e:
+        logging.error(f"Error enhancing prompt: {e}")
+        return english_prompt  # Fallback к оригинальному переводу
+
+async def show_enhanced_prompt(update, context, state):
+    """Показывает улучшенный промпт пользователю"""
+    try:
+        video_prompt = state.get('video_prompt', '')
+        english_prompt = state.get('english_prompt', '')
+        enhancement_attempt = state.get('enhancement_attempt', 1)
+        
+        # Улучшаем промпт
+        enhanced_prompt = await enhance_prompt_with_gpt(video_prompt, english_prompt, enhancement_attempt)
+        state['enhanced_prompt'] = enhanced_prompt
+        state['enhancement_attempt'] = enhancement_attempt  # Обновляем счетчик в состоянии
+        
+        # Формируем текст для показа
+        prompt_text = f"📝 **Оригинальный промпт:** {video_prompt}\n🌐 **Переведенный промпт:** {english_prompt}\n✨ **Улучшенный промпт:** {enhanced_prompt}"
+        
+        # Создаем клавиатуру с выбором
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Использовать улучшенный", callback_data="use_enhanced"),
+                InlineKeyboardButton("🔄 Показать другой вариант", callback_data="show_another_enhancement")
+            ],
+            [
+                InlineKeyboardButton("❌ Вернуться к простому", callback_data="use_simple")
+            ]
+        ]
+        
+        # Отправляем сообщение с улучшенным промптом
+        if hasattr(update, 'callback_query') and update.callback_query:
+            await update.callback_query.edit_message_text(
+                f"🔧 **Улучшение промпта**\n\n"
+                f"{prompt_text}\n\n"
+                f"❓ **Нравится ли вам улучшенная версия?**",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        else:
+            await update.message.reply_text(
+                f"🔧 **Улучшение промпта**\n\n"
+                f"{prompt_text}\n\n"
+                f"❓ **Нравится ли вам улучшенная версия?**",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        
+        # Устанавливаем состояние для ожидания выбора
+        state['current_step'] = STEP_PROMPT_ENHANCEMENT
+        
+    except Exception as e:
+        logging.error(f"Error in show_enhanced_prompt: {e}")
+        # Fallback к прямой генерации
+        await generate_video(update, context, state)
+
 async def generate_video(update, context, state):
     """Генерирует видео с помощью Replicate API"""
     # Определяем chat_id и user_id
@@ -4190,8 +4397,8 @@ async def generate_video(update, context, state):
         video_duration = state.get('video_duration', 5)
         video_prompt = state.get('video_prompt', '')
         
-        # Инициализируем переменную для переведенного промпта
-        english_prompt = video_prompt
+        # Получаем переведенный промпт из состояния (должен быть уже готов)
+        english_prompt = state.get('english_prompt', video_prompt)
         
         # Определяем параметры для модели
         if video_type == 'text_to_video':
@@ -4201,30 +4408,14 @@ async def generate_video(update, context, state):
                 logging.error(f"video_prompt не задан для text-to-video. State: {state}")
                 raise Exception("Промпт для видео не задан. Пожалуйста, попробуйте еще раз.")
             
-            # Переводим русский промпт на английский (минимальный перевод без добавления деталей)
-            english_prompt = video_prompt
-            try:
-                import openai
-                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-                translation_response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
-                        {"role": "user", "content": f"Translate this video prompt: {video_prompt}"}
-                    ],
-                    max_tokens=150,
-                    temperature=0.1
-                )
-                english_prompt = translation_response.choices[0].message.content.strip()
-                
-                # Логируем оба промпта для прозрачности
-                logging.info(f"Original Russian prompt: {video_prompt}")
-                logging.info(f"Translated English prompt: {english_prompt}")
-                
-            except Exception as e:
-                logging.error(f"Translation failed: {e}, using original prompt")
-                # Fallback к оригинальному промпту если перевод не удался
-                english_prompt = video_prompt
+            # Проверяем, есть ли улучшенный промпт
+            if 'enhanced_prompt' in state:
+                english_prompt = state['enhanced_prompt']
+                logging.info(f"Using enhanced prompt: {english_prompt}")
+            elif english_prompt != video_prompt:
+                logging.info(f"Using translated prompt: {english_prompt}")
+            else:
+                logging.info(f"Using original prompt: {english_prompt}")
             
             # Параметры для text-to-video с переведенным промптом
             input_data = {
@@ -4249,30 +4440,14 @@ async def generate_video(update, context, state):
                 logging.error(f"video_prompt не задан для image-to-video. State: {state}")
                 raise Exception("Промпт для видео не задан. Пожалуйста, опишите, какое видео вы хотите получить из изображения.")
             
-            # Переводим русский промпт на английский (минимальный перевод без добавления деталей)
-            english_prompt = video_prompt
-            try:
-                import openai
-                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-                translation_response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
-                        {"role": "user", "content": f"Translate this video prompt: {video_prompt}"}
-                    ],
-                    max_tokens=150,
-                    temperature=0.1
-                )
-                english_prompt = translation_response.choices[0].message.content.strip()
-                
-                # Логируем оба промпта для прозрачности
-                logging.info(f"Original Russian prompt: {video_prompt}")
-                logging.info(f"Translated English prompt: {english_prompt}")
-                
-            except Exception as e:
-                logging.error(f"Translation failed: {e}, using original prompt")
-                # Fallback к оригинальному промпту если перевод не удался
-                english_prompt = video_prompt
+            # Проверяем, есть ли улучшенный промпт
+            if 'enhanced_prompt' in state:
+                english_prompt = state['enhanced_prompt']
+                logging.info(f"Using enhanced prompt for image-to-video: {english_prompt}")
+            elif english_prompt != video_prompt:
+                logging.info(f"Using translated prompt for image-to-video: {english_prompt}")
+            else:
+                logging.info(f"Using original prompt for image-to-video: {english_prompt}")
             
             # Параметры для image-to-video с промптом
             input_data = {
