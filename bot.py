@@ -73,7 +73,7 @@ MODEL_DESCRIPTIONS = {
 
 # Характеристики моделей видео
 VIDEO_MODEL_DESCRIPTIONS = {
-    'Bytedance Seedance 1.0 Pro': 'text-to-video + image-to-video, 480p/1080p'
+            'Bytedance Seedance 1.0 Pro': 'text-to-video + image-to-video, 480p/720p/1080p, aspect_ratio'
 }
 
 def get_image_size_for_format(format_type, simple_orientation=None):
@@ -3295,6 +3295,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state['step'] = STEP_VIDEO_QUALITY
         keyboard = [
             [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
             [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
             [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
         ]
@@ -3311,6 +3312,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state['step'] = STEP_VIDEO_QUALITY
         keyboard = [
             [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
             [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
             [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
         ]
@@ -3343,6 +3345,26 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Обработка выбора длительности видео
         duration = int(data.split(":")[1])
         state['video_duration'] = duration
+        state['step'] = 'waiting_for_aspect_ratio'
+        
+        # Запрашиваем выбор пропорции сторон
+        keyboard = [
+            [InlineKeyboardButton("📱 Instagram Stories/Reels (9:16)", callback_data="aspect_ratio:9:16")],
+            [InlineKeyboardButton("📷 Instagram Post (1:1)", callback_data="aspect_ratio:1:1")],
+            [InlineKeyboardButton("🖥️ YouTube/Обычное (16:9)", callback_data="aspect_ratio:16:9")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            f"⏱️ **Длительность выбрана: {duration} сек**\n\n"
+            "Выберите пропорцию сторон видео:",
+            reply_markup=reply_markup
+        )
+
+    elif data.startswith("aspect_ratio:"):
+        # Обработка выбора пропорции сторон
+        aspect_ratio = data.split(":")[1] + ":" + data.split(":")[2]  # Получаем "9:16", "1:1", "16:9"
+        state['aspect_ratio'] = aspect_ratio
         state['step'] = STEP_VIDEO_GENERATION
         
         # Запрашиваем промпт для видео
@@ -3377,6 +3399,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state['step'] = STEP_VIDEO_QUALITY
         keyboard = [
             [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
             [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
             [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
         ]
@@ -3393,6 +3416,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state['step'] = STEP_VIDEO_QUALITY
         keyboard = [
             [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
             [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
             [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
         ]
@@ -4205,9 +4229,10 @@ async def generate_video(update, context, state):
             # Параметры для text-to-video с переведенным промптом
             input_data = {
                 "prompt": english_prompt,
-                "width": 512 if video_quality == "480p" else 1024,
-                "height": 512 if video_quality == "480p" else 1024,
-                "num_frames": 16 if video_duration == 5 else 32,
+                "duration": video_duration,
+                "resolution": video_quality,
+                "aspect_ratio": state.get('aspect_ratio', '16:9'),
+                "camera_fixed": False,
                 "fps": 24
             }
         else:
@@ -4253,9 +4278,10 @@ async def generate_video(update, context, state):
             input_data = {
                 "image": state['selected_image_url'],
                 "prompt": english_prompt,  # Добавляем промпт для image-to-video
-                "width": 512 if video_quality == "480p" else 1024,
-                "height": 512 if video_quality == "480p" else 1024,
-                "num_frames": 16 if video_duration == 5 else 32,
+                "duration": video_duration,
+                "resolution": video_quality,
+                "aspect_ratio": state.get('aspect_ratio', '16:9'),
+                "camera_fixed": False,
                 "fps": 24
             }
         
