@@ -4540,23 +4540,23 @@ async def generate_video(update, context, state):
             
             # Метод 2: Пробуем отправить как документ для сохранения качества
             try:
-            await context.bot.send_document(
-                chat_id=chat_id,
-                document=video_url,
-                caption=f"🎬 **Видео готово!**\n\n"
-                        f"{prompt_caption}\n"
-                        f"⚡ Качество: {video_quality}\n"
-                        f"⏱️ Длительность: {video_duration} сек\n"
-                        f"📁 Формат: MP4 (сохранен оригинал)\n\n"
-                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                        f"💡 Отправлено как документ для сохранения качества"
-            )
-            video_sent = True
-            logging.info("Видео успешно отправлено как документ (MP4)")
-            
+                await context.bot.send_document(
+                    chat_id=chat_id,
+                    document=video_url,
+                    caption=f"🎬 **Видео готово!**\n\n"
+                            f"{prompt_caption}\n"
+                            f"⚡ Качество: {video_quality}\n"
+                            f"⏱️ Длительность: {video_duration} сек\n"
+                            f"📁 Формат: MP4 (сохранен оригинал)\n\n"
+                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                            f"💡 Отправлено как документ для сохранения качества"
+                )
+                video_sent = True
+                logging.info("Видео успешно отправлено как документ (MP4)")
+                
             except Exception as e:
                 doc_error = e
-            logging.error(f"Не удалось отправить как документ: {doc_error}")
+                logging.error(f"Не удалось отправить как документ: {doc_error}")
             
                 # Метод 3: Пробуем загрузить файл локально и отправить
                 try:
@@ -4621,19 +4621,19 @@ async def generate_video(update, context, state):
                         # Отправляем локальный файл
                         try:
                             with open(temp_file_path, 'rb') as video_file:
-                await context.bot.send_video(
-                    chat_id=chat_id,
-                    video=video_file,
-                    caption=f"🎬 **Видео готово!**\n\n"
-                            f"{prompt_caption}\n"
-                            f"⚡ Качество: {video_quality}\n"
-                            f"⏱️ Длительность: {video_duration} сек\n\n"
-                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                            f"💾 Отправлено из локального файла",
-                    supports_streaming=True,
-                    has_spoiler=False
-                )
-                video_sent = True
+                                await context.bot.send_video(
+                                    chat_id=chat_id,
+                                    video=video_file,
+                                    caption=f"🎬 **Видео готово!**\n\n"
+                                            f"{prompt_caption}\n"
+                                            f"⚡ Качество: {video_quality}\n"
+                                            f"⏱️ Длительность: {video_duration} сек\n\n"
+                                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                                            f"💾 Отправлено из локального файла",
+                                    supports_streaming=True,
+                                    has_spoiler=False
+                                )
+                            video_sent = True
                             logging.info("Видео успешно отправлено из локального файла")
                         except Exception as send_error:
                             logging.error(f"Ошибка при отправке локального файла: {send_error}")
