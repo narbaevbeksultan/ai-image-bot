@@ -4210,36 +4210,36 @@ async def generate_video(update, context, state):
         # Отправляем видео пользователю
         prompt_caption = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
         await context.bot.send_video(
-                chat_id=user_id,
-                video=video_url,
-                caption=f"🎬 **Видео готово!**\n\n"
-                        f"{prompt_caption}\n"
-                        f"⚡ Качество: {video_quality}\n"
-                        f"⏱️ Длительность: {video_duration} сек\n\n"
-                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
-            )
-            
-            # Показываем кнопки для дальнейших действий
-            keyboard = [
-                [InlineKeyboardButton("🎬 Создать еще видео", callback_data="video_generation")],
-                [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await context.bot.send_message(
-                chat_id=user_id,
-                text="🎉 **Видео успешно создано!**\n\n"
-                     "Что хотите сделать дальше?",
-                reply_markup=reply_markup
-            )
-            
-            # Сбрасываем состояние
-            state['step'] = None
-            state.pop('video_type', None)
-            state.pop('video_quality', None)
-            state.pop('video_duration', None)
-            state.pop('video_prompt', None)
+            chat_id=user_id,
+            video=video_url,
+            caption=f"🎬 **Видео готово!**\n\n"
+                    f"{prompt_caption}\n"
+                    f"⚡ Качество: {video_quality}\n"
+                    f"⏱️ Длительность: {video_duration} сек\n\n"
+                    f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
+        )
+        
+        # Показываем кнопки для дальнейших действий
+        keyboard = [
+            [InlineKeyboardButton("🎬 Создать еще видео", callback_data="video_generation")],
+            [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="🎉 **Видео успешно создано!**\n\n"
+                 "Что хотите сделать дальше?",
+            reply_markup=reply_markup
+        )
+        
+        # Сбрасываем состояние
+        state['step'] = None
+        state.pop('video_type', None)
+        state.pop('video_quality', None)
+        state.pop('video_duration', None)
+        state.pop('video_prompt', None)
             
     except Exception as e:
         logging.error(f"Ошибка при генерации видео: {e}")
