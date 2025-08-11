@@ -4525,17 +4525,17 @@ async def generate_video(update, context, state):
             
         # Отправляем видео пользователю
         if video_type == 'text_to_video' and video_prompt:
-            # Показываем оба промпта для прозрачности
-            prompt_caption = f"📝 Оригинальный промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
+            # Показываем только переведенный промпт для экономии места
+            prompt_caption = f"📝 {english_prompt}"
         elif video_type == 'image_to_video' and video_prompt:
-            # Показываем промпт для image-to-video
-            prompt_caption = f"🖼️ Изображение: загружено\n📝 Промпт: {video_prompt}\n🌐 Переведенный промпт: {english_prompt}"
+            # Показываем только переведенный промпт для экономии места
+            prompt_caption = f"🖼️ {english_prompt}"
         else:
             # Fallback для случаев, когда что-то пошло не так
             if video_type == 'image_to_video':
-                prompt_caption = "🖼️ Изображение: загружено\n⚠️ Промпт не указан"
+                prompt_caption = "🖼️ Изображение загружено"
             else:
-                prompt_caption = "🖼️ Изображение: загружено"
+                prompt_caption = "🎬 Видео готово"
         
         # Улучшенная отправка видео с множественными fallback методами
         video_sent = False
@@ -4551,9 +4551,8 @@ async def generate_video(update, context, state):
                 video=video_url,
                 caption=f"🎬 **Видео готово!**\n\n"
                         f"{prompt_caption}\n"
-                        f"⚡ Качество: {video_quality}\n"
-                        f"⏱️ Длительность: {video_duration} сек\n\n"
-                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro",
+                        f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
+                        f"✨ Bytedance Seedance 1.0 Pro",
                 supports_streaming=True,
                 has_spoiler=False
             )
@@ -4571,11 +4570,8 @@ async def generate_video(update, context, state):
                     document=video_url,
                     caption=f"🎬 **Видео готово!**\n\n"
                             f"{prompt_caption}\n"
-                            f"⚡ Качество: {video_quality}\n"
-                            f"⏱️ Длительность: {video_duration} сек\n"
-                            f"📁 Формат: MP4 (сохранен оригинал)\n\n"
-                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                            f"💡 Отправлено как документ для сохранения качества"
+                            f"⚡ {video_quality} | ⏱️ {video_duration}с | 📁 MP4\n"
+                            f"✨ Bytedance Seedance 1.0 Pro"
                 )
                 video_sent = True
                 logging.info("Видео успешно отправлено как документ (MP4)")
@@ -4652,10 +4648,8 @@ async def generate_video(update, context, state):
                                     video=video_file,
                                     caption=f"🎬 **Видео готово!**\n\n"
                                             f"{prompt_caption}\n"
-                                            f"⚡ Качество: {video_quality}\n"
-                                            f"⏱️ Длительность: {video_duration} сек\n\n"
-                                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                                            f"💾 Отправлено из локального файла",
+                                            f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
+                                            f"✨ Bytedance Seedance 1.0 Pro",
                                     supports_streaming=True,
                                     has_spoiler=False
                                 )
@@ -4671,10 +4665,8 @@ async def generate_video(update, context, state):
                                         document=video_file,
                                         caption=f"🎬 **Видео готово!**\n\n"
                                                 f"{prompt_caption}\n"
-                                                f"⚡ Качество: {video_quality}\n"
-                                                f"⏱️ Длительность: {video_duration} сек\n"
-                                                f"📁 Формат: MP4 (локальный файл)\n\n"
-                                                f"✨ Создано с помощью Bytedance Seedance 1.0 Pro",
+                                                f"⚡ {video_quality} | ⏱️ {video_duration}с | 📁 MP4\n"
+                                                f"✨ Bytedance Seedance 1.0 Pro",
                                         filename=f"video_{video_quality}_{video_duration}s.mp4"
                                     )
                                 video_sent = True
@@ -4703,9 +4695,8 @@ async def generate_video(update, context, state):
                                 animation=video_url,
                                 caption=f"🎬 **Анимация готова!**\n\n"
                                         f"{prompt_caption}\n"
-                                        f"⚡ Качество: {video_quality}\n"
-                                        f"⏱️ Длительность: {video_duration} сек\n\n"
-                                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
+                                        f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
+                                        f"✨ Bytedance Seedance 1.0 Pro"
                             )
                             video_sent = True
                             logging.info("Анимация успешно отправлена")
