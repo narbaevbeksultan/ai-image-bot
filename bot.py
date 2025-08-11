@@ -4929,11 +4929,11 @@ async def generate_video(update, context, state):
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
         else:
-        keyboard = [
-            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="video_generation")],
+            keyboard = [
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="video_generation")],
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
-            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-        ]
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         
