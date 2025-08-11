@@ -4384,8 +4384,41 @@ async def generate_video(update, context, state):
         # Вызываем Replicate API для генерации видео
         import replicate
         
+        # Логируем параметры API для диагностики
+        logging.info(f"🎬 Отправляем запрос к Replicate API:")
+        logging.info(f"   Модель: bytedance/seedance-1-pro")
+        logging.info(f"   Параметры: {input_data}")
+        logging.info(f"   Тип видео: {video_type}")
+        logging.info(f"   Качество: {video_quality}")
+        logging.info(f"   Длительность: {video_duration}")
+        logging.info(f"   Aspect ratio: {state.get('aspect_ratio', 'не указан')}")
+        
+        # Создаем минимальный набор параметров для сравнения
+        minimal_input = {"prompt": english_prompt}
+        if video_type == 'image_to_video':
+            minimal_input["image"] = state['selected_image_url']
+        
+        logging.info(f"🔍 Минимальные параметры для сравнения: {minimal_input}")
+        
+        # Валидация параметров
+        logging.info(f"🔍 Валидация параметров:")
+        logging.info(f"   duration: {video_duration} (тип: {type(video_duration)})")
+        logging.info(f"   resolution: {video_quality} (тип: {type(video_quality)})")
+        logging.info(f"   aspect_ratio: {state.get('aspect_ratio', 'не указан')} (тип: {type(state.get('aspect_ratio'))})")
+        logging.info(f"   camera_fixed: False (тип: {type(False)})")
+        logging.info(f"   fps: 24 (тип: {type(24)})")
+        
+        # Проверяем, что параметры соответствуют ожидаемым типам
+        if not isinstance(video_duration, int):
+            logging.warning(f"⚠️ duration должен быть int, получен: {type(video_duration)}")
+        if not isinstance(video_quality, str):
+            logging.warning(f"⚠️ resolution должен быть str, получен: {type(video_quality)}")
+        if state.get('aspect_ratio') and not isinstance(state.get('aspect_ratio'), str):
+            logging.warning(f"⚠️ aspect_ratio должен быть str, получен: {type(state.get('aspect_ratio'))}")
+        
         try:
             # Используем модель Bytedance Seedance 1.0 Pro
+            logging.info(f"🚀 Вызываем API с полными параметрами...")
             output = replicate.run(
                 "bytedance/seedance-1-pro",
                 input=input_data
@@ -4397,12 +4430,40 @@ async def generate_video(update, context, state):
                 output = await output
                 
         except Exception as replicate_error:
-            logging.error(f"Ошибка Replicate API: {replicate_error}")
-            raise Exception(f"Ошибка API Replicate: {str(replicate_error)}")
+            logging.error(f"❌ Ошибка Replicate API: {replicate_error}")
+            
+            # Попробуем с минимальными параметрами
+            logging.info(f"🔄 Пробуем с минимальными параметрами...")
+            try:
+                output = replicate.run(
+                    "bytedance/seedance-1-pro",
+                    input=minimal_input
+                )
+                logging.info(f"✅ Минимальные параметры сработали!")
+                
+                # Если output - это асинхронный объект, дожидаемся результата
+                if hasattr(output, '__await__'):
+                    logging.info("Получен асинхронный результат, ожидаем...")
+                    output = await output
+                    
+            except Exception as minimal_error:
+                logging.error(f"❌ Минимальные параметры тоже не сработали: {minimal_error}")
+                raise Exception(f"Ошибка API Replicate: {str(replicate_error)}")
         
         # Обрабатываем результат от Replicate API
         # output может быть списком, строкой или объектом FileOutput
-        logging.info(f"Replicate API вернул результат типа: {type(output)}, значение: {output}")
+        logging.info(f"🎬 Replicate API вернул результат:")
+        logging.info(f"   Тип: {type(output)}")
+        logging.info(f"   Значение: {output}")
+        logging.info(f"   Длина (если список): {len(output) if isinstance(output, list) else 'N/A'}")
+        
+        # Детальная диагностика объекта
+        if hasattr(output, '__dict__'):
+            logging.info(f"   Атрибуты объекта: {output.__dict__}")
+        if hasattr(output, 'url'):
+            logging.info(f"   Метод .url(): {output.url}")
+        if hasattr(output, 'file_path'):
+            logging.info(f"   Метод .file_path: {output.file_path}")
         
         if output:
             # Если output - это список, берем первый элемент
@@ -4436,29 +4497,53 @@ async def generate_video(update, context, state):
         
         # Проверяем расширение файла для определения формата
         file_extension = video_url.split('.')[-1].lower() if '.' in video_url else ''
-        logging.info(f"Расширение файла: {file_extension}")
+        logging.info(f"🎬 Анализ файла:")
+        logging.info(f"   URL: {video_url}")
+        logging.info(f"   Расширение: {file_extension}")
+        logging.info(f"   Содержит 'gif' в URL: {'gif' in video_url.lower()}")
+        logging.info(f"   Содержит 'mp4' в URL: {'mp4' in video_url.lower()}")
         
         # Определяем, является ли файл видео
         video_extensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v']
         is_video_file = file_extension in video_extensions
+        logging.info(f"   Расширение видео: {is_video_file}")
         
         # Дополнительная проверка: если URL содержит 'gif', то это не видео
         if 'gif' in video_url.lower():
             is_video_file = False
-            logging.info("Обнаружен GIF файл, будет отправлен как документ")
+            logging.warning("⚠️ Обнаружен GIF файл в URL! API вернул GIF вместо MP4!")
+        elif 'mp4' in video_url.lower():
+            logging.info("✅ Обнаружен MP4 файл в URL")
+        else:
+            logging.warning(f"⚠️ Неизвестный формат файла: {file_extension}")
         
         # Проверяем доступность файла перед отправкой
         try:
-            logging.info("Проверяем доступность файла...")
+            logging.info("🔍 Проверяем доступность файла...")
             head_response = requests.head(video_url, timeout=30)
             if head_response.status_code != 200:
                 logging.warning(f"Файл недоступен (статус: {head_response.status_code})")
                 # Продолжаем попытку отправки, возможно это временная проблема
             else:
+                # Анализируем заголовки для определения типа файла
+                content_type = head_response.headers.get('content-type', 'unknown')
                 content_length = head_response.headers.get('content-length')
+                
+                logging.info(f"🔍 HTTP заголовки файла:")
+                logging.info(f"   Content-Type: {content_type}")
+                logging.info(f"   Content-Length: {content_length}")
+                
+                # Проверяем, что говорит сервер о типе файла
+                if 'gif' in content_type.lower():
+                    logging.warning("⚠️ Сервер говорит, что это GIF файл!")
+                elif 'mp4' in content_type.lower() or 'video' in content_type.lower():
+                    logging.info("✅ Сервер говорит, что это видео файл")
+                else:
+                    logging.warning(f"⚠️ Неизвестный Content-Type: {content_type}")
+                
                 if content_length:
                     file_size_mb = int(content_length) / (1024 * 1024)
-                    logging.info(f"Размер файла: {file_size_mb:.1f} МБ")
+                    logging.info(f"   Размер файла: {file_size_mb:.1f} МБ")
                     
                     # Предупреждаем о больших файлах
                     if file_size_mb > 50:
@@ -4545,6 +4630,13 @@ async def generate_video(update, context, state):
         anim_error = None
         
         # Метод 1: Пробуем отправить как видео с поддержкой стриминга
+        logging.info(f"📤 Отправляем видео в Telegram:")
+        logging.info(f"   URL: {video_url}")
+        logging.info(f"   Формат файла: {file_extension}")
+        logging.info(f"   Content-Type: {content_type if 'content_type' in locals() else 'не определен'}")
+        logging.info(f"   Размер: {file_size_mb if 'file_size_mb' in locals() else 'не определен'} МБ")
+        logging.info(f"   Метод: send_video")
+        
         try:
             await context.bot.send_video(
                 chat_id=chat_id,
@@ -4557,11 +4649,13 @@ async def generate_video(update, context, state):
                 has_spoiler=False
             )
             video_sent = True
-            logging.info("Видео успешно отправлено как видео с поддержкой стриминга")
+            logging.info("✅ Видео успешно отправлено как видео с поддержкой стриминга")
             
         except Exception as e:
             video_error = e
-            logging.error(f"Не удалось отправить как видео: {video_error}")
+            logging.error(f"❌ Не удалось отправить как видео: {video_error}")
+            logging.error(f"   Тип ошибки: {type(video_error).__name__}")
+            logging.error(f"   Детали ошибки: {str(video_error)}")
             
             # Метод 2: Пробуем отправить как документ для сохранения качества
             try:
@@ -4982,6 +5076,26 @@ async def generate_video(update, context, state):
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
+        
+        # Итоговое логирование результата
+        logging.info(f"🎬 ИТОГОВЫЙ РЕЗУЛЬТАТ генерации видео:")
+        logging.info(f"   Тип видео: {video_type}")
+        logging.info(f"   Качество: {video_quality}")
+        logging.info(f"   Длительность: {video_duration}")
+        logging.info(f"   Aspect ratio: {state.get('aspect_ratio', 'не указан')}")
+        logging.info(f"   URL файла: {video_url if 'video_url' in locals() else 'не определен'}")
+        logging.info(f"   Формат файла: {file_extension if 'file_extension' in locals() else 'не определен'}")
+        logging.info(f"   Видео отправлено: {video_sent if 'video_sent' in locals() else 'не определен'}")
+        if 'video_sent' in locals() and not video_sent:
+            logging.error(f"   Ошибки отправки:")
+            if 'video_error' in locals() and video_error:
+                logging.error(f"     send_video: {video_error}")
+            if 'doc_error' in locals() and doc_error:
+                logging.error(f"     send_document: {doc_error}")
+            if 'local_error' in locals() and local_error:
+                logging.error(f"     локальная отправка: {local_error}")
+            if 'anim_error' in locals() and anim_error:
+                logging.error(f"     send_animation: {anim_error}")
         
         # Сбрасываем состояние
         state['step'] = None
