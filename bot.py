@@ -4317,6 +4317,35 @@ async def generate_video(update, context, state):
         except Exception as test_error:
             logging.warning(f"Не удалось протестировать файл: {test_error}")
             # Продолжаем попытку отправки
+        
+        # Дополнительная проверка: проверяем, не заблокирован ли бот пользователем
+        try:
+            # Пробуем отправить простое сообщение для проверки доступности
+            test_msg = await context.bot.send_message(
+                chat_id=chat_id,
+                text="🔍 Проверяю доступность чата...",
+                disable_notification=True
+            )
+            # Если сообщение отправилось, удаляем его
+            await context.bot.delete_message(chat_id=chat_id, message_id=test_msg.message_id)
+            logging.info("Чат доступен для отправки сообщений")
+        except Exception as chat_error:
+            logging.error(f"Проблема с доступом к чату: {chat_error}")
+            # Отправляем сообщение с инструкциями
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"⚠️ **Проблема с доступом к чату**\n\n"
+                     f"Возможно, бот заблокирован или чат недоступен\n\n"
+                     f"🔗 **Ссылка на видео:** {video_url}\n\n"
+                     f"💡 **Решения:**\n"
+                     f"• Разблокируйте бота\n"
+                     f"• Скопируйте ссылку в браузер\n"
+                     f"• Создайте новый чат с ботом",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔗 Скачать видео", url=video_url)
+                ]])
+            )
+            return  # Выходим из функции
             
         # Отправляем видео пользователю
         if video_type == 'text_to_video' and video_prompt:
@@ -4327,6 +4356,10 @@ async def generate_video(update, context, state):
         
         # Улучшенная отправка видео с множественными fallback методами
         video_sent = False
+        video_error = None
+        doc_error = None
+        local_error = None
+        anim_error = None
         
         # Метод 1: Пробуем отправить как видео с поддержкой стриминга
         try:
@@ -4344,7 +4377,8 @@ async def generate_video(update, context, state):
             video_sent = True
             logging.info("Видео успешно отправлено как видео с поддержкой стриминга")
             
-        except Exception as video_error:
+        except Exception as e:
+            video_error = e
             logging.error(f"Не удалось отправить как видео: {video_error}")
             
             # Метод 2: Пробуем отправить как документ для сохранения качества
@@ -4363,7 +4397,8 @@ async def generate_video(update, context, state):
                 video_sent = True
                 logging.info("Видео успешно отправлено как документ (MP4)")
                 
-            except Exception as doc_error:
+            except Exception as e:
+                doc_error = e
                 logging.error(f"Не удалось отправить как документ: {doc_error}")
                 
                 # Метод 3: Пробуем загрузить файл локально и отправить
@@ -4422,22 +4457,48 @@ async def generate_video(update, context, state):
                             temp_file_path = temp_file.name
                             logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
                         
+                        # Проверяем, что файл действительно создался и имеет размер
+                        if not os.path.exists(temp_file_path) or os.path.getsize(temp_file_path) == 0:
+                            raise Exception("Временный файл не создался или пустой")
+                        
                         # Отправляем локальный файл
-                        with open(temp_file_path, 'rb') as video_file:
-                            await context.bot.send_video(
-                                chat_id=chat_id,
-                                video=video_file,
-                                caption=f"🎬 **Видео готово!**\n\n"
-                                        f"{prompt_caption}\n"
-                                        f"⚡ Качество: {video_quality}\n"
-                                        f"⏱️ Длительность: {video_duration} сек\n\n"
-                                        f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
-                                        f"💾 Отправлено из локального файла",
-                                supports_streaming=True,
-                                has_spoiler=False
-                            )
-                        video_sent = True
-                        logging.info("Видео успешно отправлено из локального файла")
+                        try:
+                            with open(temp_file_path, 'rb') as video_file:
+                                await context.bot.send_video(
+                                    chat_id=chat_id,
+                                    video=video_file,
+                                    caption=f"🎬 **Видео готово!**\n\n"
+                                            f"{prompt_caption}\n"
+                                            f"⚡ Качество: {video_quality}\n"
+                                            f"⏱️ Длительность: {video_duration} сек\n\n"
+                                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                                            f"💾 Отправлено из локального файла",
+                                    supports_streaming=True,
+                                    has_spoiler=False
+                                )
+                            video_sent = True
+                            logging.info("Видео успешно отправлено из локального файла")
+                        except Exception as send_error:
+                            logging.error(f"Ошибка при отправке локального файла: {send_error}")
+                            # Попробуем отправить как документ
+                            try:
+                                with open(temp_file_path, 'rb') as video_file:
+                                    await context.bot.send_document(
+                                        chat_id=chat_id,
+                                        document=video_file,
+                                        caption=f"🎬 **Видео готово!**\n\n"
+                                                f"{prompt_caption}\n"
+                                                f"⚡ Качество: {video_quality}\n"
+                                                f"⏱️ Длительность: {video_duration} сек\n"
+                                                f"📁 Формат: MP4 (локальный файл)\n\n"
+                                                f"✨ Создано с помощью Bytedance Seedance 1.0 Pro",
+                                        filename=f"video_{video_quality}_{video_duration}s.mp4"
+                                    )
+                                video_sent = True
+                                logging.info("Видео успешно отправлено как документ из локального файла")
+                            except Exception as doc_send_error:
+                                logging.error(f"Ошибка при отправке локального файла как документа: {doc_send_error}")
+                                raise doc_send_error
                         
                         # Удаляем временный файл
                         try:
@@ -4447,7 +4508,8 @@ async def generate_video(update, context, state):
                     else:
                         raise Exception(f"Не удалось загрузить файл (статус: {response.status_code})")
                         
-                except Exception as local_error:
+                except Exception as e:
+                    local_error = e
                     logging.error(f"Не удалось отправить из локального файла: {local_error}")
                     
                     # Метод 4: Пробуем отправить как анимацию (если это GIF)
@@ -4464,11 +4526,23 @@ async def generate_video(update, context, state):
                             )
                             video_sent = True
                             logging.info("Анимация успешно отправлена")
-                        except Exception as anim_error:
+                        except Exception as e:
+                            anim_error = e
                             logging.error(f"Не удалось отправить как анимацию: {anim_error}")
         
         # Метод 5: В крайнем случае отправляем сообщение с ссылкой и инструкциями
         if not video_sent:
+            # Логируем все ошибки для диагностики
+            logging.error("Все методы отправки видео не удались:")
+            if video_error:
+                logging.error(f"Ошибка send_video: {video_error}")
+            if doc_error:
+                logging.error(f"Ошибка send_document: {doc_error}")
+            if local_error:
+                logging.error(f"Ошибка локальной отправки: {local_error}")
+            if anim_error:
+                logging.error(f"Ошибка send_animation: {anim_error}")
+            
             # Создаем красивую клавиатуру с кнопкой для скачивания
             keyboard = [
                 [InlineKeyboardButton("🔗 Скачать видео", url=video_url)],
@@ -4479,19 +4553,33 @@ async def generate_video(update, context, state):
             
             # Определяем возможную причину ошибки на основе всех попыток
             error_reasons = []
-            if 'video_error' in locals():
-                if "too large" in str(video_error).lower() or "file size" in str(video_error).lower():
-                    error_reasons.append("Файл слишком большой для Telegram")
-                if "timeout" in str(video_error).lower():
-                    error_reasons.append("Превышено время ожидания")
-                if "network" in str(video_error).lower() or "connection" in str(video_error).lower():
-                    error_reasons.append("Проблемы с сетью")
-                if "format" in str(video_error).lower() or "unsupported" in str(video_error).lower():
-                    error_reasons.append("Неподдерживаемый формат файла")
-                if "bot was blocked" in str(video_error).lower() or "bot was stopped" in str(video_error).lower():
-                    error_reasons.append("Бот заблокирован пользователем")
-                if "file" in str(video_error).lower() and "not found" in str(video_error).lower():
-                    error_reasons.append("Файл не найден на сервере")
+            
+            # Анализируем все ошибки
+            all_errors = [video_error, doc_error, local_error, anim_error]
+            for error in all_errors:
+                if error:
+                    error_str = str(error).lower()
+                    if "too large" in error_str or "file size" in error_str or "large" in error_str:
+                        error_reasons.append("Файл слишком большой для Telegram")
+                    if "timeout" in error_str:
+                        error_reasons.append("Превышено время ожидания")
+                    if "network" in error_str or "connection" in error_str:
+                        error_reasons.append("Проблемы с сетью")
+                    if "format" in error_str or "unsupported" in error_str:
+                        error_reasons.append("Неподдерживаемый формат файла")
+                    if "bot was blocked" in error_str or "bot was stopped" in error_str:
+                        error_reasons.append("Бот заблокирован пользователем")
+                    if "file" in error_str and "not found" in error_str:
+                        error_reasons.append("Файл не найден на сервере")
+                    if "bad request" in error_str:
+                        error_reasons.append("Некорректный запрос к Telegram")
+                    if "forbidden" in error_str:
+                        error_reasons.append("Доступ запрещен")
+                    if "internal server error" in error_str:
+                        error_reasons.append("Внутренняя ошибка сервера")
+            
+            # Убираем дубликаты
+            error_reasons = list(set(error_reasons))
             
             if not error_reasons:
                 error_reasons.append("Техническая ошибка при отправке")
@@ -4510,30 +4598,48 @@ async def generate_video(update, context, state):
             except:
                 pass
             
+            # Создаем подробную диагностику
+            diagnostic_info = f"🎬 **Видео готово!**\n\n"
+            diagnostic_info += f"{prompt_caption}\n"
+            diagnostic_info += f"⚡ Качество: {video_quality}\n"
+            diagnostic_info += f"⏱️ Длительность: {video_duration} сек{size_info}\n\n"
+            diagnostic_info += f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n\n"
+            diagnostic_info += f"⚠️ **Не удалось отправить файл напрямую**\n\n"
+            diagnostic_info += f"🔍 **Причина:** {error_reason}\n\n"
+            
+            # Добавляем детальную информацию об ошибках
+            if video_error:
+                diagnostic_info += f"📹 **Ошибка send_video:** {str(video_error)[:100]}...\n"
+            if doc_error:
+                diagnostic_info += f"📄 **Ошибка send_document:** {str(doc_error)[:100]}...\n"
+            if local_error:
+                diagnostic_info += f"💾 **Ошибка локальной отправки:** {str(local_error)[:100]}...\n"
+            if anim_error:
+                diagnostic_info += f"🎭 **Ошибка send_animation:** {str(anim_error)[:100]}...\n"
+            
+            diagnostic_info += f"\n💡 **Решения:**\n"
+            diagnostic_info += f"• Нажмите кнопку '🔗 Скачать видео' ниже\n"
+            diagnostic_info += f"• Или скопируйте ссылку: `{video_url}`\n"
+            diagnostic_info += f"• Откройте ссылку в браузере для просмотра\n\n"
+            diagnostic_info += f"📱 **Альтернативные способы:**\n"
+            diagnostic_info += f"• Скопируйте ссылку в браузер\n"
+            diagnostic_info += f"• Используйте приложение для скачивания\n"
+            diagnostic_info += f"• Попробуйте создать видео меньшего размера\n\n"
+            diagnostic_info += f"🔄 **Попробуйте снова:**\n"
+            diagnostic_info += f"• Выберите меньшее качество (480p вместо 1080p)\n"
+            diagnostic_info += f"• Уменьшите длительность видео\n"
+            diagnostic_info += f"• Создайте новое видео\n\n"
+            diagnostic_info += f"💬 **Если проблема повторяется:**\n"
+            diagnostic_info += f"• Попробуйте позже (возможны временные проблемы)\n"
+            diagnostic_info += f"• Обратитесь в поддержку с описанием ошибки\n\n"
+            diagnostic_info += f"🔧 **Техническая информация:**\n"
+            diagnostic_info += f"• URL: {video_url}\n"
+            diagnostic_info += f"• Расширение: {file_extension}\n"
+            diagnostic_info += f"• Тип: {video_type}"
+            
             await context.bot.send_message(
-                chat_id=user_id,
-                text=f"🎬 **Видео готово!**\n\n"
-                     f"{prompt_caption}\n"
-                     f"⚡ Качество: {video_quality}\n"
-                     f"⏱️ Длительность: {video_duration} сек{size_info}\n\n"
-                     f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n\n"
-                     f"⚠️ **Не удалось отправить файл напрямую**\n\n"
-                     f"🔍 **Причина:** {error_reason}\n\n"
-                     f"💡 **Решения:**\n"
-                     f"• Нажмите кнопку '🔗 Скачать видео' ниже\n"
-                     f"• Или скопируйте ссылку: `{video_url}`\n"
-                     f"• Откройте ссылку в браузере для просмотра\n\n"
-                     f"📱 **Альтернативные способы:**\n"
-                     f"• Скопируйте ссылку в браузер\n"
-                     f"• Используйте приложение для скачивания\n"
-                     f"• Попробуйте создать видео меньшего размера\n\n"
-                     f"🔄 **Попробуйте снова:**\n"
-                     f"• Выберите меньшее качество (480p вместо 1080p)\n"
-                     f"• Уменьшите длительность видео\n"
-                     f"• Создайте новое видео\n\n"
-                     f"💬 **Если проблема повторяется:**\n"
-                     f"• Попробуйте позже (возможны временные проблемы)\n"
-                     f"• Обратитесь в поддержку с описанием ошибки",
+                chat_id=chat_id,
+                text=diagnostic_info,
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
