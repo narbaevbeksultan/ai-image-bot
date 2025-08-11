@@ -4157,18 +4157,59 @@ async def generate_video(update, context, state):
         # Вызываем Replicate API для генерации видео
         import replicate
         
-        # Используем модель Bytedance Seedance 1.0 Pro
-        output = replicate.run(
-            "bytedance/seedance-1-pro",
-            input=input_data
-        )
-        
-        if output and len(output) > 0:
-            video_url = output[0]
+        try:
+            # Используем модель Bytedance Seedance 1.0 Pro
+            output = replicate.run(
+                "bytedance/seedance-1-pro",
+                input=input_data
+            )
             
-            # Отправляем видео пользователю
-            prompt_caption = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
-            await context.bot.send_video(
+            # Если output - это асинхронный объект, дожидаемся результата
+            if hasattr(output, '__await__'):
+                logging.info("Получен асинхронный результат, ожидаем...")
+                output = await output
+                
+        except Exception as replicate_error:
+            logging.error(f"Ошибка Replicate API: {replicate_error}")
+            raise Exception(f"Ошибка API Replicate: {str(replicate_error)}")
+        
+        # Обрабатываем результат от Replicate API
+        # output может быть списком, строкой или объектом FileOutput
+        logging.info(f"Replicate API вернул результат типа: {type(output)}, значение: {output}")
+        
+        if output:
+            # Если output - это список, берем первый элемент
+            if isinstance(output, list) and len(output) > 0:
+                video_url = output[0]
+                logging.info(f"Получен URL из списка: {video_url}")
+            # Если output - это строка (прямой URL)
+            elif isinstance(output, str):
+                video_url = output
+                logging.info(f"Получен URL строкой: {video_url}")
+            # Если output - это объект FileOutput
+            elif hasattr(output, 'url'):
+                video_url = output.url
+                logging.info(f"Получен URL из объекта.url: {video_url}")
+            # Если output - это объект с атрибутом file_path
+            elif hasattr(output, 'file_path'):
+                video_url = output.file_path
+                logging.info(f"Получен URL из объекта.file_path: {video_url}")
+            else:
+                # Пытаемся преобразовать в строку
+                video_url = str(output)
+                logging.info(f"Преобразован в строку: {video_url}")
+        else:
+            raise Exception("API не вернул результат")
+        
+        # Проверяем, что получили валидный URL
+        if not video_url or not isinstance(video_url, str):
+            raise Exception(f"Получен невалидный URL: {video_url}")
+        
+        logging.info(f"Финальный URL для видео: {video_url}")
+            
+        # Отправляем видео пользователю
+        prompt_caption = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
+        await context.bot.send_video(
                 chat_id=user_id,
                 video=video_url,
                 caption=f"🎬 **Видео готово!**\n\n"
@@ -4199,9 +4240,6 @@ async def generate_video(update, context, state):
             state.pop('video_quality', None)
             state.pop('video_duration', None)
             state.pop('video_prompt', None)
-            
-        else:
-            raise Exception("API не вернул результат")
             
     except Exception as e:
         logging.error(f"Ошибка при генерации видео: {e}")
