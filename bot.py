@@ -4206,18 +4206,92 @@ async def generate_video(update, context, state):
             raise Exception(f"Получен невалидный URL: {video_url}")
         
         logging.info(f"Финальный URL для видео: {video_url}")
+        
+        # Проверяем расширение файла для определения формата
+        file_extension = video_url.split('.')[-1].lower() if '.' in video_url else ''
+        logging.info(f"Расширение файла: {file_extension}")
+        
+        # Определяем, является ли файл видео
+        video_extensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v']
+        is_video_file = file_extension in video_extensions
+        
+        # Дополнительная проверка: если URL содержит 'gif', то это не видео
+        if 'gif' in video_url.lower():
+            is_video_file = False
+            logging.info("Обнаружен GIF файл, будет отправлен как документ")
             
         # Отправляем видео пользователю
         prompt_caption = f"📝 Промпт: {video_prompt}" if video_prompt else "🖼️ Изображение: загружено"
-        await context.bot.send_video(
-            chat_id=user_id,
-            video=video_url,
-            caption=f"🎬 **Видео готово!**\n\n"
-                    f"{prompt_caption}\n"
-                    f"⚡ Качество: {video_quality}\n"
-                    f"⏱️ Длительность: {video_duration} сек\n\n"
-                    f"✨ Создано с помощью Bytedance Seedance 1.0 Pro"
-        )
+        
+        # Пытаемся отправить как видео с принудительными параметрами
+        video_sent = False
+        
+        # Метод 1: Прямая отправка как видео
+        if is_video_file:
+            try:
+                await context.bot.send_video(
+                    chat_id=user_id,
+                    video=video_url,
+                    caption=f"🎬 **Видео готово!**\n\n"
+                            f"{prompt_caption}\n"
+                            f"⚡ Качество: {video_quality}\n"
+                            f"⏱️ Длительность: {video_duration} сек\n\n"
+                            f"✨ Создано с помощью Bytedance Seedance 1.0 Pro",
+                    supports_streaming=True,
+                    has_spoiler=False
+                )
+                video_sent = True
+                logging.info("Видео успешно отправлено как видео")
+            except Exception as video_error:
+                logging.warning(f"Не удалось отправить как видео: {video_error}")
+        
+        # Метод 2: Если не удалось отправить как видео, пробуем как документ
+        if not video_sent:
+            try:
+                # Если это GIF, пробуем отправить как анимацию
+                if 'gif' in video_url.lower():
+                    await context.bot.send_animation(
+                        chat_id=user_id,
+                        animation=video_url,
+                        caption=f"🎬 **Анимация готова!**\n\n"
+                                f"{prompt_caption}\n"
+                                f"⚡ Качество: {video_quality}\n"
+                                f"⏱️ Длительность: {video_duration} сек\n\n"
+                                f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                                f"📱 Отправлено как анимация"
+                    )
+                    video_sent = True
+                    logging.info("GIF отправлен как анимация")
+                else:
+                    # Для других форматов отправляем как документ
+                    await context.bot.send_document(
+                        chat_id=user_id,
+                        document=video_url,
+                        caption=f"🎬 **Видео готово!**\n\n"
+                                f"{prompt_caption}\n"
+                                f"⚡ Качество: {video_quality}\n"
+                                f"⏱️ Длительность: {video_duration} сек\n\n"
+                                f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n"
+                                f"📱 Отправлено как документ для сохранения качества"
+                    )
+                    video_sent = True
+                    logging.info("Видео отправлено как документ")
+            except Exception as doc_error:
+                logging.error(f"Не удалось отправить как документ/анимацию: {doc_error}")
+        
+        # Метод 3: В крайнем случае отправляем сообщение с ссылкой
+        if not video_sent:
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=f"🎬 **Видео готово!**\n\n"
+                     f"{prompt_caption}\n"
+                     f"⚡ Качество: {video_quality}\n"
+                     f"⏱️ Длительность: {video_duration} сек\n\n"
+                     f"✨ Создано с помощью Bytedance Seedance 1.0 Pro\n\n"
+                     f"🔗 Ссылка на видео: {video_url}\n\n"
+                     f"⚠️ Не удалось отправить файл напрямую. Используйте ссылку для скачивания."
+            )
+            logging.info("Отправлена ссылка на видео")
         
         # Показываем кнопки для дальнейших действий
         keyboard = [
