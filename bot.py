@@ -4201,7 +4201,7 @@ async def generate_video(update, context, state):
                 logging.error(f"video_prompt не задан для text-to-video. State: {state}")
                 raise Exception("Промпт для видео не задан. Пожалуйста, попробуйте еще раз.")
             
-            # Переводим русский промпт на английский для лучшего качества видео
+            # Переводим русский промпт на английский (минимальный перевод без добавления деталей)
             english_prompt = video_prompt
             try:
                 import openai
@@ -4209,11 +4209,11 @@ async def generate_video(update, context, state):
                 translation_response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
-                        {"role": "system", "content": "You are an expert at creating video generation prompts. Translate the user's request from Russian to English and enhance it for video generation. Make it detailed, specific, and optimized for AI video models. Keep the exact meaning but make it more descriptive for better video results. Focus on visual elements, actions, and scenes."},
-                        {"role": "user", "content": f"Translate and enhance this video prompt: {video_prompt}"}
+                        {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
+                        {"role": "user", "content": f"Translate this video prompt: {video_prompt}"}
                     ],
-                    max_tokens=300,
-                    temperature=0.3
+                    max_tokens=150,
+                    temperature=0.1
                 )
                 english_prompt = translation_response.choices[0].message.content.strip()
                 
@@ -4249,7 +4249,7 @@ async def generate_video(update, context, state):
                 logging.error(f"video_prompt не задан для image-to-video. State: {state}")
                 raise Exception("Промпт для видео не задан. Пожалуйста, опишите, какое видео вы хотите получить из изображения.")
             
-            # Переводим русский промпт на английский для лучшего качества видео
+            # Переводим русский промпт на английский (минимальный перевод без добавления деталей)
             english_prompt = video_prompt
             try:
                 import openai
@@ -4257,11 +4257,11 @@ async def generate_video(update, context, state):
                 translation_response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
-                        {"role": "system", "content": "You are an expert at creating video generation prompts. Translate the user's request from Russian to English and enhance it for video generation. Make it detailed, specific, and optimized for AI video models. Keep the exact meaning but make it more descriptive for better video results. Focus on visual elements, actions, and scenes."},
-                        {"role": "user", "content": f"Translate and enhance this video prompt: {video_prompt}"}
+                        {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
+                        {"role": "user", "content": f"Translate this video prompt: {video_prompt}"}
                     ],
-                    max_tokens=300,
-                    temperature=0.3
+                    max_tokens=150,
+                    temperature=0.1
                 )
                 english_prompt = translation_response.choices[0].message.content.strip()
                 
