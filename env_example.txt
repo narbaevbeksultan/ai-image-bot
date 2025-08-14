@@ -1,0 +1,22 @@
+# Telegram Bot Token
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# OpenAI API Key
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Replicate API Token
+REPLICATE_API_TOKEN=your_replicate_api_token_here
+
+# Betatransfer API Keys (добавить после прохождения СБ)
+BETATRANSFER_API_KEY=your_betatransfer_api_key_here
+BETATRANSFER_SECRET_KEY=your_betatransfer_secret_key_here
+BETATRANSFER_TEST_MODE=true
+
+# Admin User IDs (через запятую)
+ADMIN_IDS=123456789,987654321
+
+# Webhook URL для Betatransfer (ваш домен)
+WEBHOOK_BASE_URL=https://your-domain.com
+
+# Примечание: Система работает только с кредитами (pay-per-use модель)
+# Планы подписок не поддерживаются

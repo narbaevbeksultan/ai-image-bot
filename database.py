@@ -72,6 +72,62 @@ class AnalyticsDB:
                     )
                 ''')
                 
+                # НОВЫЕ ТАБЛИЦЫ ДЛЯ ПЛАТЕЖНОЙ СИСТЕМЫ
+                
+                # Таблица платежей
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS payments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        amount DECIMAL(10,2) NOT NULL,
+                        currency TEXT DEFAULT 'USD',
+                        status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'completed', 'failed'
+                        betatransfer_id TEXT,
+                        payment_method TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        completed_at TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id)
+                    )
+                ''')
+                
+                # Таблица лимитов пользователей (упрощенная)
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS user_limits (
+                        user_id INTEGER PRIMARY KEY,
+                        free_generations_used INTEGER DEFAULT 0,
+                        total_free_generations INTEGER DEFAULT 3,
+                        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id)
+                    )
+                ''')
+                
+                # Таблица кредитов (для pay-per-use модели)
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS user_credits (
+                        user_id INTEGER PRIMARY KEY,
+                        credits_balance INTEGER DEFAULT 0,
+                        total_purchased INTEGER DEFAULT 0,
+                        total_used INTEGER DEFAULT 0,
+                        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id)
+                    )
+                ''')
+                
+                # Таблица транзакций кредитов
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS credit_transactions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        transaction_type TEXT NOT NULL, -- 'purchase', 'usage', 'refund'
+                        amount INTEGER NOT NULL,
+                        description TEXT,
+                        payment_id INTEGER,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id),
+                        FOREIGN KEY (payment_id) REFERENCES payments (id)
+                    )
+                ''')
+                
                 conn.commit()
                 logging.info("База данных успешно инициализирована")
                 
@@ -292,6 +348,313 @@ class AnalyticsDB:
         except Exception as e:
             logging.error(f"Ошибка получения ежедневной статистики: {e}")
             return []
+
+    # НОВЫЕ МЕТОДЫ ДЛЯ ПЛАТЕЖНОЙ СИСТЕМЫ
+    
+    def get_user_subscription(self, user_id: int) -> Optional[Dict]:
+        """Получение активной подписки пользователя"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT id, plan_type, status, start_date, end_date, 
+                           monthly_generations, used_generations
+                    FROM subscriptions 
+                    WHERE user_id = ? AND status = 'active' AND end_date > CURRENT_TIMESTAMP
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                ''', (user_id,))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        'id': result[0],
+                        'plan_type': result[1],
+                        'status': result[2],
+                        'start_date': result[3],
+                        'end_date': result[4],
+                        'monthly_generations': result[5],
+                        'used_generations': result[6]
+                    }
+                return None
+        except Exception as e:
+            logging.error(f"Ошибка получения подписки пользователя: {e}")
+            return None
+    
+    def get_user_limits(self, user_id: int) -> Dict:
+        """Получение лимитов пользователя"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT free_generations_used, total_free_generations, last_updated
+                    FROM user_limits 
+                    WHERE user_id = ?
+                ''', (user_id,))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        'free_generations_used': result[0],
+                        'total_free_generations': result[1],
+                        'last_updated': result[2]
+                    }
+                else:
+                    # Создаем запись по умолчанию
+                    self.init_user_limits(user_id)
+                    return {
+                        'free_generations_used': 0,
+                        'total_free_generations': 3,
+                        'last_updated': datetime.now().isoformat()
+                    }
+        except Exception as e:
+            logging.error(f"Ошибка получения лимитов пользователя: {e}")
+            return {}
+    
+    def init_user_limits(self, user_id: int):
+        """Инициализация лимитов пользователя"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR IGNORE INTO user_limits 
+                    (user_id, free_generations_used, total_free_generations, last_updated)
+                    VALUES (?, 0, 3, CURRENT_TIMESTAMP)
+                ''', (user_id,))
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Ошибка инициализации лимитов пользователя: {e}")
+    
+    def check_generation_limit(self, user_id: int) -> bool:
+        """Проверка лимита генераций для пользователя"""
+        try:
+            limits = self.get_user_limits(user_id)
+            if not limits:
+                return False
+            
+            # Проверяем, есть ли еще бесплатные генерации
+            if limits['free_generations_used'] < limits['total_free_generations']:
+                return True
+            
+            # Проверяем, есть ли кредиты
+            credits = self.get_user_credits(user_id)
+            if credits['balance'] > 0:
+                return True
+            
+            # Нет ни бесплатных генераций, ни кредитов
+            return False
+            
+        except Exception as e:
+            logging.error(f"Ошибка проверки лимита генераций: {e}")
+            return False
+    
+    def increment_generation_count(self, user_id: int):
+        """Увеличение счетчика генераций пользователя"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Сначала пытаемся использовать бесплатные генерации
+                cursor.execute('''
+                    UPDATE user_limits 
+                    SET free_generations_used = free_generations_used + 1
+                    WHERE user_id = ? AND free_generations_used < total_free_generations
+                ''', (user_id,))
+                
+                if cursor.rowcount == 0:
+                    # Бесплатные генерации закончились, используем кредиты
+                    cursor.execute('''
+                        UPDATE user_credits 
+                        SET credits_balance = credits_balance - 1, total_used = total_used + 1
+                        WHERE user_id = ? AND credits_balance > 0
+                    ''', (user_id,))
+                    
+                    if cursor.rowcount > 0:
+                        # Логируем использование кредита
+                        cursor.execute('''
+                            INSERT INTO credit_transactions 
+                            (user_id, transaction_type, amount, description)
+                            VALUES (?, 'usage', 1, 'Генерация изображения')
+                        ''', (user_id,))
+                
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Ошибка увеличения счетчика генераций: {e}")
+    
+    def get_free_generations_left(self, user_id: int) -> int:
+        """Получение количества оставшихся бесплатных генераций"""
+        try:
+            limits = self.get_user_limits(user_id)
+            if not limits:
+                return 0
+            
+            return max(0, limits['total_free_generations'] - limits['free_generations_used'])
+        except Exception as e:
+            logging.error(f"Ошибка получения бесплатных генераций: {e}")
+            return 0
+    
+    def reset_daily_limit(self, user_id: int):
+        """Сброс дневного лимита"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    UPDATE user_limits 
+                    SET used_daily = 0, last_daily_reset = CURRENT_DATE
+                    WHERE user_id = ?
+                ''', (user_id,))
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Ошибка сброса дневного лимита: {e}")
+    
+    def reset_monthly_limit(self, user_id: int):
+        """Сброс месячного лимита"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    UPDATE user_limits 
+                    SET used_monthly = 0, last_monthly_reset = CURRENT_DATE
+                    WHERE user_id = ?
+                ''', (user_id,))
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Ошибка сброса месячного лимита: {e}")
+    
+    def create_subscription(self, user_id: int, plan_type: str, monthly_generations: int, 
+                           payment_id: str = None) -> bool:
+        """Создание новой подписки"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Деактивируем старые подписки
+                cursor.execute('''
+                    UPDATE subscriptions 
+                    SET status = 'expired' 
+                    WHERE user_id = ? AND status = 'active'
+                ''', (user_id,))
+                
+                # Создаем новую подписку
+                end_date = datetime.now() + timedelta(days=30)
+                cursor.execute('''
+                    INSERT INTO subscriptions 
+                    (user_id, plan_type, status, start_date, end_date, monthly_generations, payment_id)
+                    VALUES (?, ?, 'active', CURRENT_TIMESTAMP, ?, ?, ?)
+                ''', (user_id, plan_type, end_date, monthly_generations, payment_id))
+                
+                # Обновляем лимиты пользователя
+                cursor.execute('''
+                    UPDATE user_limits 
+                    SET monthly_generations = ?, is_premium = TRUE
+                    WHERE user_id = ?
+                ''', (user_id,))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logging.error(f"Ошибка создания подписки: {e}")
+            return False
+    
+    def get_user_credits(self, user_id: int) -> Dict:
+        """Получение баланса кредитов пользователя"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT credits_balance, total_purchased, total_used
+                    FROM user_credits 
+                    WHERE user_id = ?
+                ''', (user_id,))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        'balance': result[0],
+                        'total_purchased': result[1],
+                        'total_used': result[2]
+                    }
+                else:
+                    # Создаем запись по умолчанию
+                    self.init_user_credits(user_id)
+                    return {'balance': 0, 'total_purchased': 0, 'total_used': 0}
+        except Exception as e:
+            logging.error(f"Ошибка получения кредитов пользователя: {e}")
+            return {'balance': 0, 'total_purchased': 0, 'total_used': 0}
+    
+    def init_user_credits(self, user_id: int):
+        """Инициализация кредитов пользователя"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR IGNORE INTO user_credits 
+                    (user_id, credits_balance, total_purchased, total_used)
+                    VALUES (?, 0, 0, 0)
+                ''', (user_id,))
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Ошибка инициализации кредитов пользователя: {e}")
+    
+    def add_credits(self, user_id: int, amount: int, payment_id: int = None, 
+                    description: str = "Покупка кредитов"):
+        """Добавление кредитов пользователю"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Добавляем кредиты
+                cursor.execute('''
+                    UPDATE user_credits 
+                    SET credits_balance = credits_balance + ?, total_purchased = total_purchased + ?
+                    WHERE user_id = ?
+                ''', (amount, amount, user_id))
+                
+                # Логируем транзакцию
+                cursor.execute('''
+                    INSERT INTO credit_transactions 
+                    (user_id, transaction_type, amount, description, payment_id)
+                    VALUES (?, 'purchase', ?, ?, ?)
+                ''', (user_id, amount, description, payment_id))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logging.error(f"Ошибка добавления кредитов: {e}")
+            return False
+    
+    def use_credits(self, user_id: int, amount: int, description: str = "Использование кредитов"):
+        """Использование кредитов пользователем"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Проверяем баланс
+                cursor.execute('SELECT credits_balance FROM user_credits WHERE user_id = ?', (user_id,))
+                result = cursor.fetchone()
+                
+                if not result or result[0] < amount:
+                    return False
+                
+                # Списываем кредиты
+                cursor.execute('''
+                    UPDATE user_credits 
+                    SET credits_balance = credits_balance - ?, total_used = total_used + ?
+                    WHERE user_id = ?
+                ''', (amount, amount, user_id))
+                
+                # Логируем транзакцию
+                cursor.execute('''
+                    INSERT INTO credit_transactions 
+                    (user_id, transaction_type, amount, description)
+                    VALUES (?, 'usage', ?, ?)
+                ''', (user_id, amount, description))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logging.error(f"Ошибка использования кредитов: {e}")
+            return False
 
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
