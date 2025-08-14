@@ -271,3 +271,5 @@ class BetatransferAPI:
 
 # Глобальный экземпляр API
 betatransfer_api = BetatransferAPI()
+
+
