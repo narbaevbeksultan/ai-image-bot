@@ -1744,6 +1744,56 @@ def get_format_tips(format_type):
 ✅ Хорошо: "современный объект с деталями, красивое освещение, уютная атмосфера"
 ❌ Плохо: "красиво" """
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Логируем нового пользователя
+    user = update.effective_user
+    analytics_db.add_user(
+        user_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    analytics_db.update_user_activity(user.id)
+    analytics_db.log_action(user.id, "start_command")
+    
+    welcome_text = """
+🎨 Добро пожаловать в AI Image Generator!
+
+Я помогу вам создавать качественные изображения и видео с помощью ИИ.
+
+💡 Быстрый старт:
+• Нажмите "🎨 Создать контент" для создания видео или изображений
+• Нажмите "🖼️ Создать изображения" для быстрой генерации изображений
+• Нажмите "🎬 Создать видео" для генерации видео
+• Выберите формат и модель
+• Опишите, что хотите создать
+• Получите результат!
+
+💰 **Информация о стоимости:**
+• 🖼️ Создание изображений - БЕСПЛАТНО
+• ✏️ Редактирование изображений - БЕСПЛАТНО
+• 🎬 Создание видео - требует кредиты Replicate
+
+❓ Если что-то непонятно - нажмите "Как пользоваться"
+🔄 Если бот завис - напишите /start
+📊 Ваша статистика - /stats
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+        [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")],
+        [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
+        [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
+        [InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")],
+        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")]
+    ]
+    
+    await update.message.reply_text(
+        welcome_text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    USER_STATE[update.effective_user.id] = {'step': 'main_menu'}
+
 async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает главное меню"""
     user_id = update.effective_user.id
@@ -1757,9 +1807,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     status_text = ""
     if free_generations_left > 0:
-        status_text += f"🆓 **Бесплатные генерации:** {free_generations_left} осталось\n"
+        status_text = f"🆓 **Бесплатные генерации:** {free_generations_left} осталось\n"
     else:
-        status_text += f"🆓 **Бесплатные генерации:** закончились\n"
+        status_text = f"🆓 **Бесплатные генерации:** закончились\n"
     
     # Добавляем информацию о кредитах
     if credits['balance'] > 0:
