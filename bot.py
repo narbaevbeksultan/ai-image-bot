@@ -8251,14 +8251,22 @@ def main():
         async def start_webhook():
             await app.initialize()
             await app.start()
-            await app.bot.set_webhook(url=f"https://web-production-3dd82.up.railway.app/{TOKEN}")
+            
+            # Устанавливаем webhook
+            webhook_url = f"https://web-production-3dd82.up.railway.app/{TOKEN}"
+            await app.bot.set_webhook(url=webhook_url)
+            
+            # Запускаем webhook
             await app.updater.start_webhook(
                 listen="0.0.0.0",
                 port=port,
                 url_path=TOKEN,
-                webhook_url=f"https://web-production-3dd82.up.railway.app/{TOKEN}"
+                webhook_url=webhook_url
             )
             print(f"🚀 Бот запущен на Railway на порту {port}")
+            print(f"🌐 Webhook URL: {webhook_url}")
+            print(f"🔑 Token: {TOKEN[:10]}...")
+            
             # Держим приложение запущенным
             try:
                 await asyncio.Event().wait()
