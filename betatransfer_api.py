@@ -1,275 +1,246 @@
 import requests
 import hashlib
-import hmac
+import time
 import json
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class BetatransferAPI:
     """Класс для работы с Betatransfer API"""
     
-    def __init__(self, api_key: str = None, secret_key: str = None, is_test: bool = True):
-        self.api_key = api_key or os.getenv('BETATRANSFER_API_KEY')
-        self.secret_key = secret_key or os.getenv('BETATRANSFER_SECRET_KEY')
-        self.is_test = is_test
+    def __init__(self):
+        self.api_key = os.getenv('BETATRANSFER_API_KEY')
+        self.secret_key = os.getenv('BETATRANSFER_SECRET_KEY')
+        self.test_mode = os.getenv('BETATRANSFER_TEST_MODE', 'false').lower() == 'true'
         
-        # Базовые URL для API
-        if is_test:
-            self.base_url = "https://test-api.betatransfer.com"
-        else:
-            self.base_url = "https://api.betatransfer.com"
-        
-        # URL для callback (ваш бот)
-        self.callback_base_url = "https://your-bot-domain.com"  # Замените на ваш домен
-        
-        logging.info(f"Betatransfer API инициализирован: {'тестовый' if is_test else 'продакшн'} режим")
+        # Используем продакшн URL согласно документации
+        self.base_url = "https://merchant.betatransfer.io/api"
     
-    def create_payment(self, amount: float, currency: str = "RUB", description: str = "", 
-                      order_id: str = None, user_id: int = None) -> Dict:
+    def _generate_signature(self, data: Dict) -> str:
         """
-        Создание платежа
+        Генерирует подпись для запроса согласно документации Betatransfer
+        """
+        # Сортируем параметры по ключам
+        sorted_params = sorted(data.items())
+        
+        # Создаем строку для подписи: все параметры подряд + секретный ключ
+        signature_string = ''.join(str(v) for _, v in sorted_params) + self.secret_key
+        
+        # Создаем MD5 подпись
+        return hashlib.md5(signature_string.encode('utf-8')).hexdigest()
+    
+    def create_payment(self, amount: float, currency: str = "UAH", 
+                       description: str = "", order_id: str = None, 
+                       payer_email: str = "", payer_name: str = "",
+                       payer_id: str = "") -> Dict:
+        """
+        Создает платеж для покупки кредитов
         
         Args:
             amount: Сумма платежа
-            currency: Валюта (RUB, USD, EUR)
+            currency: Валюта (UAH, USD, RUB, KZT, etc.)
             description: Описание платежа
             order_id: Уникальный ID заказа
-            user_id: ID пользователя Telegram
+            payer_email: Email плательщика
+            payer_name: Имя плательщика
+            payer_id: ID плательщика (для антифрода)
         
         Returns:
-            Dict с данными платежа или ошибкой
+            Dict с информацией о платеже
         """
+        endpoint = f"{self.base_url}/payment"
+        
+        # Генерируем order_id если не передан
+        if not order_id:
+            order_id = f"order{int(time.time())}"
+        
+        # Формируем данные запроса согласно документации
+        payload = {
+            'amount': str(amount),
+            'currency': currency,
+            'fullCallback': '1',
+            'orderId': order_id,
+            'payerEmail': payer_email,
+            'payerId': payer_id,
+            'payerName': payer_name,
+            'paymentSystem': 'card',  # По умолчанию карта
+            'urlFail': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/fail",
+            'urlResult': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/callback",
+            'urlSuccess': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/success"
+        }
+        
+        # Генерируем подпись
+        payload['sign'] = self._generate_signature(payload)
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        
         try:
-            if not self.api_key:
-                return {"error": "API ключ не настроен"}
+            print(f"🔍 Детали запроса:")
+            print(f"   URL: {endpoint}")
+            print(f"   Заголовки: {headers}")
+            print(f"   Данные: {payload}")
             
-            # Генерируем уникальный ID заказа если не передан
-            if not order_id:
-                order_id = f"order_{user_id}_{int(datetime.now().timestamp())}"
+            # Отправляем как form-data согласно документации
+            response = requests.post(endpoint, data=payload, headers=headers)
             
-            # Формируем callback URL
-            success_url = f"{self.callback_base_url}/payment_success?order_id={order_id}"
-            fail_url = f"{self.callback_base_url}/payment_fail?order_id={order_id}"
+            print(f"🔍 Детали ответа:")
+            print(f"   Статус: {response.status_code}")
+            print(f"   Заголовки ответа: {dict(response.headers)}")
+            print(f"   Тело ответа: {response.text}")
             
-            payload = {
-                "amount": amount,
-                "currency": currency,
-                "description": description,
-                "order_id": order_id,
-                "success_url": success_url,
-                "fail_url": fail_url,
-                "callback_url": f"{self.callback_base_url}/webhook",  # URL для уведомлений
-                "metadata": {
-                    "user_id": user_id,
-                    "bot_type": "telegram",
-                    "service": "ai_image_generator"
-                }
-            }
-            
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            logging.info(f"Создаем платеж: {amount} {currency} для пользователя {user_id}")
-            
-            response = requests.post(
-                f"{self.base_url}/payments",
-                json=payload,
-                headers=headers,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                logging.info(f"Платеж создан успешно: {result.get('payment_id')}")
-                return result
-            else:
-                error_msg = f"Ошибка создания платежа: {response.status_code} - {response.text}"
-                logging.error(error_msg)
-                return {"error": error_msg}
-                
-        except Exception as e:
-            error_msg = f"Исключение при создании платежа: {str(e)}"
-            logging.error(error_msg)
-            return {"error": error_msg}
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Ошибка HTTP запроса: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"   Статус ответа: {e.response.status_code}")
+                print(f"   Тело ответа: {e.response.text}")
+            return {"error": str(e)}
     
     def get_payment_status(self, payment_id: str) -> Dict:
         """
-        Получение статуса платежа
+        Получает статус платежа
         
         Args:
-            payment_id: ID платежа в Betatransfer
+            payment_id: ID платежа
         
         Returns:
-            Dict с статусом платежа
+            Dict с информацией о статусе
         """
+        endpoint = f"{self.base_url}/payment/{payment_id}"
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
         try:
-            if not self.api_key:
-                return {"error": "API ключ не настроен"}
-            
-            headers = {"Authorization": f"Bearer {self.api_key}"}
-            
-            response = requests.get(
-                f"{self.base_url}/payments/{payment_id}",
-                headers=headers,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                logging.info(f"Статус платежа {payment_id}: {result.get('status')}")
-                return result
-            else:
-                error_msg = f"Ошибка получения статуса: {response.status_code} - {response.text}"
-                logging.error(error_msg)
-                return {"error": error_msg}
-                
-        except Exception as e:
-            error_msg = f"Исключение при получении статуса: {str(e)}"
-            logging.error(error_msg)
-            return {"error": error_msg}
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            return {"error": str(e)}
     
-    def verify_webhook(self, data: Dict, signature: str) -> bool:
+    def verify_callback_signature(self, data: Dict, signature: str) -> bool:
         """
-        Проверка подписи webhook от Betatransfer
+        Проверяет подпись callback уведомления
         
         Args:
-            data: Данные webhook
+            data: Данные callback
             signature: Подпись для проверки
         
         Returns:
             True если подпись верна, False иначе
         """
-        try:
-            if not self.secret_key:
-                logging.error("Секретный ключ не настроен для проверки webhook")
-                return False
-            
-            # Создаем подпись из данных
-            expected_signature = hmac.new(
-                self.secret_key.encode('utf-8'),
-                json.dumps(data, separators=(',', ':'), sort_keys=True).encode('utf-8'),
-                hashlib.sha256
-            ).hexdigest()
-            
-            # Сравниваем подписи
-            is_valid = hmac.compare_digest(signature, expected_signature)
-            
-            if is_valid:
-                logging.info("Webhook подпись проверена успешно")
-            else:
-                logging.warning("Webhook подпись неверна")
-            
-            return is_valid
-            
-        except Exception as e:
-            logging.error(f"Ошибка проверки webhook подписи: {str(e)}")
-            return False
+        # Убираем поле sign из данных для проверки
+        params = {k: v for k, v in data.items() if k != 'sign'}
+        
+        # Сортируем параметры по ключам (как в запросе)
+        sorted_params = sorted(params.items())
+        
+        # Создаем строку для подписи: все параметры подряд + секретный ключ
+        # Важно: используем только значения, без ключей
+        signature_string = ''.join(str(v) for _, v in sorted_params) + self.secret_key
+        
+        # Создаем MD5 подпись
+        expected_signature = hashlib.md5(signature_string.encode('utf-8')).hexdigest()
+        
+        # Добавляем отладочную информацию
+        print(f"🔍 Отладочная информация:")
+        print(f"   Параметры: {sorted_params}")
+        print(f"   Строка для подписи: {signature_string}")
+        print(f"   Ожидаемая подпись: {expected_signature}")
+        print(f"   Полученная подпись: {signature}")
+        
+        return signature == expected_signature
     
-    def process_webhook(self, webhook_data: Dict, signature: str) -> Dict:
+    def process_callback(self, callback_data: Dict) -> Dict:
         """
-        Обработка webhook от Betatransfer
+        Обрабатывает callback уведомление от Betatransfer
         
         Args:
-            webhook_data: Данные webhook
-            signature: Подпись webhook
+            callback_data: Данные callback
         
         Returns:
             Dict с результатом обработки
         """
-        try:
-            # Проверяем подпись
-            if not self.verify_webhook(webhook_data, signature):
-                return {"error": "Неверная подпись webhook"}
-            
-            # Извлекаем данные
-            payment_id = webhook_data.get('payment_id')
-            status = webhook_data.get('status')
-            order_id = webhook_data.get('order_id')
-            amount = webhook_data.get('amount')
-            currency = webhook_data.get('currency')
-            
-            logging.info(f"Обрабатываем webhook: платеж {payment_id}, статус {status}")
-            
-            # Обрабатываем успешный платеж
-            if status == 'completed':
-                return {
-                    "success": True,
-                    "payment_id": payment_id,
-                    "order_id": order_id,
-                    "amount": amount,
-                    "currency": currency,
-                    "status": status
-                }
-            elif status == 'failed':
-                return {
-                    "success": False,
-                    "payment_id": payment_id,
-                    "order_id": order_id,
-                    "status": status,
-                    "error": "Платеж не прошел"
-                }
-            else:
-                return {
-                    "success": False,
-                    "payment_id": payment_id,
-                    "status": status,
-                    "error": f"Неизвестный статус: {status}"
-                }
-                
-        except Exception as e:
-            error_msg = f"Ошибка обработки webhook: {str(e)}"
-            logging.error(error_msg)
-            return {"error": error_msg}
+        # Проверяем подпись
+        signature = callback_data.get('sign', '')
+        if not self.verify_callback_signature(callback_data, signature):
+            return {"error": "Invalid signature", "status": "error"}
+        
+        # Извлекаем данные платежа согласно формату Betatransfer
+        payment_info = {
+            "payment_id": callback_data.get('id'),
+            "payment_system": callback_data.get('paymentSystem'),
+            "type": callback_data.get('type'),
+            "order_id": callback_data.get('orderId'),
+            "order_amount": callback_data.get('orderAmount'),
+            "paid_amount": callback_data.get('paidAmount'),
+            "amount": callback_data.get('amount'),
+            "currency": callback_data.get('currency'),
+            "commission": callback_data.get('commission'),
+            "status": callback_data.get('status'),
+            "created_at": callback_data.get('createdAt'),
+            "updated_at": callback_data.get('updatedAt'),
+            "exchange_rate": callback_data.get('exchangeRate'),
+            "receiver_wallet": callback_data.get('receiverWallet'),
+            "beneficiary_name": callback_data.get('beneficiaryName'),
+            "beneficiary_bank": callback_data.get('beneficiaryBank')
+        }
+        
+        return {
+            "success": True,
+            "payment_info": payment_info,
+            "status": "success"
+        }
     
     def get_payment_url(self, payment_id: str) -> str:
         """
-        Получение URL для оплаты
+        Получает URL для оплаты
         
         Args:
-            payment_id: ID платежа в Betatransfer
+            payment_id: ID платежа
         
         Returns:
-            URL для перехода к оплате
+            URL для оплаты
         """
-        return f"{self.base_url}/pay/{payment_id}"
+        return f"https://merchant.betatransfer.io/pay/{payment_id}"
     
-    def test_connection(self) -> bool:
+    def test_connection(self) -> Dict:
         """
-        Тестирование подключения к API
+        Тестирует подключение к API
         
         Returns:
-            True если подключение успешно, False иначе
+            Dict с результатом теста
         """
+        # Пробуем простой GET запрос к базовому URL
+        endpoint = f"{self.base_url}/"
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
         try:
-            if not self.api_key:
-                logging.error("API ключ не настроен")
-                return False
-            
-            # Пробуем получить информацию об аккаунте
-            headers = {"Authorization": f"Bearer {self.api_key}"}
-            
-            response = requests.get(
-                f"{self.base_url}/account",
-                headers=headers,
-                timeout=30
-            )
-            
+            response = requests.get(endpoint, headers=headers)
             if response.status_code == 200:
-                logging.info("Подключение к Betatransfer API успешно")
-                return True
+                return {"success": True, "message": "API connection successful"}
             else:
-                logging.error(f"Ошибка подключения: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            logging.error(f"Ошибка тестирования подключения: {str(e)}")
-            return False
+                return {"success": False, "message": f"API error: {response.status_code}"}
+        except requests.exceptions.RequestException as e:
+            return {"success": False, "message": f"Connection error: {str(e)}"}
 
 # Глобальный экземпляр API
 betatransfer_api = BetatransferAPI()
+
 
 

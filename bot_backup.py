@@ -6898,13 +6898,13 @@ async def show_credit_packages(update: Update, context: ContextTypes.DEFAULT_TYP
     except ImportError:
         # Fallback если модуль не импортирован
         CREDIT_PACKAGES = {
-            'small': {'name': '🪙 Малый пакет', 'credits': 2000, 'price': 14.0, 'currency': 'USD', 'description': '2000 кредитов для начала работы'},
-            'medium': {'name': '🪙 Средний пакет', 'credits': 5000, 'price': 30.0, 'currency': 'USD', 'description': '5000 кредитов со скидкой 14%'},
-            'large': {'name': '🪙 Большой пакет', 'credits': 10000, 'price': 50.0, 'currency': 'USD', 'description': '10000 кредитов со скидкой 29%'}
+                    'small': {'name': '🪙 Малый пакет', 'credits': 2000, 'price': 14.0, 'currency': 'UAH', 'description': '2000 кредитов для начала работы'},
+        'medium': {'name': '🪙 Средний пакет', 'credits': 5000, 'price': 30.0, 'currency': 'UAH', 'description': '5000 кредитов со скидкой 14%'},
+        'large': {'name': '🪙 Большой пакет', 'credits': 10000, 'price': 50.0, 'currency': 'UAH', 'description': '10000 кредитов со скидкой 29%'}
         }
         
         def format_price(amount, currency):
-            return f"${amount:.2f}" if currency == 'USD' else f"{amount:.2f}{currency}"
+            return f"₴{amount:.2f}" if currency == 'UAH' else f"{amount:.2f}{currency}"
     
     text = "🪙 **Пакеты кредитов (pay-per-use):**\n\n"
     text += "💡 **Как это работает:**\n"

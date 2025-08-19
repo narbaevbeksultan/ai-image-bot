@@ -80,7 +80,7 @@ class AnalyticsDB:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id INTEGER,
                         amount DECIMAL(10,2) NOT NULL,
-                        currency TEXT DEFAULT 'USD',
+                        currency TEXT DEFAULT 'UAH',
                         status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'completed', 'failed'
                         betatransfer_id TEXT,
                         payment_method TEXT,
@@ -654,6 +654,61 @@ class AnalyticsDB:
                 return True
         except Exception as e:
             logging.error(f"Ошибка использования кредитов: {e}")
+            return False
+
+    def get_payment_by_order_id(self, order_id: str) -> Optional[Dict]:
+        """
+        Получает информацию о платеже по order_id
+        
+        Args:
+            order_id: Уникальный ID заказа
+            
+        Returns:
+            Dict с информацией о платеже или None
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM payments 
+                    WHERE order_id = ?
+                """, (order_id,))
+                
+                row = cursor.fetchone()
+                if row:
+                    columns = [description[0] for description in cursor.description]
+                    return dict(zip(columns, row))
+                return None
+            
+        except Exception as e:
+            logging.error(f"Ошибка получения платежа по order_id: {e}")
+            return None
+
+    def update_payment_status(self, payment_id: str, status: str) -> bool:
+        """
+        Обновляет статус платежа
+        
+        Args:
+            payment_id: ID платежа в Betatransfer
+            status: Новый статус
+            
+        Returns:
+            True если обновление успешно, False иначе
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE payments 
+                    SET status = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE payment_id = ?
+                """, (status, payment_id))
+                
+                conn.commit()
+                return cursor.rowcount > 0
+            
+        except Exception as e:
+            logging.error(f"Ошибка обновления статуса платежа: {e}")
             return False
 
 # Глобальный экземпляр базы данных

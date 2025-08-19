@@ -6,7 +6,7 @@ CREDIT_PACKAGES = {
         'name': '🪙 Малый пакет',
         'credits': 2000,
         'price': 14.0,
-        'currency': 'USD',
+        'currency': 'UAH',
         'price_per_credit': 0.007,
         'description': '2000 кредитов для начала работы'
     },
@@ -14,7 +14,7 @@ CREDIT_PACKAGES = {
         'name': '🪙 Средний пакет',
         'credits': 5000,
         'price': 30.0,
-        'currency': 'USD',
+        'currency': 'UAH',
         'price_per_credit': 0.006,
         'description': '5000 кредитов со скидкой 14%'
     },
@@ -22,7 +22,7 @@ CREDIT_PACKAGES = {
         'name': '🪙 Большой пакет',
         'credits': 10000,
         'price': 50.0,
-        'currency': 'USD',
+        'currency': 'UAH',
         'price_per_credit': 0.005,
         'description': '10000 кредитов со скидкой 29%'
     }
@@ -69,20 +69,25 @@ FREE_LIMITS = {
 
 # Настройки валют
 CURRENCY_SETTINGS = {
+    'UAH': {
+        'symbol': '₴',
+        'name': 'Украинская гривна',
+        'exchange_rate': 1.0
+    },
     'USD': {
         'symbol': '$',
         'name': 'Доллар США',
-        'exchange_rate': 1.0
+        'exchange_rate': 0.026  # Примерный курс 1 UAH = 0.026 USD
     },
     'RUB': {
         'symbol': '₽',
         'name': 'Российский рубль',
-        'exchange_rate': 90.0  # Примерный курс
+        'exchange_rate': 2.4  # Примерный курс 1 UAH = 2.4 RUB
     },
     'EUR': {
         'symbol': '€',
         'name': 'Евро',
-        'exchange_rate': 0.92  # Примерный курс
+        'exchange_rate': 0.024  # Примерный курс 1 UAH = 0.024 EUR
     }
 }
 
@@ -103,17 +108,20 @@ def get_generation_cost(model: str, format_type: str = None, video_quality: str 
     format_cost = FORMAT_COSTS.get(format_type, 0)
     return base_cost + format_cost
 
-def format_price(amount: float, currency: str = 'USD') -> str:
-    """Форматирование цены для отображения"""
-    currency_info = CURRENCY_SETTINGS.get(currency, CURRENCY_SETTINGS['USD'])
-    symbol = currency_info['symbol']
+def format_price(amount: float, currency: str = 'UAH') -> str:
+    """Форматирует цену с символом валюты"""
+    currency_info = CURRENCY_SETTINGS.get(currency, CURRENCY_SETTINGS['UAH'])
     
-    if currency == 'USD':
+    if currency == 'UAH':
+        return f"₴{amount:.2f}"
+    elif currency == 'USD':
         return f"${amount:.2f}"
     elif currency == 'RUB':
-        return f"{int(amount * 90)}₽"  # Примерный курс
+        return f"₽{amount:.2f}"
+    elif currency == 'EUR':
+        return f"€{amount:.2f}"
     else:
-        return f"{amount:.2f}{symbol}"
+        return f"{amount:.2f} {currency}"
 
 def convert_currency(amount: float, from_currency: str, to_currency: str) -> float:
     """Конвертация валют"""
