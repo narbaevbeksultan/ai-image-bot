@@ -8042,7 +8042,7 @@ async def show_credit_packages(update: Update, context: ContextTypes.DEFAULT_TYP
 async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обрабатывает покупку кредитов"""
     try:
-        from pricing_config import get_credit_package_by_type, format_price
+        from pricing_config import get_credit_package_by_type
     except ImportError:
         await update.callback_query.answer("❌ Модуль конфигурации не найден")
         return
