@@ -29,7 +29,8 @@ class BetatransferAPI:
         sorted_params = sorted(data.items())
         
         # Создаем строку для подписи: все параметры подряд + секретный ключ
-        signature_string = ''.join(str(v) for _, v in sorted_params) + self.secret_key
+        # Фильтруем None значения и конвертируем в строки
+        signature_string = ''.join(str(v) if v is not None else '' for _, v in sorted_params) + self.secret_key
         
         # Создаем MD5 подпись
         return hashlib.md5(signature_string.encode('utf-8')).hexdigest()
@@ -65,14 +66,19 @@ class BetatransferAPI:
             'currency': currency,
             'fullCallback': '1',
             'orderId': order_id,
-            'payerEmail': payer_email,
-            'payerId': payer_id,
-            'payerName': payer_name,
             'paymentSystem': 'card',  # По умолчанию карта
             'urlFail': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/fail",
             'urlResult': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/callback",
             'urlSuccess': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/success"
         }
+        
+        # Добавляем параметры пользователя только если они не пустые
+        if payer_email:
+            payload['payerEmail'] = payer_email
+        if payer_id:
+            payload['payerId'] = payer_id
+        if payer_name:
+            payload['payerName'] = payer_name
         
         # Генерируем подпись
         payload['sign'] = self._generate_signature(payload)
