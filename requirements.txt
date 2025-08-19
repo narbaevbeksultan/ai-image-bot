@@ -10,11 +10,8 @@ Flask==3.0.0
 # HTTP запросы
 requests==2.31.0
 
-# База данных
-sqlite3
+# Pillow для работы с изображениями
+Pillow==10.0.1
 
-# Логирование
-logging
-
-# Время и дата
-datetime 
+# Дополнительные утилиты
+python-dateutil==2.8.2 
