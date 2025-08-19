@@ -29,8 +29,8 @@ class BetatransferAPI:
         sorted_params = sorted(data.items())
         
         # Создаем строку для подписи: все параметры подряд + секретный ключ
-        # Создаем строку для подписи: все параметры подряд + секретный ключ
-        signature_string = ''.join(str(v) for _, v in sorted_params) + self.secret_key
+        # Фильтруем None значения и конвертируем в строки
+        signature_string = ''.join(str(v) if v is not None else '' for _, v in sorted_params) + self.secret_key
         
         # Создаем MD5 подпись
         return hashlib.md5(signature_string.encode('utf-8')).hexdigest()
