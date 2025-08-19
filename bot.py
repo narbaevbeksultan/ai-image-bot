@@ -8106,7 +8106,12 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
         )
         
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"🔍 Полный traceback ошибки:")
+        print(error_traceback)
         logging.error(f"Ошибка создания платежа: {e}")
+        logging.error(f"Traceback: {error_traceback}")
         await update.callback_query.answer("❌ Ошибка создания платежа")
 
 async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
