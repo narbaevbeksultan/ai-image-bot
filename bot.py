@@ -8246,7 +8246,6 @@ def main():
     
     if port:
         # Запускаем на Railway с webhook
-        from telegram.ext import Application
         import asyncio
         
         async def start_webhook():
