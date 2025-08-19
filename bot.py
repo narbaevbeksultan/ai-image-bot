@@ -8062,15 +8062,23 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
         from betatransfer_api import betatransfer_api
         
         # Создаем платеж
+        print(f"🔍 Создаем платеж для пакета: {package}")
         payment_result = betatransfer_api.create_payment(
             amount=package['price'],
             currency=package['currency'],
             description=f"Пакет кредитов: {package['name']} ({package['credits']} кредитов)",
-            user_id=user_id
+            payer_id=str(user_id)
         )
+        print(f"🔍 Результат создания платежа: {payment_result}")
         
         if 'error' in payment_result:
             await update.callback_query.answer(f"❌ Ошибка создания платежа: {payment_result['error']}")
+            return
+        
+        # Проверяем, есть ли payment_id в ответе
+        if 'payment_id' not in payment_result:
+            print(f"❌ В ответе нет payment_id: {payment_result}")
+            await update.callback_query.answer("❌ Ошибка: не получен ID платежа")
             return
         
         # Получаем URL для оплаты
