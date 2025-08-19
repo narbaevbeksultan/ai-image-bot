@@ -8254,18 +8254,37 @@ def main():
             
             # Устанавливаем webhook
             webhook_url = f"https://web-production-3dd82.up.railway.app/{TOKEN}"
-            await app.bot.set_webhook(url=webhook_url)
+            print(f"🌐 Устанавливаем webhook: {webhook_url}")
+            
+            try:
+                await app.bot.set_webhook(url=webhook_url)
+                print("✅ Webhook установлен успешно")
+            except Exception as e:
+                print(f"❌ Ошибка установки webhook: {e}")
+                return
             
             # Запускаем webhook
-            await app.updater.start_webhook(
-                listen="0.0.0.0",
-                port=port,
-                url_path=TOKEN,
-                webhook_url=webhook_url
-            )
+            try:
+                await app.updater.start_webhook(
+                    listen="0.0.0.0",
+                    port=port,
+                    url_path=TOKEN,
+                    webhook_url=webhook_url
+                )
+                print("✅ Webhook запущен успешно")
+            except Exception as e:
+                print(f"❌ Ошибка запуска webhook: {e}")
+                return
             print(f"🚀 Бот запущен на Railway на порту {port}")
             print(f"🌐 Webhook URL: {webhook_url}")
             print(f"🔑 Token: {TOKEN[:10]}...")
+            
+            # Проверяем статус webhook
+            try:
+                webhook_info = await app.bot.get_webhook_info()
+                print(f"📊 Webhook статус: {webhook_info}")
+            except Exception as e:
+                print(f"❌ Ошибка получения webhook статуса: {e}")
             
             # Держим приложение запущенным
             try:
