@@ -8088,7 +8088,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
         text = f"🪙 **Покупка пакета кредитов**\n\n"
         text += f"📦 **Пакет:** {package['name']}\n"
         text += f"🪙 **Кредитов:** {package['credits']}\n"
-        text += f"💰 **Сумма:** ₴{package['price']:.2f}\n"
+        text += f"💰 **Сумма:** {format_price(package['price'], package['currency'])}\n"
         text += f"📝 **Описание:** {package['description']}\n\n"
         text += "🔗 **Для оплаты перейдите по ссылке:**\n"
         text += f"{payment_url}\n\n"
