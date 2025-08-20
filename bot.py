@@ -12,7 +12,7 @@ import time
 from datetime import datetime, timedelta
 from database import analytics_db
 
-# Включаем логирование коммит
+# Включаем логирование
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
