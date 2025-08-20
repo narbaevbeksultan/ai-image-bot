@@ -1395,7 +1395,8 @@ async def generate_recraft_images(prompt, image_count, format_type):
         logging.error(f"Ошибка генерации Recraft AI: {e}")
         return []
 
-def main():
+def create_application():
+    """Создает и настраивает приложение бота"""
     import os
     from dotenv import load_dotenv
     
@@ -1407,14 +1408,14 @@ def main():
         print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN не установлен!")
         print("📝 Установите переменную окружения TELEGRAM_BOT_TOKEN")
         print("💡 Запустите setup_env.py для инструкций")
-        return
+        return None
     
     # Устанавливаем API токен для Replicate если не установлен
     if not os.getenv('REPLICATE_API_TOKEN'):
         print("⚠️ ВНИМАНИЕ: REPLICATE_API_TOKEN не установлен!")
         print("📝 Установите переменную окружения REPLICATE_API_TOKEN")
         print("💡 Для Railway добавьте её в настройках проекта")
-        return
+        return None
     
     app = ApplicationBuilder().token(TOKEN).build()
     
@@ -1430,6 +1431,17 @@ def main():
     
     # Устанавливаем команды меню при запуске
     app.post_init = setup_commands
+    
+    return app
+
+def main():
+    """Главная функция запуска бота"""
+    app = create_application()
+    if not app:
+        return
+    
+    # Получаем токен из приложения
+    TOKEN = app.bot.token
     
     # Проверяем, запущены ли мы на Railway
     port = int(os.environ.get('PORT', 0))
