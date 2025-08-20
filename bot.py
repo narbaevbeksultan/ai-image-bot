@@ -9,6 +9,7 @@ from PIL import Image
 import io
 import tempfile
 import time
+import asyncio
 from datetime import datetime, timedelta
 from database import analytics_db
 
@@ -1019,10 +1020,129 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def send_images(update, context, state, prompt_type='auto', user_prompt=None, scenes=None):
     """Отправляет сгенерированные изображения"""
-    # Заглушка - нужно будет дополнить
-    await update.message.reply_text(
-        "🖼️ Функция генерации изображений в разработке. Используйте /start для возврата в меню."
-    )
+    user_id = update.effective_user.id
+    
+    # Получаем параметры из состояния
+    format_type = state.get('format', 'Изображения')
+    model = state.get('model', 'Ideogram')
+    topic = state.get('topic', '')
+    image_count = state.get('image_count', 1)
+    
+    # Определяем, какой промпт использовать
+    if user_prompt:
+        prompt = user_prompt
+    elif scenes:
+        prompt = scenes[0] if scenes else topic
+    else:
+        prompt = topic
+    
+    if not prompt:
+        await update.message.reply_text(
+            "❌ Ошибка: не указан промпт для генерации. Нажмите /start для перезапуска."
+        )
+        return
+    
+    # Проверяем безопасность промпта
+    if not is_prompt_safe(prompt):
+        await update.message.reply_text(
+            "❌ Промпт содержит запрещенный контент. Попробуйте описать по-другому."
+        )
+        return
+    
+    # Логируем начало генерации
+    analytics_db.log_action(user_id, f"image_generation_start_{model}")
+    start_time = time.time()
+    
+    try:
+        await update.message.reply_text(
+            f"🎨 Генерирую {image_count} изображений...\n"
+            f"📝 Промпт: {prompt[:100]}{'...' if len(prompt) > 100 else ''}\n"
+            f"🤖 Модель: {model}\n"
+            f"⏳ Это может занять 30-60 секунд..."
+        )
+        
+        # Генерируем изображения в зависимости от модели
+        if model == 'Ideogram':
+            images = await generate_ideogram_images(prompt, image_count, format_type)
+        elif model == 'Bytedance (Seedream-3)':
+            images = await generate_bytedance_images(prompt, image_count, format_type)
+        elif model == 'Google Imagen 4 Ultra':
+            images = await generate_google_imagen_images(prompt, image_count, format_type)
+        elif model == 'Luma Photon':
+            images = await generate_luma_photon_images(prompt, image_count, format_type)
+        elif model == 'Bria 3.2':
+            images = await generate_bria_images(prompt, image_count, format_type)
+        elif model == 'Recraft AI':
+            images = await generate_recraft_images(prompt, image_count, format_type)
+        else:
+            await update.message.reply_text(f"❌ Неподдерживаемая модель: {model}")
+            return
+        
+        if not images:
+            await update.message.reply_text("❌ Не удалось сгенерировать изображения. Попробуйте другой промпт.")
+            return
+        
+        # Отправляем изображения
+        if len(images) == 1:
+            # Одно изображение
+            await update.message.reply_photo(
+                photo=images[0],
+                caption=f"🎨 Сгенерировано с помощью {model}\n📝 Промпт: {prompt[:200]}{'...' if len(prompt) > 200 else ''}"
+            )
+        else:
+            # Несколько изображений
+            media_group = []
+            for i, image_url in enumerate(images):
+                media_group.append(
+                    InputMediaPhoto(
+                        media=image_url,
+                        caption=f"🎨 Изображение {i+1}/{len(images)} - {model}\n📝 Промпт: {prompt[:100]}{'...' if len(prompt) > 100 else ''}"
+                    )
+                )
+            
+            await update.message.reply_media_group(media=media_group)
+        
+        # Логируем успешную генерацию
+        generation_time = time.time() - start_time
+        analytics_db.log_generation(
+            user_id=user_id,
+            model_name=model,
+            format_type=format_type,
+            prompt=prompt,
+            image_count=image_count,
+            success=True,
+            generation_time=generation_time
+        )
+        
+        # Показываем кнопки для дальнейших действий
+        keyboard = [
+            [InlineKeyboardButton("🔄 Создать еще", callback_data="create_content")],
+            [InlineKeyboardButton("✏️ Редактировать", callback_data="edit_image")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        
+        await update.message.reply_text(
+            f"✅ Готово! Сгенерировано {len(images)} изображений за {generation_time:.1f} секунд.",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        
+    except Exception as e:
+        # Логируем ошибку
+        generation_time = time.time() - start_time
+        analytics_db.log_generation(
+            user_id=user_id,
+            model_name=model,
+            format_type=format_type,
+            prompt=prompt,
+            image_count=image_count,
+            success=False,
+            error_message=str(e),
+            generation_time=generation_time
+        )
+        
+        await update.message.reply_text(
+            f"❌ Ошибка при генерации: {str(e)}\n\nПопробуйте другой промпт или нажмите /start для перезапуска."
+        )
 
 async def generate_video(update, context, state):
     """Генерирует видео"""
@@ -1037,6 +1157,243 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
     await update.message.reply_text(
         "✏️ Функция редактирования изображений в разработке. Используйте /start для возврата в меню."
     )
+
+async def generate_ideogram_images(prompt, image_count, format_type):
+    """Генерирует изображения через Ideogram"""
+    try:
+        # Улучшаем промпт для Ideogram
+        improved_prompt = improve_prompt_for_ideogram(prompt)
+        
+        # Определяем размер изображения
+        size = get_replicate_size_for_model('Ideogram', format_type)
+        
+        # Генерируем изображения
+        images = []
+        for i in range(image_count):
+            output = replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={
+                    "prompt": improved_prompt,
+                    "width": int(size.split('x')[0]),
+                    "height": int(size.split('x')[1])
+                }
+            )
+            
+            # Обрабатываем результат
+            if hasattr(output, 'url'):
+                image_url = output.url
+            elif isinstance(output, list) and len(output) > 0:
+                image_url = output[0]
+            else:
+                image_url = str(output)
+            
+            if image_url and image_url.startswith('http'):
+                images.append(image_url)
+            
+            # Небольшая задержка между генерациями
+            if i < image_count - 1:
+                await asyncio.sleep(1)
+        
+        return images
+        
+    except Exception as e:
+        logging.error(f"Ошибка генерации Ideogram: {e}")
+        return []
+
+async def generate_bytedance_images(prompt, image_count, format_type):
+    """Генерирует изображения через Bytedance Seedream-3"""
+    try:
+        # Определяем размер для Bytedance
+        size = get_replicate_size_for_model('Bytedance (Seedream-3)', format_type)
+        
+        # Генерируем изображения
+        images = []
+        for i in range(image_count):
+            output = replicate.run(
+                "bytedance/seedream-3",
+                input={
+                    "prompt": prompt,
+                    "size": size,
+                    "aspect_ratio": "9:16" if format_type.lower() in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts'] else "1:1"
+                }
+            )
+            
+            # Обрабатываем результат
+            if hasattr(output, 'url'):
+                image_url = output.url
+            elif isinstance(output, list) and len(output) > 0:
+                image_url = output[0]
+            else:
+                image_url = str(output)
+            
+            if image_url and image_url.startswith('http'):
+                images.append(image_url)
+            
+            # Небольшая задержка между генерациями
+            if i < image_count - 1:
+                await asyncio.sleep(1)
+        
+        return images
+        
+    except Exception as e:
+        logging.error(f"Ошибка генерации Bytedance: {e}")
+        return []
+
+async def generate_google_imagen_images(prompt, image_count, format_type):
+    """Генерирует изображения через Google Imagen 4 Ultra"""
+    try:
+        # Определяем размер изображения
+        size = get_replicate_size_for_model('Google Imagen 4 Ultra', format_type)
+        
+        # Генерируем изображения
+        images = []
+        for i in range(image_count):
+            output = replicate.run(
+                "google/imagen-4-ultra",
+                input={
+                    "prompt": prompt,
+                    "width": int(size.split('x')[0]),
+                    "height": int(size.split('x')[1])
+                }
+            )
+            
+            # Обрабатываем результат
+            if hasattr(output, 'url'):
+                image_url = output.url
+            elif isinstance(output, list) and len(output) > 0:
+                image_url = output[0]
+            else:
+                image_url = str(output)
+            
+            if image_url and image_url.startswith('http'):
+                images.append(image_url)
+            
+            # Небольшая задержка между генерациями
+            if i < image_count - 1:
+                await asyncio.sleep(1)
+        
+        return images
+        
+    except Exception as e:
+        logging.error(f"Ошибка генерации Google Imagen: {e}")
+        return []
+
+async def generate_luma_photon_images(prompt, image_count, format_type):
+    """Генерирует изображения через Luma Photon"""
+    try:
+        # Определяем размер изображения
+        size = get_replicate_size_for_model('Luma Photon', format_type)
+        
+        # Генерируем изображения
+        images = []
+        for i in range(image_count):
+            output = replicate.run(
+                "luma-ai/luma-photoreal",
+                input={
+                    "prompt": prompt,
+                    "width": int(size.split('x')[0]),
+                    "height": int(size.split('x')[1])
+                }
+            )
+            
+            # Обрабатываем результат
+            if hasattr(output, 'url'):
+                image_url = output.url
+            elif isinstance(output, list) and len(output) > 0:
+                image_url = output[0]
+            else:
+                image_url = str(output)
+            
+            if image_url and image_url.startswith('http'):
+                images.append(image_url)
+            
+            # Небольшая задержка между генерациями
+            if i < image_count - 1:
+                await asyncio.sleep(1)
+        
+        return images
+        
+    except Exception as e:
+        logging.error(f"Ошибка генерации Luma Photon: {e}")
+        return []
+
+async def generate_bria_images(prompt, image_count, format_type):
+    """Генерирует изображения через Bria 3.2"""
+    try:
+        # Определяем размер изображения
+        size = get_replicate_size_for_model('Bria 3.2', format_type)
+        
+        # Генерируем изображения
+        images = []
+        for i in range(image_count):
+            output = replicate.run(
+                "briaai/bria-3.2",
+                input={
+                    "prompt": prompt,
+                    "width": int(size.split('x')[0]),
+                    "height": int(size.split('x')[1])
+                }
+            )
+            
+            # Обрабатываем результат
+            if hasattr(output, 'url'):
+                image_url = output.url
+            elif isinstance(output, list) and len(output) > 0:
+                image_url = output[0]
+            else:
+                image_url = str(output)
+            
+            if image_url and image_url.startswith('http'):
+                images.append(image_url)
+            
+            # Небольшая задержка между генерациями
+            if i < image_count - 1:
+                await asyncio.sleep(1)
+        
+        return images
+        
+    except Exception as e:
+        logging.error(f"Ошибка генерации Bria: {e}")
+        return []
+
+async def generate_recraft_images(prompt, image_count, format_type):
+    """Генерирует изображения через Recraft AI"""
+    try:
+        # Определяем размер изображения
+        size = get_replicate_size_for_model('Recraft AI', format_type)
+        
+        # Генерируем изображения
+        images = []
+        for i in range(image_count):
+            output = replicate.run(
+                "recraftai/recraft-ai",
+                input={
+                    "prompt": prompt,
+                    "width": int(size.split('x')[0]),
+                    "height": int(size.split('x')[1])
+                }
+            )
+            
+            # Обрабатываем результат
+            if hasattr(output, 'url'):
+                image_url = output.url
+            elif isinstance(output, list) and len(output) > 0:
+                image_url = output[0]
+            else:
+                image_url = str(output)
+            
+            if image_url and image_url.startswith('http'):
+                images.append(image_url)
+            
+            # Небольшая задержка между генерациями
+            if i < image_count - 1:
+                await asyncio.sleep(1)
+        
+        return images
+        
+    except Exception as e:
+        logging.error(f"Ошибка генерации Recraft AI: {e}")
+        return []
 
 def main():
     import os
