@@ -69,7 +69,7 @@ class BetatransferAPI:
             'amount': str(amount),
             'currency': currency,
             'orderId': order_id,
-            'paymentSystem': 'VISA Card',  # Используем доступный способ оплаты
+            'paymentSystem': 'Test1',  # Используем тестовый метод для проверки
         }
         
         # Добавляем параметры пользователя только если они не пустые
