@@ -69,7 +69,7 @@ class BetatransferAPI:
             'amount': str(amount),
             'currency': currency,
             'orderId': order_id,
-            'paymentSystem': 'Test1',  # Используем тестовый метод для проверки
+            'paymentSystem': 'Card',  # Используем Card с большой буквы
         }
         
         # Добавляем параметры пользователя только если они не пустые
