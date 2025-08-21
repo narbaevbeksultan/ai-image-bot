@@ -98,16 +98,14 @@ def get_generation_cost(model: str, format_type: str = None, video_quality: str 
     format_cost = FORMAT_COSTS.get(format_type, 0)
     return base_cost + format_cost
 
-def format_price(amount: float, currency: str = 'UAH') -> str:
+def format_price(amount: float, currency: str = 'RUB') -> str:
     """Форматирует цену с символом валюты"""
-    currency_info = CURRENCY_SETTINGS.get(currency, CURRENCY_SETTINGS['UAH'])
-    
-    if currency == 'UAH':
+    if currency == 'RUB':
+        return f"₽{amount:.0f}"  # Без копеек для рублей
+    elif currency == 'UAH':
         return f"₴{amount:.2f}"
     elif currency == 'USD':
         return f"${amount:.2f}"
-    elif currency == 'RUB':
-        return f"₽{amount:.2f}"
     elif currency == 'EUR':
         return f"€{amount:.2f}"
     else:
@@ -118,13 +116,18 @@ def convert_currency(amount: float, from_currency: str, to_currency: str) -> flo
     if from_currency == to_currency:
         return amount
     
-    from_rate = CURRENCY_SETTINGS.get(from_currency, {}).get('exchange_rate', 1.0)
-    to_rate = CURRENCY_SETTINGS.get(to_currency, {}).get('exchange_rate', 1.0)
+    # Простая конвертация для основных валют
+    # В будущем можно добавить API для получения актуальных курсов
+    if from_currency == 'RUB' and to_currency == 'USD':
+        return amount / 100  # Примерный курс 100 RUB = 1 USD
+    elif from_currency == 'USD' and to_currency == 'RUB':
+        return amount * 100
+    elif from_currency == 'UAH' and to_currency == 'RUB':
+        return amount * 2.4  # Примерный курс 1 UAH = 2.4 RUB
+    elif from_currency == 'RUB' and to_currency == 'UAH':
+        return amount / 2.4
     
-    if from_rate and to_rate:
-        return amount * (to_rate / from_rate)
-    
-    return amount
+    return amount  # Если конвертация не поддерживается, возвращаем исходную сумму
 
 def get_available_credit_packages() -> list:
     """Получение всех доступных пакетов кредитов"""
