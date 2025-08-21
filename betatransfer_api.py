@@ -70,15 +70,12 @@ class BetatransferAPI:
             'currency': currency,
             'orderId': order_id,
             'paymentSystem': 'Test1',  # Тестовый метод для RUB
-            'payerId': str(payer_id),
-            'sign': signature
+            'payerId': str(payer_id)
         }
         
         # Добавляем параметры пользователя только если они не пустые
         if payer_email:
             payload['payerEmail'] = payer_email
-        if payer_id:
-            payload['payerId'] = payer_id
         if payer_name:
             payload['payerName'] = payer_name
         
