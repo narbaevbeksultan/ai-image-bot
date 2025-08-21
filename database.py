@@ -83,6 +83,8 @@ class AnalyticsDB:
                         currency TEXT DEFAULT 'UAH',
                         status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'completed', 'failed'
                         betatransfer_id TEXT,
+                        order_id TEXT,
+                        credit_amount INTEGER,
                         payment_method TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         completed_at TIMESTAMP,
@@ -128,11 +130,34 @@ class AnalyticsDB:
                     )
                 ''')
                 
+                # Миграция: добавляем недостающие колонки в таблицу payments
+                self._migrate_payments_table(cursor)
+                
                 conn.commit()
                 logging.info("База данных успешно инициализирована")
                 
         except Exception as e:
             logging.error(f"Ошибка инициализации базы данных: {e}")
+    
+    def _migrate_payments_table(self, cursor):
+        """Миграция таблицы payments для добавления недостающих колонок"""
+        try:
+            # Проверяем, есть ли колонка order_id
+            cursor.execute("PRAGMA table_info(payments)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            # Добавляем колонку order_id если её нет
+            if 'order_id' not in columns:
+                cursor.execute("ALTER TABLE payments ADD COLUMN order_id TEXT")
+                logging.info("Добавлена колонка order_id в таблицу payments")
+            
+            # Добавляем колонку credit_amount если её нет
+            if 'credit_amount' not in columns:
+                cursor.execute("ALTER TABLE payments ADD COLUMN credit_amount INTEGER")
+                logging.info("Добавлена колонка credit_amount в таблицу payments")
+                
+        except Exception as e:
+            logging.error(f"Ошибка миграции таблицы payments: {e}")
     
     def add_user(self, user_id: int, username: str = None, first_name: str = None, last_name: str = None):
         """Добавление нового пользователя"""
@@ -493,6 +518,22 @@ class AnalyticsDB:
             logging.error(f"Ошибка получения бесплатных генераций: {e}")
             return 0
     
+    def increment_free_generations(self, user_id: int):
+        """Увеличивает счетчик использованных бесплатных генераций"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    UPDATE user_limits 
+                    SET free_generations_used = free_generations_used + 1
+                    WHERE user_id = ?
+                ''', (user_id,))
+                conn.commit()
+                return True
+        except Exception as e:
+            logging.error(f"Ошибка увеличения счетчика бесплатных генераций: {e}")
+            return False
+    
     def reset_daily_limit(self, user_id: int):
         """Сброс дневного лимита"""
         try:
@@ -656,6 +697,39 @@ class AnalyticsDB:
             logging.error(f"Ошибка использования кредитов: {e}")
             return False
 
+    def create_payment(self, user_id: int, amount: float, currency: str = "UAH", 
+                      payment_id: str = None, order_id: str = None, 
+                      credit_amount: int = None) -> bool:
+        """
+        Создает запись о платеже в базе данных
+        
+        Args:
+            user_id: ID пользователя
+            amount: Сумма платежа
+            currency: Валюта
+            payment_id: ID платежа в Betatransfer
+            order_id: Уникальный ID заказа
+            credit_amount: Количество кредитов
+            
+        Returns:
+            True если создание успешно, False иначе
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO payments 
+                    (user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at)
+                    VALUES (?, ?, ?, 'pending', ?, ?, ?, CURRENT_TIMESTAMP)
+                """, (user_id, amount, currency, payment_id, order_id or '', credit_amount or 0))
+                
+                conn.commit()
+                return True
+                
+        except Exception as e:
+            logging.error(f"Ошибка создания платежа: {e}")
+            return False
+
     def get_payment_by_order_id(self, order_id: str) -> Optional[Dict]:
         """
         Получает информацию о платеже по order_id
@@ -700,8 +774,8 @@ class AnalyticsDB:
                 cursor = conn.cursor()
                 cursor.execute("""
                     UPDATE payments 
-                    SET status = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE payment_id = ?
+                    SET status = ?, completed_at = CURRENT_TIMESTAMP
+                    WHERE betatransfer_id = ?
                 """, (status, payment_id))
                 
                 conn.commit()

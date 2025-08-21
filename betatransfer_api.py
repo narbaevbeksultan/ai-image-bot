@@ -24,16 +24,21 @@ class BetatransferAPI:
     def _generate_signature(self, data: Dict) -> str:
         """
         Генерирует подпись для запроса согласно документации Betatransfer
+        Алгоритм: md5(implode('', $data) . $secret)
         """
-        # Сортируем параметры по ключам
-        sorted_params = sorted(data.items())
+        # Создаем строку из всех значений (без ключей) + секретный ключ
+        # Согласно документации: md5(implode('', $data) . $secret)
+        signature_string = ''.join(str(v) for v in data.values()) + self.secret_key
         
-        # Создаем строку для подписи: все параметры подряд + секретный ключ
-        # Фильтруем None значения и конвертируем в строки
-        signature_string = ''.join(str(v) if v is not None else '' for _, v in sorted_params) + self.secret_key
+        print(f"🔍 Отладка подписи:")
+        print(f"   Данные: {data}")
+        print(f"   Строка для подписи: {signature_string}")
         
         # Создаем MD5 подпись
-        return hashlib.md5(signature_string.encode('utf-8')).hexdigest()
+        signature = hashlib.md5(signature_string.encode('utf-8')).hexdigest()
+        print(f"   Подпись: {signature}")
+        
+        return signature
     
     def create_payment(self, amount: float, currency: str = "UAH", 
                        description: str = "", order_id: str = None, 
@@ -54,22 +59,16 @@ class BetatransferAPI:
         Returns:
             Dict с информацией о платеже
         """
-        endpoint = f"{self.base_url}/payment"
-        
         # Генерируем order_id если не передан
         if not order_id:
             order_id = f"order{int(time.time())}"
         
-        # Формируем данные запроса согласно документации
+        # Формируем данные запроса согласно документации Betatransfer
         payload = {
             'amount': str(amount),
             'currency': currency,
-            'fullCallback': '1',
             'orderId': order_id,
-            'paymentSystem': 'card',  # По умолчанию карта
-            'urlFail': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/fail",
-            'urlResult': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/callback",
-            'urlSuccess': os.getenv('WEBHOOK_BASE_URL', '') + "/payment/success"
+            'paymentSystem': 'Pay',  # Согласно документации
         }
         
         # Добавляем параметры пользователя только если они не пустые
@@ -80,11 +79,13 @@ class BetatransferAPI:
         if payer_name:
             payload['payerName'] = payer_name
         
-        # Генерируем подпись
+        # Генерируем подпись ПЕРЕД добавлением в payload
         payload['sign'] = self._generate_signature(payload)
         
+        # URL с токеном согласно документации
+        endpoint = f"{self.base_url}/payment?token={self.api_key}"
+        
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
         
@@ -113,7 +114,7 @@ class BetatransferAPI:
     
     def get_payment_status(self, payment_id: str) -> Dict:
         """
-        Получает статус платежа
+        Получает статус платежа согласно документации Betatransfer
         
         Args:
             payment_id: ID платежа
@@ -121,15 +122,22 @@ class BetatransferAPI:
         Returns:
             Dict с информацией о статусе
         """
-        endpoint = f"{self.base_url}/payment/{payment_id}"
+        # Формируем данные для подписи
+        data = {'id': payment_id}
+        signature = self._generate_signature(data)
+        
+        # URL с токеном согласно документации
+        endpoint = f"{self.base_url}/info?token={self.api_key}"
+        
+        # Добавляем подпись к данным
+        data['sign'] = signature
         
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/x-www-form-urlencoded"
         }
         
         try:
-            response = requests.get(endpoint, headers=headers)
+            response = requests.post(endpoint, data=data, headers=headers)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -137,7 +145,8 @@ class BetatransferAPI:
     
     def verify_callback_signature(self, data: Dict, signature: str) -> bool:
         """
-        Проверяет подпись callback уведомления
+        Проверяет подпись callback уведомления согласно документации Betatransfer
+        Для успешного платежа: md5($amount . $orderId . $secret)
         
         Args:
             data: Данные callback
@@ -146,22 +155,21 @@ class BetatransferAPI:
         Returns:
             True если подпись верна, False иначе
         """
-        # Убираем поле sign из данных для проверки
-        params = {k: v for k, v in data.items() if k != 'sign'}
+        # Согласно документации для успешного платежа:
+        # md5($amount . $orderId . $secret)
+        amount = data.get('amount', '')
+        order_id = data.get('orderId', '')
         
-        # Сортируем параметры по ключам (как в запросе)
-        sorted_params = sorted(params.items())
-        
-        # Создаем строку для подписи: все параметры подряд + секретный ключ
-        # Важно: используем только значения, без ключей
-        signature_string = ''.join(str(v) for _, v in sorted_params) + self.secret_key
+        # Создаем строку для подписи согласно документации
+        signature_string = str(amount) + str(order_id) + self.secret_key
         
         # Создаем MD5 подпись
         expected_signature = hashlib.md5(signature_string.encode('utf-8')).hexdigest()
         
         # Добавляем отладочную информацию
-        print(f"🔍 Отладочная информация:")
-        print(f"   Параметры: {sorted_params}")
+        print(f"🔍 Отладочная информация callback:")
+        print(f"   amount: {amount}")
+        print(f"   orderId: {order_id}")
         print(f"   Строка для подписи: {signature_string}")
         print(f"   Ожидаемая подпись: {expected_signature}")
         print(f"   Полученная подпись: {signature}")

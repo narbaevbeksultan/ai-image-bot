@@ -15,7 +15,7 @@ app = Flask(__name__)
 betatransfer_api = BetatransferAPI()
 db = AnalyticsDB()
 
-@app.route('/payment/callback', methods=['POST'])
+@app.route('/payment/ca', methods=['POST'])
 def payment_callback():
     """
     Обрабатывает callback уведомления от Betatransfer
@@ -71,7 +71,7 @@ def payment_callback():
         logger.error(f"Ошибка обработки callback: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/payment/success', methods=['GET'])
+@app.route('/payment/su', methods=['GET'])
 def payment_success():
     """
     Страница успешной оплаты
@@ -81,7 +81,7 @@ def payment_success():
         "message": "Payment completed successfully"
     })
 
-@app.route('/payment/fail', methods=['GET'])
+@app.route('/payment/fai', methods=['GET'])
 def payment_fail():
     """
     Страница неуспешной оплаты
