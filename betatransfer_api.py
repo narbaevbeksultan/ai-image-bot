@@ -69,7 +69,9 @@ class BetatransferAPI:
             'amount': str(amount),
             'currency': currency,
             'orderId': order_id,
-            'paymentSystem': 'Card',  # Используем Card с большой буквы
+            'paymentSystem': 'Test1',  # Тестовый метод для RUB
+            'payerId': str(payer_id),
+            'sign': signature
         }
         
         # Добавляем параметры пользователя только если они не пустые
