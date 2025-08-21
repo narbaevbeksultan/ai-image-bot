@@ -28,7 +28,8 @@ class BetatransferAPI:
         """
         # Создаем строку из всех значений (без ключей) + секретный ключ
         # Согласно документации: md5(implode('', $data) . $secret)
-        signature_string = ''.join(str(v) for v in data.values()) + self.secret_key
+        # Фильтруем None значения перед созданием подписи
+        signature_string = ''.join(str(v) for v in data.values() if v is not None) + self.secret_key
         
         print(f"🔍 Отладка подписи:")
         print(f"   Данные: {data}")
