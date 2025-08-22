@@ -9594,10 +9594,12 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     if hasattr(update, 'message') and update.message:
                         await update.message.reply_photo(photo=item.media, caption=item.caption)
                     else:
-                        await context.bot.send_photo(chat_id=update.effective_chat.id, photo=item.media, caption=item.caption)
+                        await context.bot.send_photo(chat_id=chat_id, photo=item.media, caption=item.caption)
                     print(f"✅ Изображение {i+1} отправлено отдельно")
                 except Exception as photo_error:
                     print(f"❌ Ошибка отправки изображения {i+1}: {photo_error}")
+                    if send_text:
+                        await send_text(f"❌ Ошибка отправки изображения {i+1}: {str(photo_error)[:100]}")
 
     elif processed_count == 0 and send_text:
 
