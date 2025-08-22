@@ -27721,7 +27721,10 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     """Проверяет статус платежа"""
-
+    
+    print(f"🔍 Вызвана функция check_payment_status")
+    print(f"🔍 callback_data: {update.callback_query.data}")
+    
     # Извлекаем ID платежа из callback_data
 
     payment_id = update.callback_query.data.split(':')[1]
@@ -27730,12 +27733,10 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
     try:
 
-        from betatransfer_api import betatransfer_api
-
+        from betatransfer_api import BetatransferAPI
+        betatransfer_api = BetatransferAPI()
         
-
         # Получаем статус платежа
-
         payment_status = betatransfer_api.get_payment_status(payment_id)
 
         
@@ -27786,7 +27787,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
     user_id = update.effective_user.id
 
-    payment_id = payment_data.get('payment_id')
+    payment_id = payment_data.get('id')
 
     amount = payment_data.get('amount', 0)
 
@@ -27804,11 +27805,11 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
             CREDIT_PACKAGES = {
 
-                'small': {'credits': 2000, 'price': 14.0},
+                'small': {'credits': 2000, 'price': 1129.0},
 
-                'medium': {'credits': 5000, 'price': 30.0},
+                'medium': {'credits': 5000, 'price': 2420.0},
 
-                'large': {'credits': 10000, 'price': 50.0}
+                'large': {'credits': 10000, 'price': 4030.0}
 
             }
 
@@ -27818,7 +27819,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
         for package in CREDIT_PACKAGES.values():
 
-            if abs(package['price'] - amount) < 0.1:  # Погрешность 0.1 доллара
+            if abs(package['price'] - amount) < 1.0:  # Погрешность 1 рубль
 
                 # Активируем кредиты
 
@@ -27842,7 +27843,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
                     text += f"🪙 **Получено кредитов:** {package['credits']}\n"
 
-                    text += f"💰 **Сумма:** ${amount:.2f}\n"
+                    text += f"💰 **Сумма:** ₽{amount:.0f}\n"
 
                     text += f"📦 **Пакет:** {package['credits']} кредитов\n\n"
 
