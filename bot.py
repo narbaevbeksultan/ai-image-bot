@@ -27753,10 +27753,11 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
         
 
-        if status == 'completed':
+        if status == 'completed' or status == 'success':
 
             # Платеж успешен - активируем подписку или кредиты
 
+            print(f"✅ Платеж завершен со статусом: {status}")
             await activate_payment(update, context, payment_status)
 
         elif status == 'pending':
@@ -27795,6 +27796,11 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
     payment_id = payment_data.get('id')
 
     amount = payment_data.get('amount', 0)
+    
+    print(f"🔍 activate_payment вызвана:")
+    print(f"🔍 user_id: {user_id}")
+    print(f"🔍 payment_id: {payment_id}")
+    print(f"🔍 amount: {amount} (тип: {type(amount)})")
 
     
 
@@ -27821,9 +27827,12 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
         
 
         # Находим подходящий пакет по цене
+        print(f"🔍 Ищем подходящий пакет для суммы: {amount}")
 
         for package in CREDIT_PACKAGES.values():
 
+            print(f"🔍 Проверяем пакет: {package['credits']} кредитов за {package['price']} руб")
+            print(f"🔍 Разница: {abs(package['price'] - amount)}")
             if abs(package['price'] - amount) < 1.0:  # Погрешность 1 рубль
 
                 # Активируем кредиты
