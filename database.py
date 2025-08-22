@@ -133,6 +133,9 @@ class AnalyticsDB:
                 # Миграция: добавляем недостающие колонки в таблицу payments
                 self._migrate_payments_table(cursor)
                 
+                # Миграция: добавляем недостающие колонки в таблицу user_limits
+                self._migrate_user_limits_table(cursor)
+                
                 conn.commit()
                 logging.info("База данных успешно инициализирована")
                 
@@ -158,6 +161,42 @@ class AnalyticsDB:
                 
         except Exception as e:
             logging.error(f"Ошибка миграции таблицы payments: {e}")
+    
+    def _migrate_user_limits_table(self, cursor):
+        """Миграция таблицы user_limits для добавления недостающих колонок"""
+        try:
+            # Проверяем, есть ли таблица user_limits
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user_limits'")
+            if not cursor.fetchone():
+                # Создаем таблицу если её нет
+                cursor.execute('''
+                    CREATE TABLE user_limits (
+                        user_id INTEGER PRIMARY KEY,
+                        free_generations_used INTEGER DEFAULT 0,
+                        total_free_generations INTEGER DEFAULT 3,
+                        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id)
+                    )
+                ''')
+                logging.info("Создана таблица user_limits")
+                return
+            
+            # Проверяем, есть ли колонка free_generations_used
+            cursor.execute("PRAGMA table_info(user_limits)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            # Добавляем колонку free_generations_used если её нет
+            if 'free_generations_used' not in columns:
+                cursor.execute("ALTER TABLE user_limits ADD COLUMN free_generations_used INTEGER DEFAULT 0")
+                logging.info("Добавлена колонка free_generations_used в таблицу user_limits")
+            
+            # Добавляем колонку total_free_generations если её нет
+            if 'total_free_generations' not in columns:
+                cursor.execute("ALTER TABLE user_limits ADD COLUMN total_free_generations INTEGER DEFAULT 3")
+                logging.info("Добавлена колонка total_free_generations в таблицу user_limits")
+                
+        except Exception as e:
+            logging.error(f"Ошибка миграции таблицы user_limits: {e}")
     
     def add_user(self, user_id: int, username: str = None, first_name: str = None, last_name: str = None):
         """Добавление нового пользователя"""
