@@ -9190,61 +9190,225 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if send_text:
 
-                        await send_text(f"Генерирую через Bytedance Seedream-3 (нативная 2K генерация, быстрая)...")
+                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 создает изображения высокого качества, может занять до 2 минут")
 
                     
 
-                    # Генерация через Bytedance на Replicate
+                    # Генерация через Bytedance на Replicate с таймаутом
 
-                    output = replicate.run(
+                    import asyncio
 
-                        "bytedance/seedream-3",
+                    try:
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                        # Проверяем API токен
 
-                    )
+                        if not os.environ.get('REPLICATE_API_TOKEN'):
 
-                    
+                            if send_text:
 
-                    # Обработка результата
+                                keyboard = [
 
-                    if hasattr(output, 'url'):
+                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
-                        image_url = output.url
+                                ]
 
-                    elif hasattr(output, '__getitem__'):
+                                reply_markup = InlineKeyboardMarkup(keyboard)
 
-                        image_url = output[0] if output else None
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
 
-                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+                            continue
 
-                        image_url = output[0]
+                        
 
-                    else:
+                        # Запускаем генерацию с увеличенным таймаутом для 2K качества
 
-                        image_url = str(output) if output else None
+                        loop = asyncio.get_event_loop()
 
-                    
+                        
 
-                    # Отладочная информация для Seedream-3 ЭТАП 1
-                    print(f"🔍 Seedream-3 ЭТАП 1: получили output от Replicate")
-                    print(f"   output = {output}")
-                    print(f"   тип output = {type(output)}")
-                    print(f"   hasattr(output, 'url') = {hasattr(output, 'url')}")
-                    print(f"   image_url = {image_url}")
-                    print(f"   тип image_url = {type(image_url)}")
-                    print(f"   длина image_url = {len(str(image_url)) if image_url else 'None'}")
-                    if image_url:
-                        print(f"   image_url[:20] = {str(image_url)[:20]}")
-                        print(f"   image_url[-20:] = {str(image_url)[-20:]}")
+                        output = await asyncio.wait_for(
+
+                            loop.run_in_executor(None, lambda: replicate.run(
+
+                                "bytedance/seedream-3",
+
+                                input={"prompt": prompt_with_style, **replicate_params}
+
+                            )),
+
+                            timeout=120.0  # Увеличиваем таймаут до 120 секунд для Bytedance 2K генерации
+
+                        )
+
+                        
+
+                        # Обработка ответа от Replicate API
+
+                        image_url = None
+
+                        
+
+                        # Проверяем, является ли output объектом FileOutput
+
+                        if hasattr(output, 'url'):
+
+                            # Это объект FileOutput, используем его URL
+
+                            image_url = output.url
+
+                        elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                            # Если это итератор (генератор)
+
+                            try:
+
+                                # Преобразуем в список и берем первый элемент
+
+                                output_list = list(output)
+
+                                if output_list:
+
+                                    image_url = output_list[0]
+
+                            except Exception as e:
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при обработке итератора: {e}")
+
+                                continue
+
+                        elif hasattr(output, '__getitem__'):
+
+                            image_url = output[0] if output else None
+
+                        elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                            image_url = output[0]
+
+                        else:
+
+                            # Если это не итератор, используем как есть
+
+                            image_url = str(output) if output else None
+
+                        
+
+                        # Проверяем, что получили URL
+
+                        if not image_url:
+
+                            if send_text:
+
+                                await send_text(f"❌ Не удалось получить изображение от Bytedance (пустой результат)")
+
+                            continue
+
+                        
+
+                        # Конвертация bytes в строку если необходимо (только для URL, не для бинарных данных)
+
+                        if isinstance(image_url, bytes):
+
+                            try:
+
+                                # Пробуем декодировать как UTF-8 (для URL)
+
+                                image_url = image_url.decode('utf-8')
+
+                            except UnicodeDecodeError:
+
+                                # Если не удается декодировать как UTF-8, это может быть бинарные данные
+
+                                if send_text:
+
+                                    await send_text(f"❌ Получены бинарные данные вместо URL от Bytedance")
+
+                                continue
+
+                        
+
+                        # Проверяем, что это строка и начинается с http
+
+                        if not isinstance(image_url, str):
+
+                            if send_text:
+
+                                await send_text(f"❌ Неверный тип URL от Bytedance")
+
+                            continue
+
+                        
+
+                        if not image_url.startswith(('http://', 'https://')):
+
+                            if send_text:
+
+                                await send_text(f"❌ Получен неверный URL от Bytedance")
+
+                            continue
+
+                            
+
+                    except asyncio.TimeoutError:
+
+                        logging.warning(f"Таймаут при генерации через Bytedance (120 сек)")
+
+                        if send_text:
+
+                            await send_text(f"⏰ Таймаут при генерации 2K изображения\n💡 Bytedance требует больше времени для высокого качества. Попробуйте выбрать другую модель или попробовать снова")
+
+                        continue
+
+                        
 
                 except Exception as e:
 
-                    logging.error(f"Ошибка при генерации через Bytedance: {e}")
+                    error_msg = str(e)
 
-                    if send_text:
+                    logging.error(f"Ошибка при генерации изображения через Bytedance: {e}")
 
-                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+                    if "insufficient_credit" in error_msg.lower() or "insufficient credit" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
+
+                    elif "api" in error_msg.lower() or "token" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
+
+                    else:
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка при генерации через Bytedance: {error_msg[:100]}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
 
                     continue
 
@@ -20653,51 +20817,225 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if send_text:
 
-                        await send_text(f"Генерирую через Bytedance Seedream-3 (нативная 2K генерация, быстрая)...")
+                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 создает изображения высокого качества, может занять до 2 минут")
 
                     
 
-                    # Генерация через Bytedance на Replicate
+                    # Генерация через Bytedance на Replicate с таймаутом
 
-                    output = replicate.run(
+                    import asyncio
 
-                        "bytedance/seedream-3",
+                    try:
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                        # Проверяем API токен
 
-                    )
+                        if not os.environ.get('REPLICATE_API_TOKEN'):
 
-                    
+                            if send_text:
 
-                    # Обработка результата
+                                keyboard = [
 
-                    if hasattr(output, 'url'):
+                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
-                        image_url = output.url
+                                ]
 
-                    elif hasattr(output, '__getitem__'):
+                                reply_markup = InlineKeyboardMarkup(keyboard)
 
-                        image_url = output[0] if output else None
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
 
-                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+                            continue
 
-                        image_url = output[0]
+                        
 
-                    else:
+                        # Запускаем генерацию с увеличенным таймаутом для 2K качества
 
-                        image_url = str(output) if output else None
+                        loop = asyncio.get_event_loop()
 
-                    
+                        
 
-                    # Отладочная информация убрана для чистоты интерфейса
+                        output = await asyncio.wait_for(
+
+                            loop.run_in_executor(None, lambda: replicate.run(
+
+                                "bytedance/seedream-3",
+
+                                input={"prompt": prompt_with_style, **replicate_params}
+
+                            )),
+
+                            timeout=120.0  # Увеличиваем таймаут до 120 секунд для Bytedance 2K генерации
+
+                        )
+
+                        
+
+                        # Обработка ответа от Replicate API
+
+                        image_url = None
+
+                        
+
+                        # Проверяем, является ли output объектом FileOutput
+
+                        if hasattr(output, 'url'):
+
+                            # Это объект FileOutput, используем его URL
+
+                            image_url = output.url
+
+                        elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                            # Если это итератор (генератор)
+
+                            try:
+
+                                # Преобразуем в список и берем первый элемент
+
+                                output_list = list(output)
+
+                                if output_list:
+
+                                    image_url = output_list[0]
+
+                            except Exception as e:
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при обработке итератора: {e}")
+
+                                continue
+
+                        elif hasattr(output, '__getitem__'):
+
+                            image_url = output[0] if output else None
+
+                        elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                            image_url = output[0]
+
+                        else:
+
+                            # Если это не итератор, используем как есть
+
+                            image_url = str(output) if output else None
+
+                        
+
+                        # Проверяем, что получили URL
+
+                        if not image_url:
+
+                            if send_text:
+
+                                await send_text(f"❌ Не удалось получить изображение от Bytedance (пустой результат)")
+
+                            continue
+
+                        
+
+                        # Конвертация bytes в строку если необходимо (только для URL, не для бинарных данных)
+
+                        if isinstance(image_url, bytes):
+
+                            try:
+
+                                # Пробуем декодировать как UTF-8 (для URL)
+
+                                image_url = image_url.decode('utf-8')
+
+                            except UnicodeDecodeError:
+
+                                # Если не удается декодировать как UTF-8, это может быть бинарные данные
+
+                                if send_text:
+
+                                    await send_text(f"❌ Получены бинарные данные вместо URL от Bytedance")
+
+                                continue
+
+                        
+
+                        # Проверяем, что это строка и начинается с http
+
+                        if not isinstance(image_url, str):
+
+                            if send_text:
+
+                                await send_text(f"❌ Неверный тип URL от Bytedance")
+
+                            continue
+
+                        
+
+                        if not image_url.startswith(('http://', 'https://')):
+
+                            if send_text:
+
+                                await send_text(f"❌ Получен неверный URL от Bytedance")
+
+                            continue
+
+                            
+
+                    except asyncio.TimeoutError:
+
+                        logging.warning(f"Таймаут при генерации через Bytedance (120 сек)")
+
+                        if send_text:
+
+                            await send_text(f"⏰ Таймаут при генерации 2K изображения\n💡 Bytedance требует больше времени для высокого качества. Попробуйте выбрать другую модель или попробовать снова")
+
+                        continue
+
+                        
 
                 except Exception as e:
 
-                    logging.error(f"Ошибка при генерации через Bytedance: {e}")
+                    error_msg = str(e)
 
-                    if send_text:
+                    logging.error(f"Ошибка при генерации изображения через Bytedance: {e}")
 
-                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+                    if "insufficient_credit" in error_msg.lower() or "insufficient credit" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
+
+                    elif "api" in error_msg.lower() or "token" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
+
+                    else:
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка при генерации через Bytedance: {error_msg[:100]}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
 
                     continue
 
@@ -21032,7 +21370,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     if hasattr(update, 'message') and update.message:
                         await update.message.reply_photo(photo=item.media, caption=item.caption)
                     else:
-                        await context.bot.send_photo(chat_id=update.effective_chat.id, photo=item.media, caption=item.caption)
+                        await context.bot.send_photo(chat_id=chat_id, photo=item.media, caption=item.caption)
                     print(f"✅ Изображение {i+1} отправлено отдельно")
                 except Exception as photo_error:
                     print(f"❌ Ошибка отправки изображения {i+1}: {photo_error}")
