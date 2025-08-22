@@ -27796,11 +27796,18 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
     payment_id = payment_data.get('id')
 
     amount = payment_data.get('amount', 0)
+    # Преобразуем amount в число, если это строка
+    if isinstance(amount, str):
+        try:
+            amount = float(amount)
+        except ValueError:
+            amount = 0.0
     
     print(f"🔍 activate_payment вызвана:")
     print(f"🔍 user_id: {user_id}")
     print(f"🔍 payment_id: {payment_id}")
     print(f"🔍 amount: {amount} (тип: {type(amount)})")
+    print(f"🔍 amount после преобразования: {amount} (тип: {type(amount)})")
 
     
 
