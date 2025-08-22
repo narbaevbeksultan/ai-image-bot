@@ -9551,8 +9551,28 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте снова или выберите другую модель")
 
     if media and send_media:
-
-        await send_media(media=media)
+        print(f"🔍 Попытка отправки media группы...")
+        print(f"🔍 Количество изображений: {len(media)}")
+        for i, item in enumerate(media):
+            print(f"🔍 Изображение {i+1}: {item.media}")
+            print(f"🔍 Длина URL: {len(str(item.media)) if item.media else 'None'}")
+        
+        try:
+            # Пытаемся отправить как группу
+            await send_media(media=media)
+            print(f"✅ Media группа отправлена успешно")
+        except Exception as group_error:
+            print(f"❌ Ошибка отправки группы: {group_error}")
+            # Если группа не отправляется, отправляем по одному
+            for i, item in enumerate(media):
+                try:
+                    if hasattr(update, 'message') and update.message:
+                        await update.message.reply_photo(photo=item.media, caption=item.caption)
+                    else:
+                        await context.bot.send_photo(chat_id=update.effective_chat.id, photo=item.media, caption=item.caption)
+                    print(f"✅ Изображение {i+1} отправлено отдельно")
+                except Exception as photo_error:
+                    print(f"❌ Ошибка отправки изображения {i+1}: {photo_error}")
 
     elif processed_count == 0 and send_text:
 
@@ -20967,8 +20987,28 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте снова или выберите другую модель")
 
     if media and send_media:
-
-        await send_media(media=media)
+        print(f"🔍 Попытка отправки media группы...")
+        print(f"🔍 Количество изображений: {len(media)}")
+        for i, item in enumerate(media):
+            print(f"🔍 Изображение {i+1}: {item.media}")
+            print(f"🔍 Длина URL: {len(str(item.media)) if item.media else 'None'}")
+        
+        try:
+            # Пытаемся отправить как группу
+            await send_media(media=media)
+            print(f"✅ Media группа отправлена успешно")
+        except Exception as group_error:
+            print(f"❌ Ошибка отправки группы: {group_error}")
+            # Если группа не отправляется, отправляем по одному
+            for i, item in enumerate(media):
+                try:
+                    if hasattr(update, 'message') and update.message:
+                        await update.message.reply_photo(photo=item.media, caption=item.caption)
+                    else:
+                        await context.bot.send_photo(chat_id=update.effective_chat.id, photo=item.media, caption=item.caption)
+                    print(f"✅ Изображение {i+1} отправлено отдельно")
+                except Exception as photo_error:
+                    print(f"❌ Ошибка отправки изображения {i+1}: {photo_error}")
 
     elif processed_count == 0 and send_text:
 
