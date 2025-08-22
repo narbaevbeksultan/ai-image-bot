@@ -9226,7 +9226,17 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Отладочная информация убрана для чистоты интерфейса
+                    # Отладочная информация для Seedream-3 ЭТАП 1
+                    print(f"🔍 Seedream-3 ЭТАП 1: получили output от Replicate")
+                    print(f"   output = {output}")
+                    print(f"   тип output = {type(output)}")
+                    print(f"   hasattr(output, 'url') = {hasattr(output, 'url')}")
+                    print(f"   image_url = {image_url}")
+                    print(f"   тип image_url = {type(image_url)}")
+                    print(f"   длина image_url = {len(str(image_url)) if image_url else 'None'}")
+                    if image_url:
+                        print(f"   image_url[:20] = {str(image_url)[:20]}")
+                        print(f"   image_url[-20:] = {str(image_url)[-20:]}")
 
                 except Exception as e:
 
@@ -9532,6 +9542,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             
 
+            # Отладочная информация ЭТАП 2: перед добавлением в список
+            print(f"🔍 Seedream-3 ЭТАП 2: перед добавлением в images")
+            print(f"   image_url = {image_url}")
+            print(f"   тип image_url = {type(image_url)}")
+            print(f"   длина image_url = {len(str(image_url)) if image_url else 'None'}")
+            if image_url:
+                print(f"   image_url[:15] = {str(image_url)[:15]}")
+                print(f"   image_url[-15:] = {str(image_url)[-15:]}")
             images.append(image_url)
 
             media.append(InputMediaPhoto(media=image_url, caption=caption))
