@@ -9190,7 +9190,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if send_text:
 
-                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 создает изображения высокого качества, может занять до 2 минут")
+                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 лидер по качеству с нативным 2K разрешением, может занять до 3 минут для максимального качества")
 
                     
 
@@ -9236,7 +9236,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             )),
 
-                            timeout=120.0  # Увеличиваем таймаут до 120 секунд для Bytedance 2K генерации
+                            timeout=180.0  # Увеличиваем таймаут до 180 секунд для Bytedance нативной 2K генерации
 
                         )
 
@@ -9319,12 +9319,50 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             except UnicodeDecodeError:
 
                                 # Если не удается декодировать как UTF-8, это может быть бинарные данные
+                                # Bytedance часто возвращает бинарные данные изображения
 
-                                if send_text:
+                                print(f"🔍 Bytedance: получены бинарные данные, длина: {len(image_url)} байт")
+                                
+                                try:
+                                    # Создаем временный файл для отправки
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    if send_text:
 
-                                    await send_text(f"❌ Получены бинарные данные вместо URL от Bytedance")
+                                        await send_text(f"❌ Получены бинарные данные от Bytedance, но не удалось отправить")
 
-                                continue
+                                    continue
 
                         
 
@@ -9342,9 +9380,54 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         if not image_url.startswith(('http://', 'https://')):
 
+                            # Bytedance может возвращать данные в другом формате
+                            # Попробуем альтернативные способы
+                            print(f"🔍 Bytedance: URL не начинается с http, пробуем альтернативы...")
+                            
+                            # Если это не URL, возможно это бинарные данные или другой формат
+                            if isinstance(image_url, bytes):
+                                print(f"🔍 Bytedance: получены bytes, длина: {len(image_url)}")
+                                # Попробуем отправить как бинарные данные
+                                try:
+                                    # Создаем временный файл
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                            
+                            # Если ничего не помогло, показываем ошибку
                             if send_text:
 
-                                await send_text(f"❌ Получен неверный URL от Bytedance")
+                                await send_text(f"❌ Получен неверный формат от Bytedance
+💡 Попробуйте другую модель или попробуйте снова")
 
                             continue
 
@@ -9352,11 +9435,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     except asyncio.TimeoutError:
 
-                        logging.warning(f"Таймаут при генерации через Bytedance (120 сек)")
+                        logging.warning(f"Таймаут при генерации через Bytedance (180 сек)")
 
                         if send_text:
 
-                            await send_text(f"⏰ Таймаут при генерации 2K изображения\n💡 Bytedance требует больше времени для высокого качества. Попробуйте выбрать другую модель или попробовать снова")
+                            await send_text(f"⏰ Таймаут при генерации нативного 2K изображения\n💡 Seedream-3 требует до 3 минут для максимального качества. Попробуйте выбрать другую модель или попробовать снова")
 
                         continue
 
@@ -20817,7 +20900,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if send_text:
 
-                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 создает изображения высокого качества, может занять до 2 минут")
+                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 лидер по качеству с нативным 2K разрешением, может занять до 3 минут для максимального качества")
 
                     
 
@@ -20863,7 +20946,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             )),
 
-                            timeout=120.0  # Увеличиваем таймаут до 120 секунд для Bytedance 2K генерации
+                            timeout=180.0  # Увеличиваем таймаут до 180 секунд для Bytedance нативной 2K генерации
 
                         )
 
@@ -20946,12 +21029,50 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             except UnicodeDecodeError:
 
                                 # Если не удается декодировать как UTF-8, это может быть бинарные данные
+                                # Bytedance часто возвращает бинарные данные изображения
 
-                                if send_text:
+                                print(f"🔍 Bytedance: получены бинарные данные, длина: {len(image_url)} байт")
+                                
+                                try:
+                                    # Создаем временный файл для отправки
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    if send_text:
 
-                                    await send_text(f"❌ Получены бинарные данные вместо URL от Bytedance")
+                                        await send_text(f"❌ Получены бинарные данные от Bytedance, но не удалось отправить")
 
-                                continue
+                                    continue
 
                         
 
@@ -20969,9 +21090,54 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         if not image_url.startswith(('http://', 'https://')):
 
+                            # Bytedance может возвращать данные в другом формате
+                            # Попробуем альтернативные способы
+                            print(f"🔍 Bytedance: URL не начинается с http, пробуем альтернативы...")
+                            
+                            # Если это не URL, возможно это бинарные данные или другой формат
+                            if isinstance(image_url, bytes):
+                                print(f"🔍 Bytedance: получены bytes, длина: {len(image_url)}")
+                                # Попробуем отправить как бинарные данные
+                                try:
+                                    # Создаем временный файл
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                            
+                            # Если ничего не помогло, показываем ошибку
                             if send_text:
 
-                                await send_text(f"❌ Получен неверный URL от Bytedance")
+                                await send_text(f"❌ Получен неверный формат от Bytedance
+💡 Попробуйте другую модель или попробуйте снова")
 
                             continue
 
@@ -20979,11 +21145,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     except asyncio.TimeoutError:
 
-                        logging.warning(f"Таймаут при генерации через Bytedance (120 сек)")
+                        logging.warning(f"Таймаут при генерации через Bytedance (180 сек)")
 
                         if send_text:
 
-                            await send_text(f"⏰ Таймаут при генерации 2K изображения\n💡 Bytedance требует больше времени для высокого качества. Попробуйте выбрать другую модель или попробовать снова")
+                            await send_text(f"⏰ Таймаут при генерации нативного 2K изображения\n💡 Seedream-3 требует до 3 минут для максимального качества. Попробуйте выбрать другую модель или попробовать снова")
 
                         continue
 
