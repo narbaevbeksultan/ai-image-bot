@@ -27775,7 +27775,12 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
     except Exception as e:
 
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"🔍 Ошибка в check_payment_status:")
+        print(f"🔍 {error_traceback}")
         logging.error(f"Ошибка проверки статуса платежа: {e}")
+        logging.error(f"Traceback: {error_traceback}")
 
         await update.callback_query.answer("❌ Ошибка проверки статуса")
 
