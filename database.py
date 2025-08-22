@@ -194,6 +194,11 @@ class AnalyticsDB:
             if 'total_free_generations' not in columns:
                 cursor.execute("ALTER TABLE user_limits ADD COLUMN total_free_generations INTEGER DEFAULT 3")
                 logging.info("Добавлена колонка total_free_generations в таблицу user_limits")
+            
+            # Добавляем колонку last_updated если её нет
+            if 'last_updated' not in columns:
+                cursor.execute("ALTER TABLE user_limits ADD COLUMN last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                logging.info("Добавлена колонка last_updated в таблицу user_limits")
                 
         except Exception as e:
             logging.error(f"Ошибка миграции таблицы user_limits: {e}")
