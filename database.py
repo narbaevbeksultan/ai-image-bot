@@ -181,27 +181,74 @@ class AnalyticsDB:
                 logging.info("Создана таблица user_limits")
                 return
             
-            # Проверяем, есть ли колонка free_generations_used
+            # Проверяем структуру существующей таблицы
             cursor.execute("PRAGMA table_info(user_limits)")
             columns = [column[1] for column in cursor.fetchall()]
+            required_columns = ['free_generations_used', 'total_free_generations', 'last_updated']
             
-            # Добавляем колонку free_generations_used если её нет
+            # Если отсутствуют важные колонки, пересоздаем таблицу
+            missing_columns = [col for col in required_columns if col not in columns]
+            if missing_columns:
+                logging.info(f"Отсутствуют колонки: {missing_columns}, пересоздаем таблицу")
+                
+                # Сохраняем существующие данные
+                cursor.execute("SELECT user_id, free_generations_used, total_free_generations FROM user_limits")
+                existing_data = cursor.fetchall()
+                
+                # Удаляем старую таблицу
+                cursor.execute("DROP TABLE user_limits")
+                
+                # Создаем новую таблицу
+                cursor.execute('''
+                    CREATE TABLE user_limits (
+                        user_id INTEGER PRIMARY KEY,
+                        free_generations_used INTEGER DEFAULT 0,
+                        total_free_generations INTEGER DEFAULT 3,
+                        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id)
+                    )
+                ''')
+                
+                # Восстанавливаем данные
+                for user_id, free_used, total_free in existing_data:
+                    cursor.execute('''
+                        INSERT INTO user_limits (user_id, free_generations_used, total_free_generations)
+                        VALUES (?, ?, ?)
+                    ''', (user_id, free_used or 0, total_free or 3))
+                
+                logging.info("Таблица user_limits пересоздана с сохранением данных")
+                return
+            
+            # Если все колонки есть, просто добавляем недостающие
             if 'free_generations_used' not in columns:
                 cursor.execute("ALTER TABLE user_limits ADD COLUMN free_generations_used INTEGER DEFAULT 0")
                 logging.info("Добавлена колонка free_generations_used в таблицу user_limits")
             
-            # Добавляем колонку total_free_generations если её нет
             if 'total_free_generations' not in columns:
                 cursor.execute("ALTER TABLE user_limits ADD COLUMN total_free_generations INTEGER DEFAULT 3")
                 logging.info("Добавлена колонка total_free_generations в таблицу user_limits")
-            
-            # Добавляем колонку last_updated если её нет
+                
             if 'last_updated' not in columns:
                 cursor.execute("ALTER TABLE user_limits ADD COLUMN last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
                 logging.info("Добавлена колонка last_updated в таблицу user_limits")
                 
         except Exception as e:
             logging.error(f"Ошибка миграции таблицы user_limits: {e}")
+            # В случае ошибки пытаемся создать таблицу заново
+            try:
+                cursor.execute("DROP TABLE IF EXISTS user_limits")
+                cursor.execute('''
+                    CREATE TABLE user_limits (
+                        user_id INTEGER PRIMARY KEY,
+                        free_generations_used INTEGER DEFAULT 0,
+                        total_free_generations INTEGER DEFAULT 3,
+                        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (user_id)
+                    )
+                ''')
+                logging.info("Таблица user_limits создана заново после ошибки")
+            except Exception as recreate_error:
+                logging.error(f"Критическая ошибка при создании таблицы user_limits: {recreate_error}")
     
     def add_user(self, user_id: int, username: str = None, first_name: str = None, last_name: str = None):
         """Добавление нового пользователя"""

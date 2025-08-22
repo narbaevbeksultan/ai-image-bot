@@ -27981,6 +27981,18 @@ def main():
     
 
     app = ApplicationBuilder().token(TOKEN).build()
+    
+    # Добавляем обработчик ошибок
+    async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обработчик ошибок для логирования"""
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"🔍 Ошибка в боте:")
+        print(f"🔍 {error_traceback}")
+        logging.error(f"Exception while handling an update: {context.error}")
+        logging.error(f"Traceback: {error_traceback}")
+    
+    app.add_error_handler(error_handler)
 
     
 
