@@ -9535,6 +9535,13 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             images.append(image_url)
 
             media.append(InputMediaPhoto(media=image_url, caption=caption))
+            
+            # Отладочная информация для понимания проблемы с URL
+            print(f"🔍 После создания InputMediaPhoto:")
+            print(f"   image_url: {image_url}")
+            print(f"   длина image_url: {len(str(image_url)) if image_url else 'None'}")
+            print(f"   последний элемент media: {media[-1].media}")
+            print(f"   длина media[-1].media: {len(str(media[-1].media)) if media[-1].media else 'None'}")
 
             processed_count += 1
 
