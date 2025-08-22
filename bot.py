@@ -9034,7 +9034,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -9254,7 +9254,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -20744,7 +20744,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -20964,7 +20964,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
