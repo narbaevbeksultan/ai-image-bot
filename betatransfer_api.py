@@ -122,25 +122,43 @@ class BetatransferAPI:
         Returns:
             Dict с информацией о статусе
         """
+        print(f"🔍 get_payment_status вызван с ID: {payment_id}")
+        
         # Формируем данные для подписи
         data = {'id': payment_id}
+        print(f"🔍 Данные для подписи: {data}")
+        
         signature = self._generate_signature(data)
+        print(f"🔍 Сгенерированная подпись: {signature}")
         
         # URL с токеном согласно документации
         endpoint = f"{self.base_url}/info?token={self.api_key}"
+        print(f"🔍 Endpoint: {endpoint}")
         
         # Добавляем подпись к данным
         data['sign'] = signature
+        print(f"🔍 Данные для отправки: {data}")
         
         headers = {
             "Content-Type": "application/x-www-form-urlencoded"
         }
+        print(f"🔍 Заголовки: {headers}")
         
         try:
+            print(f"🔍 Отправляем POST запрос...")
             response = requests.post(endpoint, data=data, headers=headers)
+            print(f"🔍 Получен ответ: {response.status_code}")
+            print(f"🔍 Тело ответа: {response.text}")
+            
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            print(f"🔍 Результат: {result}")
+            return result
         except requests.exceptions.RequestException as e:
+            print(f"❌ Ошибка запроса: {e}")
+            return {"error": str(e)}
+        except Exception as e:
+            print(f"❌ Общая ошибка: {e}")
             return {"error": str(e)}
     
     def verify_callback_signature(self, data: Dict, signature: str) -> bool:
