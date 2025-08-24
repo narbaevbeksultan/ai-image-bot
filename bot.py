@@ -4844,7 +4844,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()()
+                    edited_image_url = output.url()
 
                 else:
 
@@ -7730,7 +7730,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()()
+                    edited_image_url = output.url()
 
                 else:
 
@@ -9034,7 +9034,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()()
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -9254,7 +9254,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()()
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -9527,7 +9527,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         # Это объект FileOutput, используем его URL
 
-                        image_url = output.url()()
+                        image_url = output.url()
 
                     elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -9647,7 +9647,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         # Это объект FileOutput, используем его URL
 
-                        image_url = output.url()()
+                        image_url = output.url()
 
                     elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -16695,7 +16695,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()()
+                    edited_image_url = output.url()
 
                 else:
 
@@ -19581,7 +19581,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()()
+                    edited_image_url = output.url()
 
                 else:
 
@@ -20885,7 +20885,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()()
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -21105,7 +21105,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()()
+                            image_url = output.url()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
