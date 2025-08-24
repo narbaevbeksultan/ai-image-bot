@@ -9921,8 +9921,17 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             
 
+            # Проверяем качество URL перед добавлением
+            if not image_url or not isinstance(image_url, str):
+                print(f"🔍 Пропускаем неверный URL: {image_url}")
+                continue
+                
+            if len(str(image_url)) < 10 or not str(image_url).startswith(('http://', 'https://')):
+                print(f"🔍 Пропускаем неверный URL: {image_url} (длина: {len(str(image_url))})")
+                continue
+                
             # Отладочная информация ЭТАП 2: перед добавлением в список
-            print(f"🔍 Seedream-3 ЭТАП 2: перед добавлением в images")
+            print(f"🔍 ЭТАП 2: перед добавлением в images")
             print(f"   image_url = {image_url}")
             print(f"   тип image_url = {type(image_url)}")
             print(f"   длина image_url = {len(str(image_url)) if image_url else 'None'}")
