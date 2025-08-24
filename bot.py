@@ -1130,9 +1130,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:
-
-            output = replicate.run(
+        try:output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -1334,9 +1332,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogram
-
-        output = replicate.run(
+        # Генерируем простое изображение через Ideogramoutput = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -3408,9 +3404,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:
-
-            output = replicate.run(
+        try:output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -3612,9 +3606,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogram
-
-        output = replicate.run(
+        # Генерируем простое изображение через Ideogramoutput = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -4780,9 +4772,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-
-                    output = replicate.run(
+                with open(temp_file_path, "rb") as image_file:output = replicate.run(
 
                         "black-forest-labs/flux-kontext-pro",
 
@@ -6294,9 +6284,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:
-
-            output = replicate.run(
+        try:output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -6498,9 +6486,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogram
-
-        output = replicate.run(
+        # Генерируем простое изображение через Ideogramoutput = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -7666,9 +7652,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-
-                    output = replicate.run(
+                with open(temp_file_path, "rb") as image_file:output = replicate.run(
 
                         "black-forest-labs/flux-kontext-pro",
 
@@ -9505,13 +9489,21 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Google Imagen 4 на Replicate
+                    # Генерация через Google Imagen 4 на Replicate (асинхронно)
 
-                    output = replicate.run(
+                    loop = asyncio.get_event_loop()
 
-                        "google/imagen-4-ultra",
+                    output = await asyncio.wait_for(
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                        loop.run_in_executor(None, lambda: replicate.run(
+
+                            "google/imagen-4-ultra",
+
+                            input={"prompt": prompt_with_style, **replicate_params}
+
+                        )),
+
+                        timeout=60.0
 
                     )
 
@@ -9605,6 +9597,12 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     print(f"🔍 Google Imagen 4 Ultra: получен URL: {image_url[:50]}...")
 
+                except asyncio.TimeoutError:
+
+                    await send_text(update, context, "⏰ Превышено время ожидания генерации Google Imagen (60 сек)")
+
+                    return
+
                 except Exception as e:
 
                     logging.error(f"Ошибка при генерации через Google Imagen 4: {e}")
@@ -9627,11 +9625,26 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Luma на Replicate
 
-                    output = replicate.run(
+                    loop = asyncio.get_event_loop()
 
-                        "luma/photon",
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                    output = await asyncio.wait_for(
+
+
+                        loop.run_in_executor(None, lambda: replicate.run(
+
+
+                            "luma/photon",
+
+
+                            input={prompt_with_style, **replicate_params}
+
+
+                        )),
+
+
+                        timeout=60.0
+
 
                     )
 
@@ -9745,9 +9758,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Bria на Replicate
-
-                    output = replicate.run(
+                    # Генерация через Bria на Replicateoutput = replicate.run(
 
                         "bria/image-3.2",
 
@@ -9801,11 +9812,26 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Recraft AI на Replicate
 
-                    output = replicate.run(
+                    loop = asyncio.get_event_loop()
 
-                        "recraft-ai/recraft-v3-svg",
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                    output = await asyncio.wait_for(
+
+
+                        loop.run_in_executor(None, lambda: replicate.run(
+
+
+                            "recraft-ai/recraft-v3-svg",
+
+
+                            input={prompt_with_style, **replicate_params}
+
+
+                        )),
+
+
+                        timeout=60.0
+
 
                     )
 
@@ -9879,9 +9905,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Fallback на Ideogram если модель не поддерживается
-
-                    output = replicate.run(
+                    # Fallback на Ideogram если модель не поддерживаетсяoutput = replicate.run(
 
                         "ideogram-ai/ideogram-v3-turbo",
 
@@ -12981,9 +13005,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:
-
-            output = replicate.run(
+        try:output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -13185,9 +13207,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogram
-
-        output = replicate.run(
+        # Генерируем простое изображение через Ideogramoutput = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -15259,9 +15279,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:
-
-            output = replicate.run(
+        try:output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -15463,9 +15481,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogram
-
-        output = replicate.run(
+        # Генерируем простое изображение через Ideogramoutput = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -16631,9 +16647,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-
-                    output = replicate.run(
+                with open(temp_file_path, "rb") as image_file:output = replicate.run(
 
                         "black-forest-labs/flux-kontext-pro",
 
@@ -18145,9 +18159,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:
-
-            output = replicate.run(
+        try:output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -18349,9 +18361,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogram
-
-        output = replicate.run(
+        # Генерируем простое изображение через Ideogramoutput = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -19517,9 +19527,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-
-                    output = replicate.run(
+                with open(temp_file_path, "rb") as image_file:output = replicate.run(
 
                         "black-forest-labs/flux-kontext-pro",
 
@@ -21358,11 +21366,26 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Google Imagen 4 на Replicate
 
-                    output = replicate.run(
+                    loop = asyncio.get_event_loop()
 
-                        "google/imagen-4-ultra",
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                    output = await asyncio.wait_for(
+
+
+                        loop.run_in_executor(None, lambda: replicate.run(
+
+
+                            "google/imagen-4-ultra",
+
+
+                            input={prompt_with_style, **replicate_params}
+
+
+                        )),
+
+
+                        timeout=60.0
+
 
                     )
 
@@ -21412,11 +21435,26 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Luma на Replicate
 
-                    output = replicate.run(
+                    loop = asyncio.get_event_loop()
 
-                        "luma/photon",
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                    output = await asyncio.wait_for(
+
+
+                        loop.run_in_executor(None, lambda: replicate.run(
+
+
+                            "luma/photon",
+
+
+                            input={prompt_with_style, **replicate_params}
+
+
+                        )),
+
+
+                        timeout=60.0
+
 
                     )
 
@@ -21464,9 +21502,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Bria на Replicate
-
-                    output = replicate.run(
+                    # Генерация через Bria на Replicateoutput = replicate.run(
 
                         "bria/image-3.2",
 
@@ -21520,11 +21556,26 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Recraft AI на Replicate
 
-                    output = replicate.run(
+                    loop = asyncio.get_event_loop()
 
-                        "recraft-ai/recraft-v3-svg",
 
-                        input={"prompt": prompt_with_style, **replicate_params}
+                    output = await asyncio.wait_for(
+
+
+                        loop.run_in_executor(None, lambda: replicate.run(
+
+
+                            "recraft-ai/recraft-v3-svg",
+
+
+                            input={prompt_with_style, **replicate_params}
+
+
+                        )),
+
+
+                        timeout=60.0
+
 
                     )
 
@@ -21598,9 +21649,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Fallback на Ideogram если модель не поддерживается
-
-                    output = replicate.run(
+                    # Fallback на Ideogram если модель не поддерживаетсяoutput = replicate.run(
 
                         "ideogram-ai/ideogram-v3-turbo",
 
