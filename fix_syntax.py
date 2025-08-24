@@ -19,7 +19,10 @@ def fix_syntax_error():
          '# Fallback на Ideogram если модель не поддерживается\n                    output = replicate.run('),
         
         ('try:output = replicate.run(', 
-         'try:\n            output = replicate.run(')
+         'try:\n            output = replicate.run('),
+        
+        ('input={prompt_with_style, **replicate_params}', 
+         'input={"prompt": prompt_with_style, **replicate_params}')
     ]
     
     for old, new in fixes:

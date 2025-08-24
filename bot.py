@@ -9643,7 +9643,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             "luma/photon",
 
 
-                            input={prompt_with_style, **replicate_params}
+                            input={"prompt": prompt_with_style, **replicate_params}
 
 
                         )),
@@ -9831,7 +9831,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             "recraft-ai/recraft-v3-svg",
 
 
-                            input={prompt_with_style, **replicate_params}
+                            input={"prompt": prompt_with_style, **replicate_params}
 
 
                         )),
@@ -21392,7 +21392,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             "google/imagen-4-ultra",
 
 
-                            input={prompt_with_style, **replicate_params}
+                            input={"prompt": prompt_with_style, **replicate_params}
 
 
                         )),
@@ -21461,7 +21461,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             "luma/photon",
 
 
-                            input={prompt_with_style, **replicate_params}
+                            input={"prompt": prompt_with_style, **replicate_params}
 
 
                         )),
@@ -21583,7 +21583,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             "recraft-ai/recraft-v3-svg",
 
 
-                            input={prompt_with_style, **replicate_params}
+                            input={"prompt": prompt_with_style, **replicate_params}
 
 
                         )),
