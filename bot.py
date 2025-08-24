@@ -9761,7 +9761,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Bria на Replicateoutput = replicate.run(
+                    # Генерация через Bria на Replicate
+                    output = replicate.run(
 
                         "bria/image-3.2",
 
@@ -9908,7 +9909,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Fallback на Ideogram если модель не поддерживаетсяoutput = replicate.run(
+                    # Fallback на Ideogram если модель не поддерживается
+                    output = replicate.run(
 
                         "ideogram-ai/ideogram-v3-turbo",
 
@@ -21508,7 +21510,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Bria на Replicateoutput = replicate.run(
+                    # Генерация через Bria на Replicate
+                    output = replicate.run(
 
                         "bria/image-3.2",
 
@@ -21655,7 +21658,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Fallback на Ideogram если модель не поддерживаетсяoutput = replicate.run(
+                    # Fallback на Ideogram если модель не поддерживается
+                    output = replicate.run(
 
                         "ideogram-ai/ideogram-v3-turbo",
 
