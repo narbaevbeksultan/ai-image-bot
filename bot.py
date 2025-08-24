@@ -1,4 +1,5 @@
 import logging
+import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -2275,6 +2276,7 @@ def enhance_prompts_with_character_context(prompts, topic):
 
 
 import logging
+import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -5253,6 +5255,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         return None
 
 import logging
+import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -11882,6 +11885,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Противоположные требования"""
 import logging
+import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -14158,6 +14162,7 @@ def enhance_prompts_with_character_context(prompts, topic):
 
 
 import logging
+import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -17136,6 +17141,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         return None
 
 import logging
+import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
