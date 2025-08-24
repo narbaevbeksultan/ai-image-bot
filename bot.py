@@ -21861,23 +21861,19 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Обработка результата
 
-                    if hasattr(output, 'url'):
-
+                    # 🔍 СПЕЦИАЛЬНАЯ ОБРАБОТКА ДЛЯ GOOGLE IMAGEN
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        # Google Imagen возвращает URL как строку
+                        image_url = output
+                        print(f"🔍 Google Imagen: получен URL как строка: {image_url[:50]}...")
+                    elif hasattr(output, 'url'):
                         image_url = output.url()
-
                     elif hasattr(output, '__getitem__'):
-
                         image_url = output[0] if output else None
-
                     elif isinstance(output, (list, tuple)) and len(output) > 0:
-
                         image_url = output[0]
-
                     else:
-
                         image_url = str(output) if output else None
-
-                    
 
                     # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
                     if send_text:
