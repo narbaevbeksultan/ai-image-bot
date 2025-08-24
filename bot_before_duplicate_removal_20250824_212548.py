@@ -21879,72 +21879,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Google Imagen вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
-                    
-                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Google Imagen 4 Ultra
-                    print(f"🔍 Google Imagen 4 Ultra - ДЕТАЛЬНАЯ ОТЛАДКА:")
-                    print(f"   Тип output: {type(output)}")
-                    print(f"   output: {output}")
-                    print(f"   repr(output): {repr(output)}")
-                    print(f"   dir(output): {dir(output)}")
-                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
-                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
-                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
-                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
-                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
-                    
-                    # Проверяем все возможные атрибуты
-                    if hasattr(output, 'url'):
-                        try:
-                            url_value = output.url()
-                            print(f"   output.url(): {url_value}")
-                        except Exception as e:
-                            print(f"   output.url() ОШИБКА: {e}")
-                    
-                    if hasattr(output, 'id'):
-                        try:
-                            id_value = output.id
-                            print(f"   output.id: {id_value}")
-                        except Exception as e:
-                            print(f"   output.id ОШИБКА: {e}")
-                    
-                    if hasattr(output, 'status'):
-                        try:
-                            status_value = output.status
-                            print(f"   output.status: {status_value}")
-                        except Exception as e:
-                            print(f"   output.status ОШИБКА: {e}")
-                    
-                    if hasattr(output, 'output'):
-                        try:
-                            output_value = output.output
-                            print(f"   output.output: {output_value}")
-                        except Exception as e:
-                            print(f"   output.output ОШИБКА: {e}")
-                    
-                    if hasattr(output, 'result'):
-                        try:
-                            result_value = output.result
-                            print(f"   output.result: {result_value}")
-                        except Exception as e:
-                            print(f"   output.result ОШИБКА: {e}")
-                    
-                    # 🔍 ФИНАЛЬНАЯ ОТЛАДКА - что получили
-                    print(f"🔍 Google Imagen - ФИНАЛЬНЫЙ РЕЗУЛЬТАТ:")
-                    print(f"   image_url: {image_url}")
-                    print(f"   Тип image_url: {type(image_url)}")
-                    if image_url:
-                        print(f"   Длина image_url: {len(str(image_url))}")
-                        print(f"   Начинается с http: {str(image_url).startswith('http')}")
+                    # Отладочная информация убрана для чистоты интерфейса
 
                 except Exception as e:
 
