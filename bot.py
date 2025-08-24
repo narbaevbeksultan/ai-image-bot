@@ -1192,7 +1192,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
 
-            import asyncio
 
             loop = asyncio.get_event_loop()
 
@@ -2276,7 +2275,6 @@ def enhance_prompts_with_character_context(prompts, topic):
 
 
 import logging
-import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -3469,7 +3467,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
 
-            import asyncio
 
             loop = asyncio.get_event_loop()
 
@@ -5255,7 +5252,6 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         return None
 
 import logging
-import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -6352,7 +6348,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
 
-            import asyncio
 
             loop = asyncio.get_event_loop()
 
@@ -8933,7 +8928,6 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Ideogram на Replicate с таймаутом
 
-                    import asyncio
 
                     try:
 
@@ -9189,7 +9183,6 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Bytedance на Replicate с таймаутом
 
-                    import asyncio
 
                     try:
 
@@ -11885,7 +11878,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Противоположные требования"""
 import logging
-import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -13078,7 +13070,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
 
-            import asyncio
 
             loop = asyncio.get_event_loop()
 
@@ -14162,7 +14153,6 @@ def enhance_prompts_with_character_context(prompts, topic):
 
 
 import logging
-import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -15355,7 +15345,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
 
-            import asyncio
 
             loop = asyncio.get_event_loop()
 
@@ -17141,7 +17130,6 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         return None
 
 import logging
-import asyncio
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
 
@@ -18238,7 +18226,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
 
-            import asyncio
 
             loop = asyncio.get_event_loop()
 
@@ -20819,7 +20806,6 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Ideogram на Replicate с таймаутом
 
-                    import asyncio
 
                     try:
 
@@ -21075,7 +21061,6 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Генерация через Bytedance на Replicate с таймаутом
 
-                    import asyncio
 
                     try:
 
@@ -28825,7 +28810,6 @@ def main():
 
         # Запускаем на Railway с webhook
 
-        import asyncio
 
         
 
