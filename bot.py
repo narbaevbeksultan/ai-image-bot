@@ -9225,11 +9225,73 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             timeout=180.0  # Увеличиваем таймаут до 180 секунд для Bytedance нативной 2K генерации
 
                         )
-
                         
-
+                        # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Bytedance Seedream-3
+                        print(f"🔍 Bytedance Seedream-3 - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                        print(f"   Тип output: {type(output)}")
+                        print(f"   output: {output}")
+                        print(f"   repr(output): {repr(output)}")
+                        print(f"   dir(output): {dir(output)}")
+                        print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                        print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                        print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                        print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                        print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                        
+                        # Проверяем все возможные атрибуты
+                        if hasattr(output, 'url'):
+                            try:
+                                url_value = output.url()
+                                print(f"   output.url(): {url_value}")
+                            except Exception as e:
+                                print(f"   output.url() ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'id'):
+                            try:
+                                id_value = output.id
+                                print(f"   output.id: {id_value}")
+                            except Exception as e:
+                                print(f"   output.id ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'status'):
+                            try:
+                                status_value = output.status
+                                print(f"   output.status: {status_value}")
+                            except Exception as e:
+                                print(f"   output.status ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'output'):
+                            try:
+                                output_value = output.output
+                                print(f"   output.output: {output_value}")
+                            except Exception as e:
+                                print(f"   output.output ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'result'):
+                            try:
+                                result_value = output.result
+                                print(f"   output.result: {result_value}")
+                            except Exception as e:
+                                print(f"   output.result ОШИБКА: {e}")
+                        
+                        # Проверяем методы объекта
+                        print(f"   Методы объекта:")
+                        for attr in dir(output):
+                            if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                                try:
+                                    value = getattr(output, attr)
+                                    if callable(value):
+                                        try:
+                                            result = value()
+                                            print(f"     {attr}(): {result}")
+                                        except Exception as e:
+                                            print(f"     {attr}(): ОШИБКА - {e}")
+                                    else:
+                                        print(f"     {attr}: {value}")
+                                except Exception as e:
+                                    print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                        
                         # Обработка ответа от Replicate API
-
                         image_url = None
 
                         
@@ -9511,25 +9573,211 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Универсальная обработка результата для Google Imagen 4 Ultra
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Google Imagen 4 Ultra
 
-                    image_url = None
+                    print(f"🔍 Google Imagen 4 Ultra - ДЕТАЛЬНАЯ ОТЛАДКА:")
 
-                    # Проверяем, является ли output объектом FileOutput
+                    print(f"   Тип output: {type(output)}")
+
+                    print(f"   output: {output}")
+
+                    print(f"   repr(output): {repr(output)}")
+
+                    print(f"   dir(output): {dir(output)}")
+
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+
+                    
+
+                    # Проверяем все возможные атрибуты
 
                     if hasattr(output, 'url'):
 
-                        # Это объект FileOutput, используем его URL
+                        try:
 
-                        image_url = output.url()
+                            url_value = output.url()
 
-                    elif hasattr(output, '__iter__') and not isinstance(output, str):
+                            print(f"   output.url(): {url_value}")
 
-                        # Если это итератор (генератор)
+                        except Exception as e:
+
+                            print(f"   output.url() ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'id'):
 
                         try:
 
-                            # Преобразуем в список и берем первый элемент
+                            id_value = output.id
+
+                            print(f"   output.id: {id_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.id ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'status'):
+
+                        try:
+
+                            status_value = output.status
+
+                            print(f"   output.status: {status_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.status ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'output'):
+
+                        try:
+
+                            output_value = output.output
+
+                            print(f"   output.output: {output_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.output ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'result'):
+
+                        try:
+
+                            result_value = output.result
+
+                            print(f"   output.result: {result_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.result ОШИБКА: {e}")
+
+                    
+
+                    # Проверяем методы объекта
+
+                    print(f"   Методы объекта:")
+
+                    for attr in dir(output):
+
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+
+                            try:
+
+                                value = getattr(output, attr)
+
+                                if callable(value):
+
+                                    try:
+
+                                        result = value()
+
+                                        print(f"     {attr}(): {result}")
+
+                                    except Exception as e:
+
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+
+                                else:
+
+                                    print(f"     {attr}: {value}")
+
+                            except Exception as e:
+
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+
+                    image_url = None
+
+                    if hasattr(output, 'url'):
+
+                        try:
+
+                            image_url = output.url()
+
+                            print(f"🔍 Google Imagen: получен URL через .url(): {image_url}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при вызове .url(): {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 2: Проверяем атрибут .output
+
+                    elif hasattr(output, 'output') and not image_url:
+
+                        try:
+
+                            output_value = output.output
+
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+
+                                image_url = output_value
+
+                                print(f"🔍 Google Imagen: получен URL через .output: {image_url}")
+
+                            elif hasattr(output_value, '__iter__'):
+
+                                # Если output.output это список/итератор
+
+                                output_list = list(output_value)
+
+                                if output_list and isinstance(output_list[0], str) and output_list[0].startswith(('http://', 'https://')):
+
+                                    image_url = output_list[0]
+
+                                    print(f"🔍 Google Imagen: получен URL через .output[0]: {image_url}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке .output: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 3: Проверяем атрибут .result
+
+                    elif hasattr(output, 'result') and not image_url:
+
+                        try:
+
+                            result_value = output.result
+
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+
+                                image_url = result_value
+
+                                print(f"🔍 Google Imagen: получен URL через .result: {image_url}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке .result: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 4: Проверяем, является ли output итератором
+
+                    elif hasattr(output, '__iter__') and not isinstance(output, str) and not image_url:
+
+                        try:
 
                             output_list = list(output)
 
@@ -9537,35 +9785,153 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                                 first_item = output_list[0]
 
+                                print(f"🔍 Google Imagen: первый элемент итератора: {first_item} (тип: {type(first_item)})")
+
+                                
+
                                 if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
 
                                     image_url = first_item
 
+                                    print(f"🔍 Google Imagen: получен URL через итератор[0]: {image_url}")
+
+                                elif hasattr(first_item, 'url'):
+
+                                    try:
+
+                                        image_url = first_item.url()
+
+                                        print(f"🔍 Google Imagen: получен URL через итератор[0].url(): {image_url}")
+
+                                    except Exception as e:
+
+                                        print(f"🔍 Google Imagen: ошибка при вызове итератор[0].url(): {e}")
+
                                 else:
 
-                                    image_url = str(first_item)
+                                    print(f"🔍 Google Imagen: итератор[0] не содержит URL")
 
                         except Exception as e:
 
-                            print(f"🔍 Google Imagen 4 Ultra: ошибка при обработке итератора: {e}")
+                            print(f"🔍 Google Imagen: ошибка при обработке итератора: {e}")
 
-                            if send_text:
+                    
 
-                                await send_text(f"❌ Ошибка при обработке результата Google Imagen 4 Ultra")
+                    # 🔍 ПОПЫТКА 5: Проверяем индексацию
 
-                            continue
+                    elif hasattr(output, '__getitem__') and not image_url:
 
-                    elif hasattr(output, '__getitem__'):
+                        try:
 
-                        image_url = output[0] if output else None
+                            first_item = output[0]
 
-                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+                            print(f"🔍 Google Imagen: первый элемент по индексу: {first_item} (тип: {type(first_item)})")
 
-                        image_url = output[0]
+                            
+
+                            if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                image_url = first_item
+
+                                print(f"🔍 Google Imagen: получен URL через [0]: {image_url}")
+
+                            elif hasattr(first_item, 'url'):
+
+                                try:
+
+                                    image_url = first_item.url()
+
+                                    print(f"🔍 Google Imagen: получен URL через [0].url(): {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Google Imagen: ошибка при вызове [0].url(): {e}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при индексации: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 6: Проверяем, является ли output списком/кортежем
+
+                    elif isinstance(output, (list, tuple)) and len(output) > 0 and not image_url:
+
+                        try:
+
+                            first_item = output[0]
+
+                            print(f"🔍 Google Imagen: первый элемент списка: {first_item} (тип: {type(first_item)})")
+
+                            
+
+                            if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                image_url = first_item
+
+                                print(f"🔍 Google Imagen: получен URL через список[0]: {image_url}")
+
+                            elif hasattr(first_item, 'url'):
+
+                                try:
+
+                                    image_url = first_item.url()
+
+                                    print(f"🔍 Google Imagen: получен URL через список[0].url(): {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Google Imagen: ошибка при вызове список[0].url(): {e}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке списка: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 7: Последняя попытка - преобразование в строку
 
                     else:
 
-                        image_url = str(output) if output else None
+                        try:
+
+                            str_output = str(output)
+
+                            print(f"🔍 Google Imagen: преобразование в строку: '{str_output}' (длина: {len(str_output)})")
+
+                            
+
+                            # Проверяем, не является ли это URL
+
+                            if str_output.startswith(('http://', 'https://')):
+
+                                image_url = str_output
+
+                                print(f"🔍 Google Imagen: получен URL через str(): {image_url}")
+
+                            else:
+
+                                print(f"🔍 Google Imagen: str() не дал URL")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при преобразовании в строку: {e}")
+
+                    
+
+                    # 🔍 ФИНАЛЬНАЯ ПРОВЕРКА
+
+                    print(f"🔍 Google Imagen - ФИНАЛЬНЫЙ РЕЗУЛЬТАТ:")
+
+                    print(f"   image_url: {image_url}")
+
+                    print(f"   тип image_url: {type(image_url)}")
+
+                    if image_url:
+
+                        print(f"   длина image_url: {len(str(image_url))}")
+
+                        print(f"   начинается с http: {str(image_url).startswith(('http://', 'https://'))}")
 
                     
 
@@ -9579,25 +9945,31 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         continue
 
+                    
+
                     # Проверяем, что это строка и начинается с http
 
                     if not isinstance(image_url, str):
 
                         if send_text:
 
-                            await send_text(f"❌ Неверный тип URL от Google Imagen 4 Ultra")
+                            await send_text(f"❌ Неверный тип URL от Google Imagen 4 Ultra: {type(image_url)}")
 
                         continue
+
+                    
 
                     if not image_url.startswith(('http://', 'https://')):
 
                         if send_text:
 
-                            await send_text(f"❌ Получен неверный формат от Google Imagen 4 Ultra")
+                            await send_text(f"❌ Получен неверный формат от Google Imagen 4 Ultra: {image_url}")
 
                         continue
 
-                    print(f"🔍 Google Imagen 4 Ultra: получен URL: {image_url[:50]}...")
+                    
+
+                    print(f"🔍 Google Imagen: получен валидный URL: {image_url[:50]}...")
 
                 except asyncio.TimeoutError:
 
@@ -9649,9 +10021,72 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
 
                     )
-
                     
-
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
+                    print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # Проверяем методы объекта
+                    print(f"   Методы объекта:")
+                    for attr in dir(output):
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                            try:
+                                value = getattr(output, attr)
+                                if callable(value):
+                                    try:
+                                        result = value()
+                                        print(f"     {attr}(): {result}")
+                                    except Exception as e:
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+                                else:
+                                    print(f"     {attr}: {value}")
+                            except Exception as e:
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                    
                     # Универсальная обработка результата для Luma Photon
 
                     image_url = None
