@@ -1224,7 +1224,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Это объект FileOutput, используем его URL
 
-                image_url = output.url
+                image_url = output.url()
 
                 await update.message.reply_text(f"✅ Получен URL из FileOutput: {image_url[:50]}...")
 
@@ -1350,7 +1350,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if hasattr(output, 'url'):
 
-            image_url = output.url
+            image_url = output.url()
 
         elif hasattr(output, '__getitem__'):
 
@@ -3502,7 +3502,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Это объект FileOutput, используем его URL
 
-                image_url = output.url
+                image_url = output.url()
 
                 await update.message.reply_text(f"✅ Получен URL из FileOutput: {image_url[:50]}...")
 
@@ -3628,7 +3628,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if hasattr(output, 'url'):
 
-            image_url = output.url
+            image_url = output.url()
 
         elif hasattr(output, '__getitem__'):
 
@@ -4844,11 +4844,11 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()
+                    edited_image_url = output.url()()
 
                 else:
 
-                    edited_image_url = output.url
+                    edited_image_url = output.url()
 
             elif isinstance(output, list) and len(output) > 0:
 
@@ -6388,7 +6388,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Это объект FileOutput, используем его URL
 
-                image_url = output.url
+                image_url = output.url()
 
                 await update.message.reply_text(f"✅ Получен URL из FileOutput: {image_url[:50]}...")
 
@@ -6514,7 +6514,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if hasattr(output, 'url'):
 
-            image_url = output.url
+            image_url = output.url()
 
         elif hasattr(output, '__getitem__'):
 
@@ -7730,11 +7730,11 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()
+                    edited_image_url = output.url()()
 
                 else:
 
-                    edited_image_url = output.url
+                    edited_image_url = output.url()
 
             elif isinstance(output, list) and len(output) > 0:
 
@@ -9034,7 +9034,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()
+                            image_url = output.url()()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -9254,7 +9254,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()
+                            image_url = output.url()()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -9517,11 +9517,49 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Обработка результата
+                    # Универсальная обработка результата для Google Imagen 4 Ultra
+
+                    image_url = None
+
+                    # Проверяем, является ли output объектом FileOutput
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        # Это объект FileOutput, используем его URL
+
+                        image_url = output.url()()
+
+                    elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                        # Если это итератор (генератор)
+
+                        try:
+
+                            # Преобразуем в список и берем первый элемент
+
+                            output_list = list(output)
+
+                            if output_list:
+
+                                first_item = output_list[0]
+
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                    image_url = first_item
+
+                                else:
+
+                                    image_url = str(first_item)
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen 4 Ultra: ошибка при обработке итератора: {e}")
+
+                            if send_text:
+
+                                await send_text(f"❌ Ошибка при обработке результата Google Imagen 4 Ultra")
+
+                            continue
 
                     elif hasattr(output, '__getitem__'):
 
@@ -9537,7 +9575,35 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Отладочная информация убрана для чистоты интерфейса
+                    # Проверяем, что получили URL
+
+                    if not image_url:
+
+                        if send_text:
+
+                            await send_text(f"❌ Не удалось получить изображение от Google Imagen 4 Ultra (пустой результат)")
+
+                        continue
+
+                    # Проверяем, что это строка и начинается с http
+
+                    if not isinstance(image_url, str):
+
+                        if send_text:
+
+                            await send_text(f"❌ Неверный тип URL от Google Imagen 4 Ultra")
+
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+
+                        if send_text:
+
+                            await send_text(f"❌ Получен неверный формат от Google Imagen 4 Ultra")
+
+                        continue
+
+                    print(f"🔍 Google Imagen 4 Ultra: получен URL: {image_url[:50]}...")
 
                 except Exception as e:
 
@@ -9571,11 +9637,49 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Обработка результата
+                    # Универсальная обработка результата для Luma Photon
+
+                    image_url = None
+
+                    # Проверяем, является ли output объектом FileOutput
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        # Это объект FileOutput, используем его URL
+
+                        image_url = output.url()()
+
+                    elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                        # Если это итератор (генератор)
+
+                        try:
+
+                            # Преобразуем в список и берем первый элемент
+
+                            output_list = list(output)
+
+                            if output_list:
+
+                                first_item = output_list[0]
+
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                    image_url = first_item
+
+                                else:
+
+                                    image_url = str(first_item)
+
+                        except Exception as e:
+
+                            print(f"🔍 Luma Photon: ошибка при обработке итератора: {e}")
+
+                            if send_text:
+
+                                await send_text(f"❌ Ошибка при обработке результата Luma Photon")
+
+                            continue
 
                     elif hasattr(output, '__getitem__'):
 
@@ -9591,7 +9695,35 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Отладочная информация убрана для чистоты интерфейса
+                    # Проверяем, что получили URL
+
+                    if not image_url:
+
+                        if send_text:
+
+                            await send_text(f"❌ Не удалось получить изображение от Luma Photon (пустой результат)")
+
+                        continue
+
+                    # Проверяем, что это строка и начинается с http
+
+                    if not isinstance(image_url, str):
+
+                        if send_text:
+
+                            await send_text(f"❌ Неверный тип URL от Luma Photon")
+
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+
+                        if send_text:
+
+                            await send_text(f"❌ Получен неверный формат от Luma Photon")
+
+                        continue
+
+                    print(f"🔍 Luma Photon: получен URL: {image_url[:50]}...")
 
                 except Exception as e:
 
@@ -9629,7 +9761,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -9683,7 +9815,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -9763,7 +9895,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -12934,7 +13066,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Это объект FileOutput, используем его URL
 
-                image_url = output.url
+                image_url = output.url()
 
                 await update.message.reply_text(f"✅ Получен URL из FileOutput: {image_url[:50]}...")
 
@@ -13060,7 +13192,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if hasattr(output, 'url'):
 
-            image_url = output.url
+            image_url = output.url()
 
         elif hasattr(output, '__getitem__'):
 
@@ -15212,7 +15344,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Это объект FileOutput, используем его URL
 
-                image_url = output.url
+                image_url = output.url()
 
                 await update.message.reply_text(f"✅ Получен URL из FileOutput: {image_url[:50]}...")
 
@@ -15338,7 +15470,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if hasattr(output, 'url'):
 
-            image_url = output.url
+            image_url = output.url()
 
         elif hasattr(output, '__getitem__'):
 
@@ -16554,11 +16686,11 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()
+                    edited_image_url = output.url()()
 
                 else:
 
-                    edited_image_url = output.url
+                    edited_image_url = output.url()
 
             elif isinstance(output, list) and len(output) > 0:
 
@@ -18098,7 +18230,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Это объект FileOutput, используем его URL
 
-                image_url = output.url
+                image_url = output.url()
 
                 await update.message.reply_text(f"✅ Получен URL из FileOutput: {image_url[:50]}...")
 
@@ -18224,7 +18356,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if hasattr(output, 'url'):
 
-            image_url = output.url
+            image_url = output.url()
 
         elif hasattr(output, '__getitem__'):
 
@@ -19440,11 +19572,11 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if callable(output.url):
 
-                    edited_image_url = output.url()
+                    edited_image_url = output.url()()
 
                 else:
 
-                    edited_image_url = output.url
+                    edited_image_url = output.url()
 
             elif isinstance(output, list) and len(output) > 0:
 
@@ -20744,7 +20876,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()
+                            image_url = output.url()()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -20964,7 +21096,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             # Это объект FileOutput, используем его URL
 
-                            image_url = output.url()
+                            image_url = output.url()()
 
                         elif hasattr(output, '__iter__') and not isinstance(output, str):
 
@@ -21231,7 +21363,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -21285,7 +21417,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -21339,7 +21471,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -21393,7 +21525,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
@@ -21473,7 +21605,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     if hasattr(output, 'url'):
 
-                        image_url = output.url
+                        image_url = output.url()
 
                     elif hasattr(output, '__getitem__'):
 
