@@ -1332,7 +1332,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogramoutput = replicate.run(
+        # Генерируем простое изображение через Ideogram
+        output = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -3606,7 +3607,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogramoutput = replicate.run(
+        # Генерируем простое изображение через Ideogram
+        output = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -6486,7 +6488,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogramoutput = replicate.run(
+        # Генерируем простое изображение через Ideogram
+        output = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -13207,7 +13210,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogramoutput = replicate.run(
+        # Генерируем простое изображение через Ideogram
+        output = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -15481,7 +15485,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogramoutput = replicate.run(
+        # Генерируем простое изображение через Ideogram
+        output = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
@@ -18361,7 +18366,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        # Генерируем простое изображение через Ideogramoutput = replicate.run(
+        # Генерируем простое изображение через Ideogram
+        output = replicate.run(
 
             "ideogram-ai/ideogram-v3-turbo",
 
