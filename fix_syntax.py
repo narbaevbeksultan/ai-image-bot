@@ -16,7 +16,10 @@ def fix_syntax_error():
          '# Генерация через Bria на Replicate\n                    output = replicate.run('),
         
         ('# Fallback на Ideogram если модель не поддерживаетсяoutput = replicate.run(', 
-         '# Fallback на Ideogram если модель не поддерживается\n                    output = replicate.run(')
+         '# Fallback на Ideogram если модель не поддерживается\n                    output = replicate.run('),
+        
+        ('try:output = replicate.run(', 
+         'try:\n            output = replicate.run(')
     ]
     
     for old, new in fixes:

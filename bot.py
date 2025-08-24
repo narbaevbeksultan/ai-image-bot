@@ -1130,7 +1130,8 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:output = replicate.run(
+        try:
+            output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -3405,7 +3406,8 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:output = replicate.run(
+        try:
+            output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -6286,7 +6288,8 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:output = replicate.run(
+        try:
+            output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -13010,7 +13013,8 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:output = replicate.run(
+        try:
+            output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -15285,7 +15289,8 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:output = replicate.run(
+        try:
+            output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
@@ -18166,7 +18171,8 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пробуем простой запрос к Replicate
 
-        try:output = replicate.run(
+        try:
+            output = replicate.run(
 
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
 
