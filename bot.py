@@ -10020,38 +10020,26 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
 
                     output = await asyncio.wait_for(
-
-
                         loop.run_in_executor(None, lambda: replicate.run(
-
-
                             "luma/photon",
-
-
                             input={"prompt": prompt_with_style, **replicate_params}
-
-
                         )),
-
-
                         timeout=60.0
-
-
                     )
                     
-                            # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-        if send_text:
-            await send_text(f"🔍 **Luma Photon вернул:**\n\n"
-                          f"📊 **Тип:** `{type(output).__name__}`\n"
-                          f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                          f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                          f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                          f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                          f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                          f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
-        
-        # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
-        print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
+                    if send_text:
+                        await send_text(f"🔍 **Luma Photon вернул:**\n\n"
+                                      f"📊 **Тип:** `{type(output).__name__}`\n"
+                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
+                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
+                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
+                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
+                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
+                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
+                    print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
                     print(f"   Тип output: {type(output)}")
                     print(f"   output: {output}")
                     print(f"   repr(output): {repr(output)}")
@@ -10116,89 +10104,50 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
                     
                     # Универсальная обработка результата для Luma Photon
-
                     image_url = None
 
                     # Проверяем, является ли output объектом FileOutput
-
                     if hasattr(output, 'url'):
-
                         # Это объект FileOutput, используем его URL
-
                         image_url = output.url()
-
                     elif hasattr(output, '__iter__') and not isinstance(output, str):
-
                         # Если это итератор (генератор)
-
                         try:
-
                             # Преобразуем в список и берем первый элемент
-
                             output_list = list(output)
-
                             if output_list:
-
                                 first_item = output_list[0]
-
                                 if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
-
                                     image_url = first_item
-
                                 else:
-
                                     image_url = str(first_item)
-
                         except Exception as e:
-
                             print(f"🔍 Luma Photon: ошибка при обработке итератора: {e}")
-
                             if send_text:
-
                                 await send_text(f"❌ Ошибка при обработке результата Luma Photon")
-
                             continue
-
                     elif hasattr(output, '__getitem__'):
-
                         image_url = output[0] if output else None
-
                     elif isinstance(output, (list, tuple)) and len(output) > 0:
-
                         image_url = output[0]
-
                     else:
-
                         image_url = str(output) if output else None
-
                     
-
                     # Проверяем, что получили URL
-
                     if not image_url:
-
                         if send_text:
-
                             await send_text(f"❌ Не удалось получить изображение от Luma Photon (пустой результат)")
-
                         continue
 
                     # Проверяем, что это строка и начинается с http
-
                     if not isinstance(image_url, str):
-
                         if send_text:
-
                             await send_text(f"❌ Неверный тип URL от Luma Photon")
-
                         continue
 
                     if not image_url.startswith(('http://', 'https://')):
-
                         if send_text:
-
                             await send_text(f"❌ Получен неверный формат от Luma Photon")
-
                         continue
 
                     print(f"🔍 Luma Photon: получен URL: {image_url[:50]}...")
