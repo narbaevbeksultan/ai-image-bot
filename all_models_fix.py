@@ -91,3 +91,4 @@ if send_text:
                   f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
                   f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
                   f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+

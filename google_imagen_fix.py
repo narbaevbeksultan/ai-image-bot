@@ -23,3 +23,4 @@ if send_text:
         final_msg += f"📏 **Длина:** `{len(str(image_url))}`\n"
         final_msg += f"🌐 **Начинается с http:** `{str(image_url).startswith(('http://', 'https://'))}`\n"
     await send_text(final_msg, parse_mode='Markdown')
+
