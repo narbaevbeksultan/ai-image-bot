@@ -10119,35 +10119,88 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             except Exception as e:
                                 print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
                     
-                    # Универсальная обработка результата для Luma Photon
+                    # 🔍 ПОПЫТКА 0 - проверяем, не является ли output уже URL строкой
                     image_url = None
-
-                    # Проверяем, является ли output объектом FileOutput
-                    if hasattr(output, 'url'):
-                        # Это объект FileOutput, используем его URL
-                        image_url = output.url()
-                    elif hasattr(output, '__iter__') and not isinstance(output, str):
-                        # Если это итератор (генератор)
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        image_url = output
+                        print(f"🔍 Luma Photon: ПОПЫТКА 0 - output уже URL строка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 1 - проверяем, является ли output объектом FileOutput
+                    if not image_url and hasattr(output, 'url'):
                         try:
-                            # Преобразуем в список и берем первый элемент
+                            image_url = output.url()
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - получен URL через .url(): {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - ошибка при вызове .url(): {e}")
+                    
+                    # 🔍 ПОПЫТКА 2 - проверяем, является ли output итератором
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+                        try:
                             output_list = list(output)
                             if output_list:
                                 first_item = output_list[0]
                                 if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
                                     image_url = first_item
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен URL из итератора: {image_url[:50]}...")
                                 else:
                                     image_url = str(first_item)
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен результат из итератора: {image_url[:50]}...")
                         except Exception as e:
-                            print(f"🔍 Luma Photon: ошибка при обработке итератора: {e}")
-                            if send_text:
-                                await send_text(f"❌ Ошибка при обработке результата Luma Photon")
-                            continue
-                    elif hasattr(output, '__getitem__'):
-                        image_url = output[0] if output else None
-                    elif isinstance(output, (list, tuple)) and len(output) > 0:
-                        image_url = output[0]
-                    else:
-                        image_url = str(output) if output else None
+                            print(f"🔍 Luma Photon: ПОПЫТКА 2 - ошибка при обработке итератора: {e}")
+                    
+                    # 🔍 ПОПЫТКА 3 - проверяем, является ли output списком или кортежем
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+                        first_item = output[0]
+                        if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                            image_url = first_item
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен URL из списка: {image_url[:50]}...")
+                        else:
+                            image_url = str(first_item)
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен результат из списка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 4 - проверяем, является ли output объектом с атрибутом output
+                    if not image_url and hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+                                image_url = output_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен URL через .output: {image_url[:50]}...")
+                            else:
+                                image_url = str(output_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен результат через .output: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 4 - ошибка при доступе к .output: {e}")
+                    
+                    # 🔍 ПОПЫТКА 5 - проверяем, является ли output объектом с атрибутом result
+                    if not image_url and hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+                                image_url = result_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен URL через .result: {image_url[:50]}...")
+                            else:
+                                image_url = str(result_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен результат через .result: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 5 - ошибка при доступе к .result: {e}")
+                    
+                    # 🔍 ПОПЫТКА 6 - проверяем, является ли output объектом с атрибутом id
+                    if not image_url and hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            if isinstance(id_value, str) and id_value.startswith(('http://', 'https://')):
+                                image_url = id_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен URL через .id: {image_url[:50]}...")
+                            else:
+                                image_url = str(id_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен результат через .id: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 6 - ошибка при доступе к .id: {e}")
+                    
+                    # 🔍 ПОПЫТКА 7 - последняя попытка, преобразуем в строку
+                    if not image_url:
+                        image_url = str(output)
+                        print(f"🔍 Luma Photon: ПОПЫТКА 7 - преобразован в строку: {image_url[:50]}...")
                     
                     # Проверяем, что получили URL
                     if not image_url:
@@ -22444,27 +22497,183 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Обработка результата
-
-                    if hasattr(output, 'url'):
-
-                        image_url = output.url()
-
-                    elif hasattr(output, '__getitem__'):
-
-                        image_url = output[0] if output else None
-
-                    elif isinstance(output, (list, tuple)) and len(output) > 0:
-
-                        image_url = output[0]
-
-                    else:
-
-                        image_url = str(output) if output else None
-
+                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
+                    if send_text:
+                        await send_text(f"🔍 **Luma Photon вернул:**\n\n"
+                                      f"📊 **Тип:** `{type(output).__name__}`\n"
+                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
+                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
+                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
+                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
+                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
+                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
                     
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
+                    print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # Проверяем методы объекта
+                    print(f"   Методы объекта:")
+                    for attr in dir(output):
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                            try:
+                                value = getattr(output, attr)
+                                if callable(value):
+                                    try:
+                                        result = value()
+                                        print(f"     {attr}(): {result}")
+                                    except Exception as e:
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+                                else:
+                                    print(f"     {attr}: {value}")
+                            except Exception as e:
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                    
+                    # 🔍 ПОПЫТКА 0 - проверяем, не является ли output уже URL строкой
+                    image_url = None
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        image_url = output
+                        print(f"🔍 Luma Photon: ПОПЫТКА 0 - output уже URL строка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 1 - проверяем, является ли output объектом FileOutput
+                    if not image_url and hasattr(output, 'url'):
+                        try:
+                            image_url = output.url()
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - получен URL через .url(): {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - ошибка при вызове .url(): {e}")
+                    
+                    # 🔍 ПОПЫТКА 2 - проверяем, является ли output итератором
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+                        try:
+                            output_list = list(output)
+                            if output_list:
+                                first_item = output_list[0]
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                                    image_url = first_item
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен URL из итератора: {image_url[:50]}...")
+                                else:
+                                    image_url = str(first_item)
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен результат из итератора: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 2 - ошибка при обработке итератора: {e}")
+                    
+                    # 🔍 ПОПЫТКА 3 - проверяем, является ли output списком или кортежем
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+                        first_item = output[0]
+                        if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                            image_url = first_item
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен URL из списка: {image_url[:50]}...")
+                        else:
+                            image_url = str(first_item)
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен результат из списка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 4 - проверяем, является ли output объектом с атрибутом output
+                    if not image_url and hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+                                image_url = output_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен URL через .output: {image_url[:50]}...")
+                            else:
+                                image_url = str(output_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен результат через .output: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 4 - ошибка при доступе к .output: {e}")
+                    
+                    # 🔍 ПОПЫТКА 5 - проверяем, является ли output объектом с атрибутом result
+                    if not image_url and hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+                                image_url = result_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен URL через .result: {image_url[:50]}...")
+                            else:
+                                image_url = str(result_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен результат через .result: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 5 - ошибка при доступе к .result: {e}")
+                    
+                    # 🔍 ПОПЫТКА 6 - проверяем, является ли output объектом с атрибутом id
+                    if not image_url and hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            if isinstance(id_value, str) and id_value.startswith(('http://', 'https://')):
+                                image_url = id_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен URL через .id: {image_url[:50]}...")
+                            else:
+                                image_url = str(id_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен результат через .id: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 6 - ошибка при доступе к .id: {e}")
+                    
+                    # 🔍 ПОПЫТКА 7 - последняя попытка, преобразуем в строку
+                    if not image_url:
+                        image_url = str(output)
+                        print(f"🔍 Luma Photon: ПОПЫТКА 7 - преобразован в строку: {image_url[:50]}...")
+                    
+                    # Проверяем, что получили URL
+                    if not image_url:
+                        if send_text:
+                            await send_text(f"❌ Не удалось получить изображение от Luma Photon (пустой результат)")
+                        continue
 
-                    # Отладочная информация убрана для чистоты интерфейса
+                    # Проверяем, что это строка и начинается с http
+                    if not isinstance(image_url, str):
+                        if send_text:
+                            await send_text(f"❌ Неверный тип URL от Luma Photon")
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+                        if send_text:
+                            await send_text(f"❌ Получен неверный формат от Luma Photon")
+                        continue
+
+                    print(f"🔍 Luma Photon: получен URL: {image_url[:50]}...")
 
                 except Exception as e:
 
