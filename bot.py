@@ -9720,11 +9720,27 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+                    # 🔍 ПОПЫТКА 0: Проверяем, не является ли output уже URL-ом
 
                     image_url = None
 
-                    if hasattr(output, 'url'):
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+
+                        image_url = output
+
+                        print(f"🔍 Google Imagen: output уже является URL: {image_url}")
+
+                        print(f"🔍 Google Imagen: пропускаем все остальные попытки")
+
+                    else:
+
+                        print(f"🔍 Google Imagen: output не является URL, продолжаем поиск...")
+
+                        
+
+                        # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+
+                    if not image_url and hasattr(output, 'url'):
 
                         try:
 
@@ -9740,7 +9756,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # 🔍 ПОПЫТКА 2: Проверяем атрибут .output
 
-                    elif hasattr(output, 'output') and not image_url:
+                    if not image_url and hasattr(output, 'output'):
 
                         try:
 
@@ -9772,7 +9788,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # 🔍 ПОПЫТКА 3: Проверяем атрибут .result
 
-                    elif hasattr(output, 'result') and not image_url:
+                    if not image_url and hasattr(output, 'result'):
 
                         try:
 
@@ -9792,7 +9808,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # 🔍 ПОПЫТКА 4: Проверяем, является ли output итератором
 
-                    elif hasattr(output, '__iter__') and not isinstance(output, str) and not image_url:
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
 
                         try:
 
@@ -9836,7 +9852,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # 🔍 ПОПЫТКА 5: Проверяем индексацию
 
-                    elif hasattr(output, '__getitem__') and not image_url:
+                    if not image_url and hasattr(output, '__getitem__'):
 
                         try:
 
@@ -9872,7 +9888,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # 🔍 ПОПЫТКА 6: Проверяем, является ли output списком/кортежем
 
-                    elif isinstance(output, (list, tuple)) and len(output) > 0 and not image_url:
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
 
                         try:
 
@@ -9908,7 +9924,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # 🔍 ПОПЫТКА 7: Последняя попытка - преобразование в строку
 
-                    else:
+                    if not image_url:
 
                         try:
 
