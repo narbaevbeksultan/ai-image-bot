@@ -9570,16 +9570,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     )
                     
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Google Imagen вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                  
                     
                     # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Google Imagen 4 Ultra
 
@@ -10034,16 +10025,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         timeout=60.0
                     )
                     
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Luma Photon вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                 
                     
                     # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
                     print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
@@ -10312,16 +10294,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Recraft AI вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                 
                     
                     # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Recraft AI
                     print(f"🔍 Recraft AI - ДЕТАЛЬНАЯ ОТЛАДКА:")
@@ -22481,16 +22454,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Google Imagen вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                    
                     
                     # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Google Imagen 4 Ultra
                     print(f"🔍 Google Imagen 4 Ultra - ДЕТАЛЬНАЯ ОТЛАДКА:")
@@ -22639,16 +22603,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Luma Photon вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                
                     
                     # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
                     print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
@@ -22917,16 +22872,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
-                    if send_text:
-                        await send_text(f"🔍 **Recraft AI вернул:**\n\n"
-                                      f"📊 **Тип:** `{type(output).__name__}`\n"
-                                      f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
-                                      f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
-                                      f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
-                                      f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
-                                      f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
-                                      f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                  
                     
                     # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Recraft AI
                     print(f"🔍 Recraft AI - ДЕТАЛЬНАЯ ОТЛАДКА:")
