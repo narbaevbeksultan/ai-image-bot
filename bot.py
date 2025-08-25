@@ -21531,58 +21531,286 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             timeout=180.0  # Увеличиваем таймаут до 180 секунд для Bytedance нативной 2K генерации
 
                         )
-
                         
-
+                        # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
+                        if send_text:
+                            await send_text(f"🔍 **Bytedance вернул:**\n\n"
+                                          f"📊 **Тип:** `{type(output).__name__}`\n"
+                                          f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
+                                          f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
+                                          f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
+                                          f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
+                                          f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
+                                          f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                        
+                        # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Bytedance Seedream-3 (console logging)
+                        print(f"🔍 Bytedance Seedream-3 - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                        print(f"   Тип output: {type(output)}")
+                        print(f"   output: {output}")
+                        print(f"   repr(output): {repr(output)}")
+                        print(f"   dir(output): {dir(output)}")
+                        print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                        print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                        print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                        print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                        print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                        
+                        # Проверяем все возможные атрибуты
+                        if hasattr(output, 'url'):
+                            try:
+                                url_value = output.url()
+                                print(f"   output.url(): {url_value}")
+                            except Exception as e:
+                                print(f"   output.url() ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'id'):
+                            try:
+                                id_value = output.id
+                                print(f"   output.id: {id_value}")
+                            except Exception as e:
+                                print(f"   output.id ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'status'):
+                            try:
+                                status_value = output.status
+                                print(f"   output.status: {status_value}")
+                            except Exception as e:
+                                print(f"   output.status ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'output'):
+                            try:
+                                output_value = output.output
+                                print(f"   output.output: {output_value}")
+                            except Exception as e:
+                                print(f"   output.output ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'result'):
+                            try:
+                                result_value = output.result
+                                print(f"   output.result: {result_value}")
+                            except Exception as e:
+                                print(f"   output.result ОШИБКА: {e}")
+                        
+                        # Проверяем методы объекта
+                        print(f"   Методы объекта:")
+                        for attr in dir(output):
+                            if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                                try:
+                                    value = getattr(output, attr)
+                                    if callable(value):
+                                        try:
+                                            result = value()
+                                            print(f"     {attr}(): {result}")
+                                        except Exception as e:
+                                            print(f"     {attr}(): ОШИБКА - {e}")
+                                    else:
+                                        print(f"     {attr}: {value}")
+                                except Exception as e:
+                                    print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                        
                         # Обработка ответа от Replicate API
+
+                        # 🔍 ПОПЫТКА 0: Проверяем, не является ли output уже URL-ом
 
                         image_url = None
 
-                        
+                        if isinstance(output, str) and output.startswith(('http://', 'https://')):
 
-                        # Проверяем, является ли output объектом FileOutput
+                            image_url = output
 
-                        if hasattr(output, 'url'):
+                            print(f"🔍 Bytedance: output уже является URL: {image_url}")
 
-                            # Это объект FileOutput, используем его URL
-
-                            image_url = output.url()
-
-                        elif hasattr(output, '__iter__') and not isinstance(output, str):
-
-                            # Если это итератор (генератор)
-
-                            try:
-
-                                # Преобразуем в список и берем первый элемент
-
-                                output_list = list(output)
-
-                                if output_list:
-
-                                    image_url = output_list[0]
-
-                            except Exception as e:
-
-                                if send_text:
-
-                                    await send_text(f"❌ Ошибка при обработке итератора: {e}")
-
-                                continue
-
-                        elif hasattr(output, '__getitem__'):
-
-                            image_url = output[0] if output else None
-
-                        elif isinstance(output, (list, tuple)) and len(output) > 0:
-
-                            image_url = output[0]
+                            print(f"🔍 Bytedance: пропускаем все остальные попытки")
 
                         else:
 
-                            # Если это не итератор, используем как есть
+                            print(f"🔍 Bytedance: output не является URL, продолжаем поиск...")
 
-                            image_url = str(output) if output else None
+                            
+
+                            # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+
+                            if not image_url and hasattr(output, 'url'):
+
+                                # Это объект FileOutput, используем его URL
+
+                                image_url = output.url()
+
+                                print(f"🔍 Bytedance: получен URL через .url(): {image_url}")
+
+                            # 🔍 ПОПЫТКА 2: Проверяем атрибут .output
+
+                            elif not image_url and hasattr(output, 'output'):
+
+                                try:
+
+                                    output_value = output.output
+
+                                    if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+
+                                        image_url = output_value
+
+                                        print(f"🔍 Bytedance: получен URL через .output: {image_url}")
+
+                                    elif hasattr(output_value, '__iter__'):
+
+                                        # Если output.output это список/итератор
+
+                                        output_list = list(output_value)
+
+                                        if output_list and isinstance(output_list[0], str) and output_list[0].startswith(('http://', 'https://')):
+
+                                            image_url = output_list[0]
+
+                                            print(f"🔍 Bytedance: получен URL через .output[0]: {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке .output: {e}")
+
+                            # 🔍 ПОПЫТКА 3: Проверяем атрибут .result
+
+                            elif not image_url and hasattr(output, 'result'):
+
+                                try:
+
+                                    result_value = output.result
+
+                                    if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+
+                                        image_url = result_value
+
+                                        print(f"🔍 Bytedance: получен URL через .result: {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке .result: {e}")
+
+                            # 🔍 ПОПЫТКА 4: Проверяем, является ли output итератором
+
+                            elif not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+
+                                # Если это итератор (генератор)
+
+                                try:
+
+                                    # Преобразуем в список и берем первый элемент
+
+                                    output_list = list(output)
+
+                                    if output_list:
+
+                                        image_url = output_list[0]
+
+                                        print(f"🔍 Bytedance: получен URL через итератор[0]: {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке итератора: {e}")
+
+                            # 🔍 ПОПЫТКА 5: Проверяем индексацию
+
+                            elif not image_url and hasattr(output, '__getitem__'):
+
+                                try:
+
+                                    first_item = output[0]
+
+                                    print(f"🔍 Bytedance: первый элемент по индексу: {first_item} (тип: {type(first_item)})")
+
+                                    
+
+                                    if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                        image_url = first_item
+
+                                        print(f"🔍 Bytedance: получен URL через [0]: {image_url}")
+
+                                    elif hasattr(first_item, 'url'):
+
+                                        try:
+
+                                            image_url = first_item.url()
+
+                                            print(f"🔍 Bytedance: получен URL через [0].url(): {image_url}")
+
+                                        except Exception as e:
+
+                                            print(f"🔍 Bytedance: ошибка при вызове [0].url(): {e}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при индексации: {e}")
+
+                            # 🔍 ПОПЫТКА 6: Проверяем, является ли output списком/кортежем
+
+                            elif not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+
+                                try:
+
+                                    first_item = output[0]
+
+                                    print(f"🔍 Bytedance: первый элемент списка: {first_item} (тип: {type(first_item)})")
+
+                                    
+
+                                    if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                        image_url = first_item
+
+                                        print(f"🔍 Bytedance: получен URL через список[0]: {image_url}")
+
+                                    elif hasattr(first_item, 'url'):
+
+                                        try:
+
+                                            image_url = first_item.url()
+
+                                            print(f"🔍 Bytedance: получен URL через список[0].url(): {image_url}")
+
+                                        except Exception as e:
+
+                                            print(f"🔍 Bytedance: ошибка при вызове список[0].url(): {e}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке списка: {e}")
+
+                            # 🔍 ПОПЫТКА 7: Последняя попытка - преобразование в строку
+
+                            if not image_url:
+
+                                try:
+
+                                    str_output = str(output)
+
+                                    print(f"🔍 Bytedance: преобразование в строку: '{str_output}' (длина: {len(str_output)})")
+
+                                    
+
+                                    # Проверяем, не является ли это URL
+
+                                    if str_output.startswith(('http://', 'https://')):
+
+                                        image_url = str_output
+
+                                        print(f"🔍 Bytedance: получен URL через str(): {image_url}")
+
+                                    else:
+
+                                        print(f"🔍 Bytedance: str() не дал URL")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при преобразовании в строку: {e}")
+
+                            # Если ничего не помогло, используем как есть
+
+                            if not image_url:
+
+                                image_url = str(output) if output else None
+
+                                print(f"🔍 Bytedance: используем output как есть: {image_url}")
 
                         
 
