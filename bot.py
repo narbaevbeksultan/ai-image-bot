@@ -25557,7 +25557,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
 
-            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
 
         ]
 
@@ -25591,7 +25591,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
 
-            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
 
         ]
 
@@ -25627,7 +25627,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             [InlineKeyboardButton("⏱️ 10 секунд", callback_data="video_duration:10")],
 
-            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_video_quality")]
 
         ]
 
@@ -25644,6 +25644,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    elif data == "back_to_video_quality":
+        state['step'] = STEP_VIDEO_QUALITY
+        keyboard = [
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+        ]
+        await query.edit_message_text(
+            "Выберите качество видео:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
     elif data.startswith("video_duration:"):
 
