@@ -11790,6 +11790,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         )
 
+    elif data.startswith('simple_orientation:'):
+        orientation = data.split(':', 1)[1]
+        USER_STATE[user_id]['orientation'] = orientation
+        USER_STATE[user_id]['step'] = 'image_gen_model'
+        await show_model_selection(update, context)
+        return
+
     elif data.startswith('image_gen_model:'):
 
         selected_model = data.split(':', 1)[1]
@@ -11875,32 +11882,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     elif data == "model_back":
-
-        # Возврат к выбору модели
-
-        user_format = state.get('format', '').lower()
-
-        if user_format == 'изображения':
-
-            # Для "Изображения" возвращаемся к выбору ориентации
-
-            keyboard = [
-
-                [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
-
-                [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
-
-            ]
-
-            keyboard.extend([
-
-                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-
-                [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
-
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-            ])
+    # Возврат к выбору модели
+    user_format = state.get('format', '').lower()
+    if user_format == 'изображения':
+        # Для "Изображения" возвращаемся к выбору ориентации
+        keyboard = [
+            [InlineKeyboardButton("�� Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+        ]
+        keyboard.extend([
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],  # ← ИЗМЕНЕНО
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ])
 
             reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -24363,6 +24357,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
 
         )
+
+    elif data.startswith('simple_orientation:'):
+        orientation = data.split(':', 1)[1]
+        USER_STATE[user_id]['orientation'] = orientation
+        USER_STATE[user_id]['step'] = 'image_gen_model'
+        await show_model_selection(update, context)
+        return
 
     elif data.startswith('image_gen_model:'):
 
