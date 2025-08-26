@@ -937,8 +937,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 FLUX.1 Kontext Pro (редактирование изображений)", callback_data="image_gen_model:FLUX.1 Kontext Pro")],
-
         [InlineKeyboardButton("📱 Ideogram (лидер в генерации текста в изображениях: баннеры, постеры, соцсети)", callback_data="image_gen_model:Ideogram")],
 
         [InlineKeyboardButton("⚡ Bytedance Seedream-3 (нативная 2K генерация, быстрая)", callback_data="image_gen_model:Bytedance (Seedream-3)")],
@@ -3212,7 +3210,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 FLUX.1 Kontext Pro (редактирование изображений)", callback_data="image_gen_model:FLUX.1 Kontext Pro")],
 
         [InlineKeyboardButton("📱 Ideogram (лидер в генерации текста в изображениях: баннеры, постеры, соцсети)", callback_data="image_gen_model:Ideogram")],
 
@@ -6093,7 +6090,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 FLUX.1 Kontext Pro (редактирование изображений)", callback_data="image_gen_model:FLUX.1 Kontext Pro")],
 
         [InlineKeyboardButton("📱 Ideogram (лидер в генерации текста в изображениях: баннеры, постеры, соцсети)", callback_data="image_gen_model:Ideogram")],
 
@@ -13446,7 +13442,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 FLUX.1 Kontext Pro (редактирование изображений)", callback_data="image_gen_model:FLUX.1 Kontext Pro")],
 
         [InlineKeyboardButton("📱 Ideogram (лидер в генерации текста в изображениях: баннеры, постеры, соцсети)", callback_data="image_gen_model:Ideogram")],
 
@@ -15721,7 +15716,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 FLUX.1 Kontext Pro (редактирование изображений)", callback_data="image_gen_model:FLUX.1 Kontext Pro")],
 
         [InlineKeyboardButton("📱 Ideogram (лидер в генерации текста в изображениях: баннеры, постеры, соцсети)", callback_data="image_gen_model:Ideogram")],
 
@@ -18602,7 +18596,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 FLUX.1 Kontext Pro (редактирование изображений)", callback_data="image_gen_model:FLUX.1 Kontext Pro")],
 
         [InlineKeyboardButton("📱 Ideogram (лидер в генерации текста в изображениях: баннеры, постеры, соцсети)", callback_data="image_gen_model:Ideogram")],
 
