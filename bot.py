@@ -11456,7 +11456,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-                [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+                [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
 
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
