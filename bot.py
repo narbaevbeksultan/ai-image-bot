@@ -11297,22 +11297,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "create_simple_images":
     # Для простых изображений сначала выбираем ориентацию
-    USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
+        USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
     
-    keyboard = [
-        [InlineKeyboardButton("�� Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
-        [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
-    ]
-    keyboard.extend([
-        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
-        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-    ])
-    
-    await query.edit_message_text(
-        "Выберите ориентацию изображения:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+        keyboard = [
+            [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+        ]
+        keyboard.extend([
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "Выберите ориентацию изображения:",
+            reply_markup=reply_markup
+        )
 
     elif data == "edit_image":
 
@@ -23865,22 +23865,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "create_simple_images":
     # Для простых изображений сначала выбираем ориентацию
-    USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
+        USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
     
-    keyboard = [
-        [InlineKeyboardButton("�� Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
-        [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
-    ]
-    keyboard.extend([
-        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
-        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-    ])
-    
-    await query.edit_message_text(
-        "Выберите ориентацию изображения:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+        keyboard = [
+            [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+        ]
+        keyboard.extend([
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "Выберите ориентацию изображения:",
+            reply_markup=reply_markup
+        )
 
     elif data == "edit_image":
 
