@@ -10012,18 +10012,44 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Luma на Replicate
+                    # Генерация через Luma на Replicate с увеличенным таймаутом и ретраями
 
                     loop = asyncio.get_event_loop()
-
-
-                    output = await asyncio.wait_for(
-                        loop.run_in_executor(None, lambda: replicate.run(
-                            "luma/photon",
-                            input={"prompt": prompt_with_style, **replicate_params}
-                        )),
-                        timeout=60.0
-                    )
+                    max_retries = 2
+                    retry_delay = 5  # секунд
+                    
+                    for attempt in range(max_retries + 1):
+                        try:
+                            if attempt > 0:
+                                if send_text:
+                                    await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
+                                await asyncio.sleep(retry_delay)
+                            
+                            output = await asyncio.wait_for(
+                                loop.run_in_executor(None, lambda: replicate.run(
+                                    "luma/photon",
+                                    input={"prompt": prompt_with_style, **replicate_params}
+                                )),
+                                timeout=180.0  # Увеличиваем с 60 до 180 секунд
+                            )
+                            break  # Успешно получили результат
+                            
+                        except asyncio.TimeoutError:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⏳ Генерация занимает больше времени... Попробую ещё раз...")
+                                continue
+                            else:
+                                if send_text:
+                                    await send_text(f"❌ Генерация Luma Photon занимает слишком много времени\n💡 Попробуйте другую модель или попробовать снова")
+                                continue
+                        except Exception as e:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⚠️ Ошибка при генерации: {str(e)[:100]}... Попробую ещё раз...")
+                                continue
+                            else:
+                                raise  # Пробрасываем ошибку в основной блок except
                     
                  
                     
@@ -22576,30 +22602,44 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     
 
-                    # Генерация через Luma на Replicate
+                    # Генерация через Luma на Replicate с увеличенным таймаутом и ретраями
 
                     loop = asyncio.get_event_loop()
-
-
-                    output = await asyncio.wait_for(
-
-
-                        loop.run_in_executor(None, lambda: replicate.run(
-
-
-                            "luma/photon",
-
-
-                            input={"prompt": prompt_with_style, **replicate_params}
-
-
-                        )),
-
-
-                        timeout=60.0
-
-
-                    )
+                    max_retries = 2
+                    retry_delay = 5  # секунд
+                    
+                    for attempt in range(max_retries + 1):
+                        try:
+                            if attempt > 0:
+                                if send_text:
+                                    await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
+                                await asyncio.sleep(retry_delay)
+                            
+                            output = await asyncio.wait_for(
+                                loop.run_in_executor(None, lambda: replicate.run(
+                                    "luma/photon",
+                                    input={"prompt": prompt_with_style, **replicate_params}
+                                )),
+                                timeout=180.0  # Увеличиваем с 60 до 180 секунд
+                            )
+                            break  # Успешно получили результат
+                            
+                        except asyncio.TimeoutError:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⏳ Генерация занимает больше времени... Попробую ещё раз...")
+                                continue
+                            else:
+                                if send_text:
+                                    await send_text(f"❌ Генерация Luma Photon занимает слишком много времени\n💡 Попробуйте другую модель или попробовать снова")
+                                continue
+                        except Exception as e:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⚠️ Ошибка при генерации: {str(e)[:100]}... Попробую ещё раз...")
+                                continue
+                            else:
+                                raise  # Пробрасываем ошибку в основной блок except
 
                     
 
