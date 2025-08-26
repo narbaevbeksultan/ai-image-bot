@@ -11883,18 +11883,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "model_back":
     # Возврат к выбору модели
-    user_format = state.get('format', '').lower()
-    if user_format == 'изображения':
+        user_format = state.get('format', '').lower()
+        if user_format == 'изображения':
         # Для "Изображения" возвращаемся к выбору ориентации
-        keyboard = [
-            [InlineKeyboardButton("�� Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
-            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
-        ]
-        keyboard.extend([
-            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],  # ← ИЗМЕНЕНО
-            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-        ])
+            keyboard = [
+                [InlineKeyboardButton("�� Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+                [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+            ]
+            keyboard.extend([
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+                [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],  # ← ИЗМЕНЕНО
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ])
 
             reply_markup = InlineKeyboardMarkup(keyboard)
 
