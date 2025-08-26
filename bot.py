@@ -4580,7 +4580,49 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         send_media = None
 
-    
+    # Проверяем доступ к редактированию изображений
+    user_id = None
+    if hasattr(update, 'message') and update.message:
+        user_id = update.message.from_user.id
+    elif hasattr(update, 'callback_query') and update.callback_query:
+        user_id = update.callback_query.from_user.id
+
+    if user_id:
+        free_generations_left = analytics_db.get_free_generations_left(user_id)
+        user_credits = analytics_db.get_user_credits(user_id)
+        
+        # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
+        if free_generations_left > 0:
+            # Доступно за бесплатную генерацию
+            generation_type = "free"
+        elif user_credits['balance'] >= 12:  # Стоимость редактирования FLUX
+            # Доступно за кредиты
+            generation_type = "credits"
+        else:
+            # Нет доступа - ни бесплатных генераций, ни кредитов
+            keyboard = [
+                [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
+                [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="❌ **Доступ к редактированию заблокирован!**\n\n"
+                     "✏️ **Редактирование изображений доступно:**\n"
+                     "• За бесплатные генерации (3 раза)\n"
+                     "• За кредиты (12 кредитов за редактирование)\n\n"
+                     "💡 **Что доступно бесплатно:**\n"
+                     "• 🖼️ Создание изображений (3 раза)\n"
+                     "• ✏️ Редактирование изображений (3 раза)\n\n"
+                     "💰 **Для продолжения нужны кредиты:**\n"
+                     "• Купите кредиты для доступа к редактированию\n"
+                     "• Или используйте бесплатные генерации для изображений",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
+            return None
 
     try:
 
@@ -4930,6 +4972,21 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_response.content)} байт")
 
+                    # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
+                    if user_id and 'generation_type' in locals():
+                        if generation_type == "free":
+                            # Списываем бесплатную генерацию
+                            if analytics_db.increment_free_generations(user_id):
+                                logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
+                        elif generation_type == "credits":
+                            # Списываем кредиты
+                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                                logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
+                    
                     
 
                     try:
@@ -10696,9 +10753,24 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         
         # Списываем кредиты или увеличиваем счетчик бесплатных генераций
         if generation_type == "free":
-            # Увеличиваем счетчик использованных бесплатных генераций
-            analytics_db.increment_free_generations(user_id)
-            logging.info(f"Пользователь {user_id} использовал бесплатную генерацию. Осталось: {free_generations_left - 1}")
+            # Списываем по количеству реально созданных изображений
+            for i in range(processed_count):
+                if analytics_db.get_free_generations_left(user_id) > 0:
+                    analytics_db.increment_free_generations(user_id)
+                else:
+                    # Если бесплатные закончились, переключаемся на кредиты
+                    generation_type = "credits"
+                    break
+    
+            # Если переключились на кредиты, списываем их
+            if generation_type == "credits":
+                remaining_count = processed_count - i
+                total_cost = generation_cost * remaining_count
+                analytics_db.use_credits(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
+                logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {remaining_count} изображений")
+            else:
+                logging.info(f"Пользователь {user_id} использовал {processed_count} бесплатных генераций")
+
         elif generation_type == "credits":
             # Списываем кредиты за каждое изображение
             total_cost = generation_cost * processed_count
@@ -23264,9 +23336,24 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         
         # Списываем кредиты или увеличиваем счетчик бесплатных генераций
         if generation_type == "free":
-            # Увеличиваем счетчик использованных бесплатных генераций
-            analytics_db.increment_free_generations(user_id)
-            logging.info(f"Пользователь {user_id} использовал бесплатную генерацию. Осталось: {free_generations_left - 1}")
+            # Списываем по количеству реально созданных изображений
+            for i in range(processed_count):
+                if analytics_db.get_free_generations_left(user_id) > 0:
+                    analytics_db.increment_free_generations(user_id)
+                else:
+                    # Если бесплатные закончились, переключаемся на кредиты
+                    generation_type = "credits"
+                    break
+    
+            # Если переключились на кредиты, списываем их
+            if generation_type == "credits":
+                remaining_count = processed_count - i
+                total_cost = generation_cost * remaining_count
+                analytics_db.use_credits(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
+                logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {remaining_count} изображений")
+            else:
+                logging.info(f"Пользователь {user_id} использовал {processed_count} бесплатных генераций")
+        
         elif generation_type == "credits":
             # Списываем кредиты за каждое изображение
             total_cost = generation_cost * processed_count
@@ -23275,7 +23362,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             else:
                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
+
     else:
+
 
         # Логируем неудачную генерацию
 
@@ -27749,7 +27838,41 @@ async def generate_video(update, context, state):
 
         return
 
-    
+    # Проверяем доступ к видео (только за кредиты)
+    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    user_credits = analytics_db.get_user_credits(user_id)
+
+    # Видео доступно только за кредиты, НЕ за бесплатные генерации
+    if user_credits['balance'] <= 0:
+        # Нет кредитов - доступ к видео заблокирован
+        keyboard = [
+            [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
+            [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="❌ **Доступ к видео заблокирован!**\n\n"
+                 "🎬 **Видео доступно только за кредиты**\n\n"
+                 "💡 **Что доступно бесплатно:**\n"
+                 "• 🖼️ Создание изображений (3 раза)\n"
+                 "• ✏️ Редактирование изображений (3 раза)\n\n"
+                 "💰 **Для видео нужны кредиты:**\n"
+                 "• Купите кредиты для доступа к видео\n"
+                 "• Видео от 37 кредитов за 5 секунд",
+            reply_markup=reply_markup,
+            parse_mode='Markdown'
+        )
+        
+        # Сбрасываем состояние
+        state['step'] = None
+        state.pop('video_type', None)
+        state.pop('video_quality', None)
+        state.pop('video_duration', None)
+        state.pop('video_prompt', None)
+        return
 
     try:
 
