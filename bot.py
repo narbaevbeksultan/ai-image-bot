@@ -20641,20 +20641,6 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
 
 
-async def send_images(update, context, state, prompt_type='auto', user_prompt=None, scenes=None):
-
-    """
-
-    Генерирует 2-3 изображения по коротким промптам через GPT и отправляет их пользователю.
-
-    prompt_type: 'auto' — промпты формируются автоматически, 'user' — по пользовательскому описанию.
-
-    user_prompt: если prompt_type == 'user', использовать этот промпт.
-
-    """
-
-
-
     # Определяем chat_id и функцию отправки сообщений
 
     if hasattr(update, 'message') and update.message:
