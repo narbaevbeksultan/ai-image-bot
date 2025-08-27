@@ -4590,6 +4590,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         user_id = update.callback_query.from_user.id
 
     if user_id:
+        logging.info(f"DEBUG: Найден user_id={user_id}")
         free_generations_left = analytics_db.get_free_generations_left(user_id)
         user_credits = analytics_db.get_user_credits(user_id)
         
@@ -4628,6 +4629,8 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 parse_mode='Markdown'
             )
             return None
+    else:
+        logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
     try:
 
