@@ -7530,7 +7530,57 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         send_media = None
 
+    # Проверяем доступ к редактированию изображений
+    user_id = None
+    generation_type = None  # Инициализируем переменную
     
+    if hasattr(update, 'message') and update.message:
+        user_id = update.message.from_user.id
+    elif hasattr(update, 'callback_query') and update.callback_query:
+        user_id = update.callback_query.from_user.id
+
+    if user_id:
+        logging.info(f"DEBUG: Найден user_id={user_id}")
+        free_generations_left = analytics_db.get_free_generations_left(user_id)
+        user_credits = analytics_db.get_user_credits(user_id)
+        
+        # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
+        logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
+        if free_generations_left > 0:
+            # Доступно за бесплатную генерацию
+            generation_type = "free"
+            logging.info(f"DEBUG: Установлен generation_type=free для пользователя {user_id}")
+        elif user_credits['balance'] >= 12:  # Стоимость редактирования FLUX
+            # Доступно за кредиты
+            generation_type = "credits"
+            logging.info(f"DEBUG: Установлен generation_type=credits для пользователя {user_id}")
+        else:
+            # Нет доступа - ни бесплатных генераций, ни кредитов
+            keyboard = [
+                [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
+                [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="❌ **Доступ к редактированию заблокирован!**\n\n"
+                     "✏️ **Редактирование изображений доступно:**\n"
+                     "• За бесплатные генерации (3 раза)\n"
+                     "• За кредиты (12 кредитов за редактирование)\n\n"
+                     "💡 **Что доступно бесплатно:**\n"
+                     "• 🖼️ Создание изображений (3 раза)\n"
+                     "• ✏️ Редактирование изображений (3 раза)\n\n"
+                     "💰 **Для продолжения нужны кредиты:**\n"
+                     "• Купите кредиты для доступа к редактированию\n"
+                     "• Или используйте бесплатные генерации для изображений",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
+            return None
+    else:
+        logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
     try:
 
@@ -7880,7 +7930,25 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_response.content)} байт")
 
-                    
+                    # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
+                    logging.info(f"DEBUG: user_id={user_id}, generation_type={generation_type}")
+                    if user_id and generation_type:
+                        if generation_type == "free":
+                            # Списываем бесплатную генерацию
+                            logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
+                            if analytics_db.increment_free_generations(user_id):
+                                logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
+                        elif generation_type == "credits":
+                            # Списываем кредиты
+                            logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
+                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                                logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
+                    else:
+                        logging.warning(f"DEBUG: Не удалось списать - user_id={user_id}, generation_type={generation_type}")
 
                     try:
 
@@ -17176,7 +17244,57 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         send_media = None
 
+    # Проверяем доступ к редактированию изображений
+    user_id = None
+    generation_type = None  # Инициализируем переменную
     
+    if hasattr(update, 'message') and update.message:
+        user_id = update.message.from_user.id
+    elif hasattr(update, 'callback_query') and update.callback_query:
+        user_id = update.callback_query.from_user.id
+
+    if user_id:
+        logging.info(f"DEBUG: Найден user_id={user_id}")
+        free_generations_left = analytics_db.get_free_generations_left(user_id)
+        user_credits = analytics_db.get_user_credits(user_id)
+        
+        # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
+        logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
+        if free_generations_left > 0:
+            # Доступно за бесплатную генерацию
+            generation_type = "free"
+            logging.info(f"DEBUG: Установлен generation_type=free для пользователя {user_id}")
+        elif user_credits['balance'] >= 12:  # Стоимость редактирования FLUX
+            # Доступно за кредиты
+            generation_type = "credits"
+            logging.info(f"DEBUG: Установлен generation_type=credits для пользователя {user_id}")
+        else:
+            # Нет доступа - ни бесплатных генераций, ни кредитов
+            keyboard = [
+                [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
+                [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="❌ **Доступ к редактированию заблокирован!**\n\n"
+                     "✏️ **Редактирование изображений доступно:**\n"
+                     "• За бесплатные генерации (3 раза)\n"
+                     "• За кредиты (12 кредитов за редактирование)\n\n"
+                     "💡 **Что доступно бесплатно:**\n"
+                     "• 🖼️ Создание изображений (3 раза)\n"
+                     "• ✏️ Редактирование изображений (3 раза)\n\n"
+                     "💰 **Для продолжения нужны кредиты:**\n"
+                     "• Купите кредиты для доступа к редактированию\n"
+                     "• Или используйте бесплатные генерации для изображений",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
+            return None
+    else:
+        logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
     try:
 
@@ -17526,7 +17644,25 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_response.content)} байт")
 
-                    
+                    # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
+                    logging.info(f"DEBUG: user_id={user_id}, generation_type={generation_type}")
+                    if user_id and generation_type:
+                        if generation_type == "free":
+                            # Списываем бесплатную генерацию
+                            logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
+                            if analytics_db.increment_free_generations(user_id):
+                                logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
+                        elif generation_type == "credits":
+                            # Списываем кредиты
+                            logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
+                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                                logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
+                    else:
+                        logging.warning(f"DEBUG: Не удалось списать - user_id={user_id}, generation_type={generation_type}")
 
                     try:
 
@@ -20056,7 +20192,57 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         send_media = None
 
+    # Проверяем доступ к редактированию изображений
+    user_id = None
+    generation_type = None  # Инициализируем переменную
     
+    if hasattr(update, 'message') and update.message:
+        user_id = update.message.from_user.id
+    elif hasattr(update, 'callback_query') and update.callback_query:
+        user_id = update.callback_query.from_user.id
+
+    if user_id:
+        logging.info(f"DEBUG: Найден user_id={user_id}")
+        free_generations_left = analytics_db.get_free_generations_left(user_id)
+        user_credits = analytics_db.get_user_credits(user_id)
+        
+        # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
+        logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
+        if free_generations_left > 0:
+            # Доступно за бесплатную генерацию
+            generation_type = "free"
+            logging.info(f"DEBUG: Установлен generation_type=free для пользователя {user_id}")
+        elif user_credits['balance'] >= 12:  # Стоимость редактирования FLUX
+            # Доступно за кредиты
+            generation_type = "credits"
+            logging.info(f"DEBUG: Установлен generation_type=credits для пользователя {user_id}")
+        else:
+            # Нет доступа - ни бесплатных генераций, ни кредитов
+            keyboard = [
+                [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
+                [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="❌ **Доступ к редактированию заблокирован!**\n\n"
+                     "✏️ **Редактирование изображений доступно:**\n"
+                     "• За бесплатные генерации (3 раза)\n"
+                     "• За кредиты (12 кредитов за редактирование)\n\n"
+                     "💡 **Что доступно бесплатно:**\n"
+                     "• 🖼️ Создание изображений (3 раза)\n"
+                     "• ✏️ Редактирование изображений (3 раза)\n\n"
+                     "💰 **Для продолжения нужны кредиты:**\n"
+                     "• Купите кредиты для доступа к редактированию\n"
+                     "• Или используйте бесплатные генерации для изображений",
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
+            return None
+    else:
+        logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
     try:
 
@@ -20406,7 +20592,25 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_response.content)} байт")
 
-                    
+                    # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
+                    logging.info(f"DEBUG: user_id={user_id}, generation_type={generation_type}")
+                    if user_id and generation_type:
+                        if generation_type == "free":
+                            # Списываем бесплатную генерацию
+                            logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
+                            if analytics_db.increment_free_generations(user_id):
+                                logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
+                        elif generation_type == "credits":
+                            # Списываем кредиты
+                            logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
+                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                                logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
+                            else:
+                                logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
+                    else:
+                        logging.warning(f"DEBUG: Не удалось списать - user_id={user_id}, generation_type={generation_type}")
 
                     try:
 
