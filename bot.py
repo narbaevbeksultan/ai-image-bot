@@ -28059,8 +28059,32 @@ async def generate_video(update, context, state):
     free_generations_left = analytics_db.get_free_generations_left(user_id)
     user_credits = analytics_db.get_user_credits(user_id)
 
+    # Получаем параметры видео для расчета стоимости
+    video_type = state.get('video_type', 'text_to_video')
+    video_quality = state.get('video_quality', '480p')
+    video_duration = state.get('video_duration', 5)
+    
+    # Рассчитываем стоимость видео
+    video_cost = 0
+    if video_duration == 5:
+        if video_quality == "480p":
+            video_cost = 37
+        elif video_quality == "720p":
+            video_cost = 71
+        elif video_quality == "1080p":
+            video_cost = 172
+    elif video_duration == 10:
+        if video_quality == "480p":
+            video_cost = 71
+        elif video_quality == "720p":
+            video_cost = 138
+        elif video_quality == "1080p":
+            video_cost = 342
+    else:
+        video_cost = 37  # Базовая цена для других длительностей
+
     # Видео доступно только за кредиты, НЕ за бесплатные генерации
-    if user_credits['balance'] <= 0:
+    if user_credits['balance'] < video_cost:
         # Нет кредитов - доступ к видео заблокирован
         keyboard = [
             [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
@@ -28071,8 +28095,13 @@ async def generate_video(update, context, state):
         
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❌ **Доступ к видео заблокирован!**\n\n"
-                 "🎬 **Видео доступно только за кредиты**\n\n"
+            text=f"❌ **Недостаточно кредитов для видео!**\n\n"
+                 f"🎬 **Выбранное видео:**\n"
+                 f"• Качество: {video_quality}\n"
+                 f"• Длительность: {video_duration} сек\n"
+                 f"• Стоимость: {video_cost} кредитов\n\n"
+                 f"🪙 **Ваш баланс:** {user_credits['balance']} кредитов\n"
+                 f"❌ **Недостаточно:** {video_cost - user_credits['balance']} кредитов\n\n"
                  "💡 **Что доступно бесплатно:**\n"
                  "• 🖼️ Создание изображений (3 раза)\n"
                  "• ✏️ Редактирование изображений (3 раза)\n\n"
@@ -28987,6 +29016,15 @@ async def generate_video(update, context, state):
                 else:
                     logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
+            # Очищаем состояние после успешной генерации
+            state['step'] = None
+            state.pop('video_type', None)
+            state.pop('video_quality', None)
+            state.pop('video_duration', None)
+            state.pop('video_prompt', None)
+            state.pop('english_prompt', None)
+            state.pop('enhanced_prompt', None)
+
             # Отправляем дополнительную информацию о файле
 
             await context.bot.send_message(
@@ -29080,6 +29118,15 @@ async def generate_video(update, context, state):
                         logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
                     else:
                         logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
+
+                # Очищаем состояние после успешной генерации
+                state['step'] = None
+                state.pop('video_type', None)
+                state.pop('video_quality', None)
+                state.pop('video_duration', None)
+                state.pop('video_prompt', None)
+                state.pop('english_prompt', None)
+                state.pop('enhanced_prompt', None)
 
                 # Отправляем дополнительную информацию о файле
 
@@ -29270,6 +29317,15 @@ async def generate_video(update, context, state):
                             video_sent = True
 
                             logging.info("Видео успешно отправлено из локального файла")
+                            
+                            # Очищаем состояние после успешной генерации
+                            state['step'] = None
+                            state.pop('video_type', None)
+                            state.pop('video_quality', None)
+                            state.pop('video_duration', None)
+                            state.pop('video_prompt', None)
+                            state.pop('english_prompt', None)
+                            state.pop('enhanced_prompt', None)
 
                         except Exception as send_error:
 
@@ -29302,6 +29358,24 @@ async def generate_video(update, context, state):
                                 video_sent = True
 
                                 logging.info("Видео успешно отправлено как документ из локального файла")
+                                
+                                # Очищаем состояние после успешной генерации
+                                state['step'] = None
+                                state.pop('video_type', None)
+                                state.pop('video_quality', None)
+                                state.pop('video_duration', None)
+                                state.pop('video_prompt', None)
+                                state.pop('english_prompt', None)
+                                state.pop('enhanced_prompt', None)
+                                
+                                # Очищаем состояние после успешной генерации
+                                state['step'] = None
+                                state.pop('video_type', None)
+                                state.pop('video_quality', None)
+                                state.pop('video_duration', None)
+                                state.pop('video_prompt', None)
+                                state.pop('english_prompt', None)
+                                state.pop('enhanced_prompt', None)
                                 
                                 # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
                                 if user_id:
@@ -29386,6 +29460,15 @@ async def generate_video(update, context, state):
                             video_sent = True
 
                             logging.info("Анимация успешно отправлена")
+                            
+                            # Очищаем состояние после успешной генерации
+                            state['step'] = None
+                            state.pop('video_type', None)
+                            state.pop('video_quality', None)
+                            state.pop('video_duration', None)
+                            state.pop('video_prompt', None)
+                            state.pop('english_prompt', None)
+                            state.pop('enhanced_prompt', None)
                             
                             # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
                             if user_id:
@@ -30056,6 +30139,10 @@ async def generate_video(update, context, state):
         state.pop('video_duration', None)
 
         state.pop('video_prompt', None)
+
+        state.pop('english_prompt', None)
+
+        state.pop('enhanced_prompt', None)
 
 
 
