@@ -28960,8 +28960,32 @@ async def generate_video(update, context, state):
             video_sent = True
 
             logging.info("✅ Видео успешно отправлено как видео с поддержкой стриминга")
-
             
+            # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
+            if user_id:
+                # Определяем стоимость видео на основе качества и длительности
+                if video_duration == 5:
+                    if video_quality == "480p":
+                        base_cost = 37
+                    elif video_quality == "720p":
+                        base_cost = 71
+                    elif video_quality == "1080p":
+                        base_cost = 172
+                elif video_duration == 10:
+                    if video_quality == "480p":
+                        base_cost = 71
+                    elif video_quality == "720p":
+                        base_cost = 138
+                    elif video_quality == "1080p":
+                        base_cost = 342
+                else:
+                    # Для других длительностей используем базовую цену 480p 5s
+                    base_cost = 37
+                
+                if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                    logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
+                else:
+                    logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
             # Отправляем дополнительную информацию о файле
 
@@ -29030,8 +29054,32 @@ async def generate_video(update, context, state):
                 video_sent = True
 
                 logging.info("Видео успешно отправлено как документ (MP4)")
-
                 
+                # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
+                if user_id:
+                    # Определяем стоимость видео на основе качества и длительности
+                    if video_duration == 5:
+                        if video_quality == "480p":
+                            base_cost = 37
+                        elif video_quality == "720p":
+                            base_cost = 71
+                        elif video_quality == "1080p":
+                            base_cost = 172
+                    elif video_duration == 10:
+                        if video_quality == "480p":
+                            base_cost = 71
+                        elif video_quality == "720p":
+                            base_cost = 138
+                        elif video_quality == "1080p":
+                            base_cost = 342
+                    else:
+                        # Для других длительностей используем базовую цену 480p 5s
+                        base_cost = 37
+                    
+                    if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                        logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
+                    else:
+                        logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
                 # Отправляем дополнительную информацию о файле
 
@@ -29254,6 +29302,32 @@ async def generate_video(update, context, state):
                                 video_sent = True
 
                                 logging.info("Видео успешно отправлено как документ из локального файла")
+                                
+                                # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
+                                if user_id:
+                                    # Определяем стоимость видео на основе качества и длительности
+                                    if video_duration == 5:
+                                        if video_quality == "480p":
+                                            base_cost = 37
+                                        elif video_quality == "720p":
+                                            base_cost = 71
+                                        elif video_quality == "1080p":
+                                            base_cost = 172
+                                    elif video_duration == 10:
+                                        if video_quality == "480p":
+                                            base_cost = 71
+                                        elif video_quality == "720p":
+                                            base_cost = 138
+                                        elif video_quality == "1080p":
+                                            base_cost = 342
+                                    else:
+                                        # Для других длительностей используем базовую цену 480p 5s
+                                        base_cost = 37
+                                    
+                                    if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                                        logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
+                                    else:
+                                        logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
                             except Exception as doc_send_error:
 
@@ -29312,8 +29386,32 @@ async def generate_video(update, context, state):
                             video_sent = True
 
                             logging.info("Анимация успешно отправлена")
-
                             
+                            # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
+                            if user_id:
+                                # Определяем стоимость видео на основе качества и длительности
+                                if video_duration == 5:
+                                    if video_quality == "480p":
+                                        base_cost = 37
+                                    elif video_quality == "720p":
+                                        base_cost = 71
+                                    elif video_quality == "1080p":
+                                        base_cost = 172
+                                elif video_duration == 10:
+                                    if video_quality == "480p":
+                                        base_cost = 71
+                                    elif video_quality == "720p":
+                                        base_cost = 138
+                                    elif video_quality == "1080p":
+                                        base_cost = 342
+                                else:
+                                    # Для других длительностей используем базовую цену 480p 5s
+                                    base_cost = 37
+                                
+                                if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                                    logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
+                                else:
+                                    logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
                             # Даже если GIF отправился, отправляем ссылку на MP4
 
