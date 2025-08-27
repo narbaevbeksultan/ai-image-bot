@@ -28908,17 +28908,25 @@ async def generate_video(update, context, state):
 
         # Отправляем видео пользователю
 
+        # Функция для сокращения длинного промпта
+        def truncate_prompt(prompt, max_length=80):
+            if len(prompt) <= max_length:
+                return prompt
+            return prompt[:max_length] + "..."
+
         if video_type == 'text_to_video' and video_prompt:
 
-            # Показываем только переведенный промпт для экономии места
+            # Показываем сокращенный промпт для экономии места
 
-            prompt_caption = f"📝 {english_prompt}"
+            truncated_prompt = truncate_prompt(english_prompt, 80)
+            prompt_caption = f"📝 {truncated_prompt}"
 
         elif video_type == 'image_to_video' and video_prompt:
 
-            # Показываем только переведенный промпт для экономии места
+            # Показываем сокращенный промпт для экономии места
 
-            prompt_caption = f"🖼️ {english_prompt}"
+            truncated_prompt = truncate_prompt(english_prompt, 80)
+            prompt_caption = f"🖼️ {truncated_prompt}"
 
         else:
 
