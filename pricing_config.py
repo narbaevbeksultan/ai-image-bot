@@ -2,11 +2,11 @@
 CREDIT_PACKAGES = {
     'small': {
         'name': '🪙 Малый пакет',
-        'credits': 500,
+        'credits': 200,
         'price': 1129.0,
         'currency': 'RUB',
-        'price_per_credit': 2.258,
-        'description': '500 кредитов для личного тестирования',
+        'price_per_credit': 5.645,
+        'description': '200 кредитов для личного тестирования',
         'original_price': 1129.0,
         'discount_percent': 0,
         'savings': 0
