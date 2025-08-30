@@ -1508,7 +1508,26 @@ async def my_id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"🆔 Ваш ID в Telegram: {user_id}\n\nСохраните этот ID - он понадобится для настройки администратора.")
 
-
+async def credits_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для просмотра статистики по кредитам (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    try:
+        stats = analytics_db.get_total_credits_statistics()
+        stats_text = f"""🪙 **СТАТИСТИКА КРЕДИТОВ БОТА**
+📊 **ОБЩАЯ СТАТИСТИКА:**
+• 👥 Пользователей с кредитами: {stats['total_users']}
+• 🪙 Всего куплено кредитов: {stats['total_purchased']:,}
+• 💸 Всего использовано кредитов: {stats['total_used']:,}
+• 💰 Текущий баланс кредитов: {stats['total_balance']:,}
+💡 **ДЛЯ ПОПОЛНЕНИЯ REPLICATE/OPENAI:**
+🔥 Общее количество купленных кредитов: **{stats['total_purchased']:,}**
+💰 Необходимо пополнить на сумму: **₽{stats['completed_revenue']:,.2f}**"""
+        await update.message.reply_text(stats_text, parse_mode='Markdown')
+    except Exception as e:
+        await update.message.reply_text("❌ Ошибка получения статистики.")
 
 async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -30813,6 +30832,8 @@ def main():
     app.add_handler(CommandHandler('my_id', my_id_command))  # Временная команда
 
     app.add_handler(CommandHandler('admin_stats', admin_stats_command))
+    
+    app.add_handler(CommandHandler('credits_stats', credits_stats_command))  # Статистика по кредитам
 
     app.add_handler(CommandHandler('ideogram_tips', ideogram_tips_command))
 
