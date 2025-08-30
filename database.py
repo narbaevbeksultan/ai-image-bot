@@ -876,6 +876,189 @@ class AnalyticsDB:
             logging.error(f"Ошибка обновления статуса платежа: {e}")
             return False
 
+    def get_total_credits_statistics(self) -> Dict:
+        """
+        Получает общую статистику по кредитам всех пользователей
+        
+        Returns:
+            Dict с общей статистикой:
+            - total_purchased: общее количество купленных кредитов
+            - total_used: общее количество использованных кредитов
+            - total_balance: общий баланс кредитов
+            - total_users: количество пользователей с кредитами
+            - total_payments: общее количество платежей
+            - total_revenue: общая выручка
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Общая статистика по кредитам
+                cursor.execute("""
+                    SELECT 
+                        SUM(total_purchased) as total_purchased,
+                        SUM(total_used) as total_used,
+                        SUM(credits_balance) as total_balance,
+                        COUNT(*) as total_users
+                    FROM user_credits
+                """)
+                
+                credits_stats = cursor.fetchone()
+                
+                # Статистика по платежам
+                cursor.execute("""
+                    SELECT 
+                        COUNT(*) as total_payments,
+                        SUM(amount) as total_revenue,
+                        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
+                        SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as completed_revenue
+                    FROM payments
+                """)
+                
+                payment_stats = cursor.fetchone()
+                
+                # Статистика по транзакциям
+                cursor.execute("""
+                    SELECT 
+                        COUNT(*) as total_transactions,
+                        SUM(CASE WHEN transaction_type = 'purchase' THEN amount ELSE 0 END) as total_purchased_transactions,
+                        SUM(CASE WHEN transaction_type = 'usage' THEN amount ELSE 0 END) as total_used_transactions
+                    FROM credit_transactions
+                """)
+                
+                transaction_stats = cursor.fetchone()
+                
+                return {
+                    'total_purchased': credits_stats[0] or 0,
+                    'total_used': credits_stats[1] or 0,
+                    'total_balance': credits_stats[2] or 0,
+                    'total_users': credits_stats[3] or 0,
+                    'total_payments': payment_stats[0] or 0,
+                    'total_revenue': payment_stats[1] or 0,
+                    'completed_payments': payment_stats[2] or 0,
+                    'completed_revenue': payment_stats[3] or 0,
+                    'total_transactions': transaction_stats[0] or 0,
+                    'total_purchased_transactions': transaction_stats[1] or 0,
+                    'total_used_transactions': transaction_stats[2] or 0
+                }
+                
+        except Exception as e:
+            logging.error(f"Ошибка получения общей статистики кредитов: {e}")
+            return {
+                'total_purchased': 0,
+                'total_used': 0,
+                'total_balance': 0,
+                'total_users': 0,
+                'total_payments': 0,
+                'total_revenue': 0,
+                'completed_payments': 0,
+                'completed_revenue': 0,
+                'total_transactions': 0,
+                'total_purchased_transactions': 0,
+                'total_used_transactions': 0
+            }
+
+    def get_user_credits_list(self) -> List[Dict]:
+        """
+        Получает список всех пользователей с их кредитами
+        
+        Returns:
+            List[Dict] с информацией о пользователях и их кредитах
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        uc.user_id,
+                        u.username,
+                        u.first_name,
+                        u.last_name,
+                        uc.credits_balance,
+                        uc.total_purchased,
+                        uc.total_used,
+                        uc.last_updated
+                    FROM user_credits uc
+                    LEFT JOIN users u ON uc.user_id = u.user_id
+                    ORDER BY uc.total_purchased DESC
+                """)
+                
+                rows = cursor.fetchall()
+                columns = [description[0] for description in cursor.description]
+                
+                return [dict(zip(columns, row)) for row in rows]
+                
+        except Exception as e:
+            logging.error(f"Ошибка получения списка пользователей с кредитами: {e}")
+            return []
+
+    def get_payment_history(self, limit: int = 100) -> List[Dict]:
+        """
+        Получает историю платежей
+        
+        Args:
+            limit: Максимальное количество записей
+            
+        Returns:
+            List[Dict] с историей платежей
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        p.*,
+                        u.username,
+                        u.first_name,
+                        u.last_name
+                    FROM payments p
+                    LEFT JOIN users u ON p.user_id = u.user_id
+                    ORDER BY p.created_at DESC
+                    LIMIT ?
+                """, (limit,))
+                
+                rows = cursor.fetchall()
+                columns = [description[0] for description in cursor.description]
+                
+                return [dict(zip(columns, row)) for row in rows]
+                
+        except Exception as e:
+            logging.error(f"Ошибка получения истории платежей: {e}")
+            return []
+
+    def create_payment_with_credits(self, user_id: int, amount: float, currency: str = "UAH", 
+                                   payment_id: str = None, order_id: str = None, 
+                                   credit_amount: int = None) -> bool:
+        """
+        Создает запись о платеже с указанием количества кредитов
+        
+        Args:
+            user_id: ID пользователя
+            amount: Сумма платежа
+            currency: Валюта
+            payment_id: ID платежа в Betatransfer
+            order_id: Уникальный ID заказа
+            credit_amount: Количество кредитов
+            
+        Returns:
+            True если создание успешно, False иначе
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO payments 
+                    (user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at)
+                    VALUES (?, ?, ?, 'pending', ?, ?, ?, CURRENT_TIMESTAMP)
+                """, (user_id, amount, currency, payment_id, order_id or '', credit_amount or 0))
+                
+                conn.commit()
+                return True
+                
+        except Exception as e:
+            logging.error(f"Ошибка создания платежа с кредитами: {e}")
+            return False
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
 

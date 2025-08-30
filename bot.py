@@ -30448,14 +30448,15 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         
 
-        # Создаем запись о платеже в базе данных
+        # Создаем запись о платеже в базе данных с количеством кредитов
         order_id = payment_result.get('order_id', f"order{int(time.time())}")
-        payment_record = analytics_db.create_payment(
+        payment_record = analytics_db.create_payment_with_credits(
             user_id=user_id,
             amount=package['price'],
             currency=package['currency'],
             payment_id=payment_result['id'],
-            order_id=order_id
+            order_id=order_id,
+            credit_amount=package['credits']  # Важно! Указываем количество кредитов
         )
         
         if not payment_record:
