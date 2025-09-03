@@ -128,3 +128,4 @@ if __name__ == "__main__":
     else:
         # Показываем общую статистику
         print_credits_statistics()
+

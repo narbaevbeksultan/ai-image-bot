@@ -48,3 +48,4 @@ async def credits_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
 
 # И ДОБАВЬТЕ ЭТУ СТРОКУ В РЕГИСТРАЦИЮ КОМАНД (после admin_stats):
 # app.add_handler(CommandHandler('credits_stats', credits_stats_command))
+
