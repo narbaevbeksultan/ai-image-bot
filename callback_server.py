@@ -4,6 +4,7 @@ from database import AnalyticsDB
 import os
 from dotenv import load_dotenv
 import logging
+import requests
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +15,40 @@ load_dotenv()
 app = Flask(__name__)
 betatransfer_api = BetatransferAPI()
 db = AnalyticsDB()
+
+def send_telegram_notification(user_id: int, message: str):
+    """
+    Отправляет уведомление пользователю в Telegram
+    
+    Args:
+        user_id: ID пользователя в Telegram
+        message: Текст сообщения
+    """
+    try:
+        bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        if not bot_token:
+            logger.error("TELEGRAM_BOT_TOKEN не установлен")
+            return False
+        
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        data = {
+            'chat_id': user_id,
+            'text': message,
+            'parse_mode': 'Markdown'
+        }
+        
+        response = requests.post(url, data=data, timeout=10)
+        
+        if response.status_code == 200:
+            logger.info(f"Уведомление отправлено пользователю {user_id}")
+            return True
+        else:
+            logger.error(f"Ошибка отправки уведомления: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Ошибка отправки уведомления пользователю {user_id}: {e}")
+        return False
 
 @app.route('/payment/ca', methods=['POST'])
 def payment_callback():
@@ -61,8 +96,23 @@ def payment_callback():
                 
                 logger.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
                 
-                # Отправляем уведомление пользователю (можно реализовать позже)
-                # await bot.send_message(user_id, f"✅ Кредиты зачислены: {credit_amount}")
+                # Отправляем уведомление пользователю
+                notification_message = (
+                    f"✅ **Кредиты зачислены!**\n\n"
+                    f"🪙 **Получено:** {credit_amount:,} кредитов\n"
+                    f"💰 **Сумма:** {amount} {currency}\n"
+                    f"📦 **Платеж:** {payment_id}\n\n"
+                    f"Теперь вы можете использовать кредиты для генерации изображений!"
+                )
+                
+                # Отправляем уведомление пользователю
+                notification_sent = send_telegram_notification(user_id, notification_message)
+                if notification_sent:
+                    logger.info(f"Уведомление о зачислении кредитов отправлено пользователю {user_id}")
+                else:
+                    logger.warning(f"Не удалось отправить уведомление пользователю {user_id}")
+            else:
+                logger.error(f"Платеж с order_id {order_id} не найден в базе данных")
         
         # Возвращаем 200 OK (требование Betatransfer)
         return jsonify({"status": "success"}), 200
