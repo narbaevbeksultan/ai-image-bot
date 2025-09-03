@@ -1517,7 +1517,7 @@ async def credits_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
 • 💰 Текущий баланс кредитов: {stats['total_balance']:,}
 💡 **ДЛЯ ПОПОЛНЕНИЯ REPLICATE/OPENAI:**
 🔥 Общее количество купленных кредитов: **{stats['total_purchased']:,}**
-💰 Необходимо пополнить на сумму: **₽{stats['completed_revenue']:,.2f}**"""
+💰 Необходимо пополнить на сумму: **сом{stats['completed_revenue']:,.2f}**"""
         await update.message.reply_text(stats_text, parse_mode='Markdown')
     except Exception as e:
         await update.message.reply_text("❌ Ошибка получения статистики.")
@@ -30449,7 +30449,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         text += f"🪙 **Кредитов:** {package['credits']}\n"
 
-        text += f"💰 **Сумма:** ₽{package['price']:.0f}\n"
+        text += f"💰 **Сумма:** сом{package['price']:.0f}\n"
 
         text += f"📝 **Описание:** {package['description']}\n\n"
 
@@ -30621,9 +30621,9 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
         for package in CREDIT_PACKAGES.values():
 
-            print(f"🔍 Проверяем пакет: {package['credits']} кредитов за {package['price']} руб")
+            print(f"🔍 Проверяем пакет: {package['credits']} кредитов за {package['price']} сом")
             print(f"🔍 Разница: {abs(package['price'] - amount)}")
-            if abs(package['price'] - amount) < 1.0:  # Погрешность 1 рубль
+            if abs(package['price'] - amount) < 1.0:  # Погрешность 1 сомль
 
                 # Активируем кредиты
 
@@ -30647,7 +30647,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
                     text += f"🪙 **Получено кредитов:** {package['credits']}\n"
 
-                    text += f"💰 **Сумма:** ₽{amount:.0f}\n"
+                    text += f"💰 **Сумма:** сом{amount:.0f}\n"
 
                     text += f"📦 **Пакет:** {package['credits']} кредитов\n\n"
 
