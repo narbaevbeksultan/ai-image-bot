@@ -31073,14 +31073,16 @@ def main():
 
         print("🚀 Бот запущен локально с polling")
         
-        # Запускаем Flask сервер для callback в отдельном потоке
+        # Запускаем callback сервер в отдельном потоке
+        from callback_integration import start_callback_server
         import threading
-        def run_flask():
-            flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
         
-        flask_thread = threading.Thread(target=run_flask, daemon=True)
-        flask_thread.start()
-        print("🌐 Flask callback сервер запущен на порту 5000")
+        def run_callback_server():
+            asyncio.run(start_callback_server(5000))
+        
+        callback_thread = threading.Thread(target=run_callback_server, daemon=True)
+        callback_thread.start()
+        print("🌐 Callback сервер запущен на порту 5000")
 
         app.run_polling()
 
