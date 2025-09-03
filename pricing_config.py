@@ -3,8 +3,8 @@ CREDIT_PACKAGES = {
     'small': {
         'name': '🪙 Малый пакет',
         'credits': 1200,
-        'price': 515.0,
-        'currency': 'KGS',
+        'price': 1000.0,
+        'currency': 'RUB',
         'price_per_credit': 0.429,
         'description': '1200 кредитов для личного тестирования',
         'original_price': 515.0,
@@ -14,8 +14,8 @@ CREDIT_PACKAGES = {
     'medium': {
         'name': '🪙 Средний пакет',
         'credits': 5000,
-        'price': 2145.0,
-        'currency': 'KGS',
+        'price': 2000.0,
+        'currency': 'RUB',
         'price_per_credit': 0.429,
         'description': '5000 кредитов для активных пользователей',
         'original_price': 2145.0,
@@ -25,8 +25,8 @@ CREDIT_PACKAGES = {
     'large': {
         'name': '🪙 Большой пакет',
         'credits': 10000,
-        'price': 4291.0,
-        'currency': 'KGS',
+        'price': 3000.0,
+        'currency': 'RUB',
         'price_per_credit': 0.429,
         'description': '10000 кредитов для профессионалов',
         'original_price': 4291.0,
