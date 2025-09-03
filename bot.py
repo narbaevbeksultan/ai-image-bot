@@ -65,23 +65,35 @@ async def check_pending_payments():
                     credit_amount = payment.get('credit_amount')
                     
                     if credit_amount and credit_amount > 0:
-                        # Зачисляем кредиты
-                        analytics_db.add_credits(user_id, credit_amount)
+                        # Проверяем, не зачислены ли уже кредиты за этот платеж
+                        # Ищем транзакцию с этим payment_id
+                        existing_transaction = analytics_db.get_credit_transaction_by_payment_id(payment_id)
                         
-                        # Обновляем статус платежа
-                        analytics_db.update_payment_status(payment_id, 'success')
-                        
-                        # Отправляем уведомление пользователю
-                        notification_message = (
-                            f"✅ **Кредиты зачислены!**\n\n"
-                            f"🪙 **Получено:** {credit_amount:,} кредитов\n"
-                            f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
-                            f"📦 **Платеж:** {payment_id}\n\n"
-                            f"Теперь вы можете использовать кредиты для генерации изображений!"
-                        )
-                        
-                        send_telegram_notification(user_id, notification_message)
-                        logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
+                        if not existing_transaction:
+                            # Кредиты еще не зачислены, зачисляем
+                            analytics_db.add_credits(user_id, credit_amount)
+                            
+                            # Создаем транзакцию с привязкой к платежу
+                            analytics_db.create_credit_transaction_with_payment(user_id, credit_amount, f"Покупка кредитов (платеж {payment_id})", payment_id)
+                            
+                            # Обновляем статус платежа
+                            analytics_db.update_payment_status(payment_id, 'success')
+                            
+                            # Отправляем уведомление пользователю
+                            notification_message = (
+                                f"✅ **Кредиты зачислены!**\n\n"
+                                f"🪙 **Получено:** {credit_amount:,} кредитов\n"
+                                f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                                f"📦 **Платеж:** {payment_id}\n\n"
+                                f"Теперь вы можете использовать кредиты для генерации изображений!"
+                            )
+                            
+                            send_telegram_notification(user_id, notification_message)
+                            logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
+                        else:
+                            # Кредиты уже зачислены, просто обновляем статус платежа
+                            analytics_db.update_payment_status(payment_id, 'success')
+                            logging.info(f"Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
                 
                 elif payment_status == 'failed':
                     # Обновляем статус неудачного платежа
@@ -30842,19 +30854,24 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
             print(f"🔍 Разница: {abs(package['price'] - amount)}")
             if abs(package['price'] - amount) < 1.0:  # Погрешность 1 сомль
 
+                # Проверяем, не зачислены ли уже кредиты за этот платеж
+                existing_transaction = analytics_db.get_credit_transaction_by_payment_id(payment_id)
+                
+                if existing_transaction:
+                    # Кредиты уже зачислены
+                    await update.callback_query.answer("✅ Кредиты уже зачислены!")
+                    return
+                
                 # Активируем кредиты
-
                 success = analytics_db.add_credits(
-
                     user_id=user_id,
-
                     amount=package['credits'],
-
                     payment_id=payment_id,
-
                     description=f"Покупка пакета: {package['credits']} кредитов"
-
                 )
+                
+                # Создаем транзакцию с привязкой к платежу
+                analytics_db.create_credit_transaction_with_payment(user_id, package['credits'], f"Покупка пакета: {package['credits']} кредитов", payment_id)
 
                 
 
