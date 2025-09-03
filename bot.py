@@ -61,7 +61,7 @@ async def check_pending_payments():
                 logging.info(f"Платеж {payment_id} имеет статус: {payment_status}")
                 
                 # Если платеж завершен, зачисляем кредиты
-                if payment_status == 'completed':
+                if payment_status == 'success':
                     credit_amount = payment.get('credit_amount')
                     
                     if credit_amount and credit_amount > 0:
@@ -69,7 +69,7 @@ async def check_pending_payments():
                         analytics_db.add_credits(user_id, credit_amount)
                         
                         # Обновляем статус платежа
-                        analytics_db.update_payment_status(payment_id, 'completed')
+                        analytics_db.update_payment_status(payment_id, 'success')
                         
                         # Отправляем уведомление пользователю
                         notification_message = (
