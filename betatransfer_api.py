@@ -41,7 +41,7 @@ class BetatransferAPI:
         
         return signature
     
-    def create_payment(self, amount: float, currency: str = "KGS", 
+    def create_payment(self, amount: float, currency: str = "RUB", 
                        description: str = "", order_id: str = None, 
                        payer_email: str = "", payer_name: str = "",
                        payer_id: str = "") -> Dict:
@@ -69,7 +69,7 @@ class BetatransferAPI:
             'amount': str(amount),
             'currency': currency,
             'orderId': order_id,
-            'paymentSystem': 'P2R_KGS',  # Метод для KGS
+            'paymentSystem': 'Test1',  # Тестовый метод для проверки
             'payerId': str(payer_id)
         }
         
