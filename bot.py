@@ -29,6 +29,85 @@ from database import analytics_db
 from flask import Flask, request, jsonify
 from betatransfer_api import betatransfer_api
 
+# Функция для автоматической проверки статуса платежей
+async def check_pending_payments():
+    """Проверяет статус всех pending платежей и зачисляет кредиты при завершении"""
+    try:
+        # Получаем все pending платежи из базы данных
+        pending_payments = analytics_db.get_pending_payments()
+        
+        if not pending_payments:
+            return
+        
+        logging.info(f"Проверяем {len(pending_payments)} pending платежей")
+        
+        for payment in pending_payments:
+            payment_id = payment.get('betatransfer_id')
+            user_id = payment.get('user_id')
+            order_id = payment.get('order_id')
+            
+            if not payment_id:
+                continue
+            
+            try:
+                # Проверяем статус платежа через Betatransfer API
+                status_result = betatransfer_api.get_payment_status(payment_id)
+                
+                if 'error' in status_result:
+                    logging.error(f"Ошибка проверки статуса платежа {payment_id}: {status_result['error']}")
+                    continue
+                
+                payment_status = status_result.get('status')
+                logging.info(f"Платеж {payment_id} имеет статус: {payment_status}")
+                
+                # Если платеж завершен, зачисляем кредиты
+                if payment_status == 'completed':
+                    credit_amount = payment.get('credit_amount')
+                    
+                    if credit_amount and credit_amount > 0:
+                        # Зачисляем кредиты
+                        analytics_db.add_credits(user_id, credit_amount)
+                        
+                        # Обновляем статус платежа
+                        analytics_db.update_payment_status(payment_id, 'completed')
+                        
+                        # Отправляем уведомление пользователю
+                        notification_message = (
+                            f"✅ **Кредиты зачислены!**\n\n"
+                            f"🪙 **Получено:** {credit_amount:,} кредитов\n"
+                            f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                            f"📦 **Платеж:** {payment_id}\n\n"
+                            f"Теперь вы можете использовать кредиты для генерации изображений!"
+                        )
+                        
+                        send_telegram_notification(user_id, notification_message)
+                        logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
+                
+                elif payment_status == 'failed':
+                    # Обновляем статус неудачного платежа
+                    analytics_db.update_payment_status(payment_id, 'failed')
+                    logging.info(f"Платеж {payment_id} завершился неудачно")
+                
+            except Exception as e:
+                logging.error(f"Ошибка обработки платежа {payment_id}: {e}")
+                continue
+                
+    except Exception as e:
+        logging.error(f"Ошибка проверки pending платежей: {e}")
+
+# Функция для запуска периодической проверки платежей
+async def start_payment_polling():
+    """Запускает периодическую проверку статуса платежей"""
+    while True:
+        try:
+            await check_pending_payments()
+            # Ждем 45 секунд перед следующей проверкой
+            await asyncio.sleep(45)
+        except Exception as e:
+            logging.error(f"Ошибка в payment polling: {e}")
+            # При ошибке ждем меньше времени
+            await asyncio.sleep(15)
+
 # Создаем Flask приложение для callback
 flask_app = Flask(__name__)
 
@@ -31052,6 +31131,10 @@ def main():
             flask_thread = threading.Thread(target=run_flask, daemon=True)
             flask_thread.start()
             print("🌐 Flask callback сервер запущен на порту 5000")
+            
+            # Запускаем периодическую проверку платежей
+            payment_polling_task = asyncio.create_task(start_payment_polling())
+            print("🔄 Автоматическая проверка платежей запущена (каждые 45 секунд)")
 
             # Держим приложение запущенным
 
@@ -31073,16 +31156,22 @@ def main():
 
         print("🚀 Бот запущен локально с polling")
         
-        # Запускаем callback сервер в отдельном потоке
-        from callback_integration import start_callback_server
+        # Запускаем Flask сервер для callback в отдельном потоке
         import threading
+        def run_flask():
+            flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
         
-        def run_callback_server():
-            asyncio.run(start_callback_server(5000))
+        flask_thread = threading.Thread(target=run_flask, daemon=True)
+        flask_thread.start()
+        print("🌐 Flask callback сервер запущен на порту 5000")
         
-        callback_thread = threading.Thread(target=run_callback_server, daemon=True)
-        callback_thread.start()
-        print("🌐 Callback сервер запущен на порту 5000")
+        # Запускаем периодическую проверку платежей в отдельном потоке
+        def run_payment_polling():
+            asyncio.run(start_payment_polling())
+        
+        polling_thread = threading.Thread(target=run_payment_polling, daemon=True)
+        polling_thread.start()
+        print("🔄 Автоматическая проверка платежей запущена (каждые 45 секунд)")
 
         app.run_polling()
 

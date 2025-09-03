@@ -1058,6 +1058,31 @@ class AnalyticsDB:
         except Exception as e:
             logging.error(f"Ошибка создания платежа с кредитами: {e}")
             return False
+    
+    def get_pending_payments(self):
+        """Получает все pending платежи для проверки статуса"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at
+                    FROM payments 
+                    WHERE status = 'pending' AND betatransfer_id IS NOT NULL
+                    ORDER BY created_at ASC
+                ''')
+                
+                columns = [description[0] for description in cursor.description]
+                payments = []
+                
+                for row in cursor.fetchall():
+                    payment = dict(zip(columns, row))
+                    payments.append(payment)
+                
+                return payments
+                
+        except Exception as e:
+            logging.error(f"Ошибка получения pending платежей: {e}")
+            return []
 
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
