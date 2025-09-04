@@ -28568,12 +28568,13 @@ async def generate_video(update, context, state):
 
             # Простая проверка через тестовый запрос
 
-            test_output = replicate.run(
-
-                "replicate/hello-world",
-
-                input={"text": "test"}
-
+            loop = asyncio.get_event_loop()
+            test_output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "replicate/hello-world",
+                    input={"text": "test"}
+                )),
+                timeout=30.0  # 30 секунд для теста
             )
 
             logging.info("Replicate API доступен")
@@ -28734,12 +28735,13 @@ async def generate_video(update, context, state):
 
             logging.info(f"🚀 Вызываем API с полными параметрами...")
 
-            output = replicate.run(
-
-                "bytedance/seedance-1-pro",
-
-                input=input_data
-
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "bytedance/seedance-1-pro",
+                    input=input_data
+                )),
+                timeout=300.0  # 5 минут для видео
             )
 
             
@@ -28766,12 +28768,12 @@ async def generate_video(update, context, state):
 
             try:
 
-                output = replicate.run(
-
-                    "bytedance/seedance-1-pro",
-
-                    input=minimal_input
-
+                output = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: replicate.run(
+                        "bytedance/seedance-1-pro",
+                        input=minimal_input
+                    )),
+                    timeout=300.0  # 5 минут для видео
                 )
 
                 logging.info(f"✅ Минимальные параметры сработали!")
