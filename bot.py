@@ -29509,24 +29509,31 @@ async def generate_video(update, context, state):
 
                                             video_sent = True
                                             logging.info("Видео успешно отправлено как документ из локального файла")
-                                
-                                # Очищаем состояние после успешной генерации
-                                state['step'] = None
-                                state.pop('video_type', None)
-                                state.pop('video_quality', None)
-                                state.pop('video_duration', None)
-                                state.pop('video_prompt', None)
-                                state.pop('english_prompt', None)
-                                state.pop('enhanced_prompt', None)
-                                
-                                # Очищаем состояние после успешной генерации
-                                state['step'] = None
-                                state.pop('video_type', None)
-                                state.pop('video_quality', None)
-                                state.pop('video_duration', None)
-                                state.pop('video_prompt', None)
-                                state.pop('english_prompt', None)
-                                state.pop('enhanced_prompt', None)
+                                            
+                                            # Очищаем состояние после успешной генерации
+                                            state['step'] = None
+                                            state.pop('video_type', None)
+                                            state.pop('video_quality', None)
+                                            state.pop('video_duration', None)
+                                            state.pop('video_prompt', None)
+                                            state.pop('english_prompt', None)
+                                            state.pop('enhanced_prompt', None)
+                                            
+                                    except Exception as doc_error:
+                                        logging.error(f"Ошибка при отправке как документ: {doc_error}")
+                                        # Отправляем ссылку как последний вариант
+                                        await context.bot.send_message(
+                                            chat_id=chat_id,
+                                            text=f"🎬 **Видео готово!**\n\n"
+                                                 f"{prompt_caption}\n"
+                                                 f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
+                                                 f"✨ Bytedance Seedance 1.0 Pro\n\n"
+                                                 f"🔗 **Ссылка на видео:** {video_url}",
+                                            reply_markup=InlineKeyboardMarkup([
+                                                [InlineKeyboardButton("🔗 Скачать видео", url=video_url)]
+                                            ])
+                                        )
+                                        video_sent = True
                                 
                                 # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
                                 if user_id:
