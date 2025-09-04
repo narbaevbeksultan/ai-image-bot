@@ -12,6 +12,7 @@ import os
 import replicate
 
 import requests
+import aiohttp
 
 from PIL import Image
 
@@ -2526,6 +2527,7 @@ import os
 import replicate
 
 import requests
+import aiohttp
 
 from PIL import Image
 
@@ -5565,6 +5567,7 @@ import os
 import replicate
 
 import requests
+import aiohttp
 
 from PIL import Image
 
@@ -12902,6 +12905,7 @@ import os
 import replicate
 
 import requests
+import aiohttp
 
 from PIL import Image
 
@@ -15169,6 +15173,7 @@ import os
 import replicate
 
 import requests
+import aiohttp
 
 from PIL import Image
 
@@ -18206,6 +18211,7 @@ import os
 import replicate
 
 import requests
+import aiohttp
 
 from PIL import Image
 
@@ -28938,21 +28944,15 @@ async def generate_video(update, context, state):
 
             logging.info("🔍 Проверяем доступность файла...")
 
-            head_response = requests.head(video_url, timeout=30)
-
-            if head_response.status_code != 200:
-
-                logging.warning(f"Файл недоступен (статус: {head_response.status_code})")
-
-                # Продолжаем попытку отправки, возможно это временная проблема
-
-            else:
-
-                # Анализируем заголовки для определения типа файла
-
-                content_type = head_response.headers.get('content-type', 'unknown')
-
-                content_length = head_response.headers.get('content-length')
+            async with aiohttp.ClientSession() as session:
+                async with session.head(video_url, timeout=aiohttp.ClientTimeout(total=30)) as head_response:
+                    if head_response.status != 200:
+                        logging.warning(f"Файл недоступен (статус: {head_response.status})")
+                        # Продолжаем попытку отправки, возможно это временная проблема
+                    else:
+                        # Анализируем заголовки для определения типа файла
+                        content_type = head_response.headers.get('content-type', 'unknown')
+                        content_length = head_response.headers.get('content-length')
 
                 
 
@@ -29010,43 +29010,31 @@ async def generate_video(update, context, state):
 
         try:
 
-            test_response = requests.get(video_url, timeout=10, stream=False)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(video_url, timeout=aiohttp.ClientTimeout(total=10)) as test_response:
+                    if test_response.status != 200:
 
-            if test_response.status_code != 200:
+                        logging.error(f"Файл недоступен для скачивания (статус: {test_response.status})")
+                        
+                        # Отправляем сообщение с инструкциями
+                        await context.bot.send_message(
+                            chat_id=chat_id,
+                            text=f"⚠️ **Файл недоступен для скачивания**\n\n"
+                                 f"Статус: {test_response.status}\n"
+                                 f"Возможно, файл был удален или недоступен\n\n"
+                                 f"🔗 **Попробуйте ссылку:** {video_url}\n\n"
+                                 f"💡 **Рекомендации:**\n"
+                                 f"• Скопируйте ссылку в браузер\n"
+                                 f"• Попробуйте позже\n"
+                                 f"• Создайте новое видео",
+                            reply_markup=InlineKeyboardMarkup([[
 
-                logging.error(f"Файл недоступен для скачивания (статус: {test_response.status_code})")
+                                InlineKeyboardButton("🔗 Попробовать ссылку", url=video_url)
 
-                # Отправляем сообщение с инструкциями
-
-                await context.bot.send_message(
-
-                    chat_id=chat_id,
-
-                    text=f"⚠️ **Файл недоступен для скачивания**\n\n"
-
-                         f"Статус: {test_response.status_code}\n"
-
-                         f"Возможно, файл был удален или недоступен\n\n"
-
-                         f"🔗 **Попробуйте ссылку:** {video_url}\n\n"
-
-                         f"💡 **Рекомендации:**\n"
-
-                         f"• Скопируйте ссылку в браузер\n"
-
-                         f"• Попробуйте позже\n"
-
-                         f"• Создайте новое видео",
-
-                    reply_markup=InlineKeyboardMarkup([[
-
-                        InlineKeyboardButton("🔗 Попробовать ссылку", url=video_url)
-
-                    ]])
-
-                )
-
-                return  # Выходим из функции
+                            ]])
+                        )
+                        
+                        return  # Выходим из функции
 
         except Exception as test_error:
 
@@ -29402,23 +29390,17 @@ async def generate_video(update, context, state):
 
                     # Сначала проверяем размер файла
 
-                    head_response = requests.head(video_url, timeout=30)
+                    async with aiohttp.ClientSession() as session:
+                        async with session.head(video_url, timeout=aiohttp.ClientTimeout(total=30)) as head_response:
+                            if head_response.status == 200:
+                                content_length = head_response.headers.get('content-length')
 
-                    if head_response.status_code == 200:
-
-                        content_length = head_response.headers.get('content-length')
-
-                        if content_length:
-
-                            file_size_mb = int(content_length) / (1024 * 1024)
-
-                            logging.info(f"Размер файла: {file_size_mb:.1f} МБ")
-
-                            
-
-                            # Проверяем лимиты Telegram
-
-                            if file_size_mb > 50:
+                                if content_length:
+                                    file_size_mb = int(content_length) / (1024 * 1024)
+                                    logging.info(f"Размер файла: {file_size_mb:.1f} МБ")
+                                    
+                                    # Проверяем лимиты Telegram
+                                    if file_size_mb > 50:
 
                                 logging.warning(f"Файл слишком большой для отправки: {file_size_mb:.1f} МБ")
 
@@ -29464,116 +29446,88 @@ async def generate_video(update, context, state):
 
                     
 
-                    # Загружаем файл по частям
+                    # Загружаем файл по частям асинхронно
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(video_url, timeout=aiohttp.ClientTimeout(total=60)) as response:
+                            if response.status == 200:
 
-                    response = requests.get(video_url, timeout=60, stream=True)
+                                with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+                                    total_size = 0
+                                    
+                                    # Загружаем файл по частям
+                                    async for chunk in response.content.iter_chunked(8192):
 
-                    if response.status_code == 200:
+                                        if chunk:
+                                            temp_file.write(chunk)
+                                            total_size += len(chunk)
+                                            
+                                            # Проверяем размер во время загрузки
+                                            if total_size > 50 * 1024 * 1024:  # 50 МБ
+                                                raise Exception("Файл превышает лимит Telegram (50 МБ)")
+                                    
+                                    temp_file_path = temp_file.name
+                                    logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
 
-                        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+                                
+                                # Проверяем, что файл действительно создался и имеет размер
+                                if not os.path.exists(temp_file_path) or os.path.getsize(temp_file_path) == 0:
+                                    raise Exception("Временный файл не создался или пустой")
+                                
+                                # Отправляем локальный файл
+                                try:
+                                    with open(temp_file_path, 'rb') as video_file:
 
-                            total_size = 0
+                                        await context.bot.send_video(
+                                            chat_id=chat_id,
 
-                            for chunk in response.iter_content(chunk_size=8192):
-
-                                if chunk:
-
-                                    temp_file.write(chunk)
-
-                                    total_size += len(chunk)
-
-                                    # Проверяем размер во время загрузки
-
-                                    if total_size > 50 * 1024 * 1024:  # 50 МБ
-
-                                        raise Exception("Файл превышает лимит Telegram (50 МБ)")
-
-                            
-
-                            temp_file_path = temp_file.name
-
-                            logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
-
-                        
-
-                        # Проверяем, что файл действительно создался и имеет размер
-
-                        if not os.path.exists(temp_file_path) or os.path.getsize(temp_file_path) == 0:
-
-                            raise Exception("Временный файл не создался или пустой")
-
-                        
-
-                        # Отправляем локальный файл
-
-                        try:
-
-                            with open(temp_file_path, 'rb') as video_file:
-
-                                await context.bot.send_video(
-
-                                    chat_id=chat_id,
-
-                                    video=video_file,
-
-                                    caption=f"🎬 **Видео готово!**\n\n"
+                                            video=video_file,
+                                            caption=f"🎬 **Видео готово!**\n\n"
 
                                             f"{prompt_caption}\n"
-
                                             f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
-
                                             f"✨ Bytedance Seedance 1.0 Pro",
 
-                                    supports_streaming=True,
+                                            supports_streaming=True,
+                                            has_spoiler=False
 
-                                    has_spoiler=False
+                                        )
+                                    
+                                    video_sent = True
 
-                                )
+                                    logging.info("Видео успешно отправлено из локального файла")
+                                    
+                                    # Очищаем состояние после успешной генерации
+                                    state['step'] = None
+                                    state.pop('video_type', None)
+                                    state.pop('video_quality', None)
+                                    state.pop('video_duration', None)
+                                    state.pop('video_prompt', None)
+                                    state.pop('english_prompt', None)
+                                    state.pop('enhanced_prompt', None)
 
-                            video_sent = True
+                                except Exception as send_error:
 
-                            logging.info("Видео успешно отправлено из локального файла")
-                            
-                            # Очищаем состояние после успешной генерации
-                            state['step'] = None
-                            state.pop('video_type', None)
-                            state.pop('video_quality', None)
-                            state.pop('video_duration', None)
-                            state.pop('video_prompt', None)
-                            state.pop('english_prompt', None)
-                            state.pop('enhanced_prompt', None)
+                                    logging.error(f"Ошибка при отправке локального файла: {send_error}")
+                                    
+                                    # Попробуем отправить как документ
+                                    try:
+                                        with open(temp_file_path, 'rb') as video_file:
 
-                        except Exception as send_error:
+                                            await context.bot.send_document(
+                                                chat_id=chat_id,
 
-                            logging.error(f"Ошибка при отправке локального файла: {send_error}")
-
-                            # Попробуем отправить как документ
-
-                            try:
-
-                                with open(temp_file_path, 'rb') as video_file:
-
-                                    await context.bot.send_document(
-
-                                        chat_id=chat_id,
-
-                                        document=video_file,
-
-                                        caption=f"🎬 **Видео готово!**\n\n"
+                                                document=video_file,
+                                                caption=f"🎬 **Видео готово!**\n\n"
 
                                                 f"{prompt_caption}\n"
-
                                                 f"⚡ {video_quality} | ⏱️ {video_duration}с | 📁 MP4\n"
-
                                                 f"✨ Bytedance Seedance 1.0 Pro",
 
-                                        filename=f"video_{video_quality}_{video_duration}s.mp4"
+                                                filename=f"video_{video_quality}_{video_duration}s.mp4"
+                                            )
 
-                                    )
-
-                                video_sent = True
-
-                                logging.info("Видео успешно отправлено как документ из локального файла")
+                                            video_sent = True
+                                            logging.info("Видео успешно отправлено как документ из локального файла")
                                 
                                 # Очищаем состояние после успешной генерации
                                 state['step'] = None
@@ -29870,17 +29824,15 @@ async def generate_video(update, context, state):
 
             try:
 
-                head_response = requests.head(video_url, timeout=10)
+                async with aiohttp.ClientSession() as session:
+                    async with session.head(video_url, timeout=aiohttp.ClientTimeout(total=10)) as head_response:
+                        if head_response.status == 200:
+                            content_length = head_response.headers.get('content-length')
 
-                if head_response.status_code == 200:
+                            if content_length:
+                                file_size_mb = int(content_length) / (1024 * 1024)
 
-                    content_length = head_response.headers.get('content-length')
-
-                    if content_length:
-
-                        file_size_mb = int(content_length) / (1024 * 1024)
-
-                        size_info = f"\n📏 **Размер файла:** {file_size_mb:.1f} МБ"
+                                size_info = f"\n📏 **Размер файла:** {file_size_mb:.1f} МБ"
 
             except:
 
