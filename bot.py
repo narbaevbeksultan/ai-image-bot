@@ -164,7 +164,7 @@ async def send_telegram_notification(user_id: int, message: str):
         return False
 
 @flask_app.route('/payment/ca', methods=['POST'])
-def payment_callback():
+async def payment_callback():
     """
     Обрабатывает callback уведомления от Betatransfer
     """
