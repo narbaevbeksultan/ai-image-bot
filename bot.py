@@ -145,7 +145,12 @@ def send_telegram_notification(user_id: int, message: str):
             'parse_mode': 'Markdown'
         }
         
-        response = requests.post(url, data=data, timeout=10)
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: requests.post(url, data=data, timeout=10)),
+            timeout=15.0
+        )
         
         if response.status_code == 200:
             logging.info(f"Уведомление отправлено пользователю {user_id}")
@@ -1357,12 +1362,14 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Пробуем простой запрос к Replicate
 
         try:
-            output = replicate.run(
-
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-
-                input={"prompt": "test"}
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    input={"prompt": "test"}
+                )),
+                timeout=30.0
             )
 
             await update.message.reply_text("✅ Replicate API работает нормально")
@@ -1559,12 +1566,14 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 
         # Генерируем простое изображение через Ideogram
-        output = replicate.run(
-
-            "ideogram-ai/ideogram-v3-turbo",
-
-            input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        output = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
+            )),
+            timeout=30.0
         )
 
         
@@ -2296,22 +2305,19 @@ async def extract_scenes_from_script(script_text, format_type=None):
 
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-                    messages=[
-
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-
-            {"role": "user", "content": prompt}
-
-        ],
-
-            max_tokens=700,
-
-            temperature=0.5,
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=700,
+                temperature=0.5,
+            )),
+            timeout=30.0
         )
 
         scenes_text = response.choices[0].message.content.strip()
@@ -3648,12 +3654,14 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Пробуем простой запрос к Replicate
 
         try:
-            output = replicate.run(
-
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-
-                input={"prompt": "test"}
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    input={"prompt": "test"}
+                )),
+                timeout=30.0
             )
 
             await update.message.reply_text("✅ Replicate API работает нормально")
@@ -3850,12 +3858,14 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 
         # Генерируем простое изображение через Ideogram
-        output = replicate.run(
-
-            "ideogram-ai/ideogram-v3-turbo",
-
-            input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        output = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
+            )),
+            timeout=30.0
         )
 
         
@@ -4568,22 +4578,19 @@ async def extract_scenes_from_script(script_text, format_type=None):
 
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-                    messages=[
-
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-
-            {"role": "user", "content": prompt}
-
-        ],
-
-            max_tokens=700,
-
-            temperature=0.5,
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=700,
+                temperature=0.5,
+            )),
+            timeout=30.0
         )
 
         scenes_text = response.choices[0].message.content.strip()
@@ -4960,7 +4967,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            response = requests.get(original_image_url, timeout=30)
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                timeout=35.0
+            )
 
             if response.status_code != 200:
 
@@ -5066,26 +5078,22 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:output = replicate.run(
-
-                        "black-forest-labs/flux-kontext-pro",
-
-                        input={
-
-                            "input_image": image_file,
-
-                            "prompt": edit_prompt,
-
-                            "aspect_ratio": "match_input_image",
-
-                            "output_format": "jpg",
-
-                            "safety_tolerance": 2,
-
-                            "prompt_upsampling": False
-
-                        }
-
+                with open(temp_file_path, "rb") as image_file:
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "black-forest-labs/flux-kontext-pro",
+                            input={
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
+                            }
+                        )),
+                        timeout=60.0
                     )
 
                 logging.info(f"Получен ответ от FLUX: {output}")
@@ -5214,7 +5222,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
 
-                edited_response = requests.get(edited_image_url, timeout=30)
+                # Используем асинхронный вызов для предотвращения блокировки
+                loop = asyncio.get_event_loop()
+                edited_response = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    timeout=35.0
+                )
 
                 logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
 
@@ -6594,12 +6607,14 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Пробуем простой запрос к Replicate
 
         try:
-            output = replicate.run(
-
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-
-                input={"prompt": "test"}
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    input={"prompt": "test"}
+                )),
+                timeout=30.0
             )
 
             await update.message.reply_text("✅ Replicate API работает нормально")
@@ -6796,12 +6811,14 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 
         # Генерируем простое изображение через Ideogram
-        output = replicate.run(
-
-            "ideogram-ai/ideogram-v3-turbo",
-
-            input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        output = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
+            )),
+            timeout=30.0
         )
 
         
@@ -7514,22 +7531,19 @@ async def extract_scenes_from_script(script_text, format_type=None):
 
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-                    messages=[
-
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-
-            {"role": "user", "content": prompt}
-
-        ],
-
-            max_tokens=700,
-
-            temperature=0.5,
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=700,
+                temperature=0.5,
+            )),
+            timeout=30.0
         )
 
         scenes_text = response.choices[0].message.content.strip()
@@ -7906,7 +7920,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            response = requests.get(original_image_url, timeout=30)
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                timeout=35.0
+            )
 
             if response.status_code != 200:
 
@@ -8012,26 +8031,22 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:output = replicate.run(
-
-                        "black-forest-labs/flux-kontext-pro",
-
-                        input={
-
-                            "input_image": image_file,
-
-                            "prompt": edit_prompt,
-
-                            "aspect_ratio": "match_input_image",
-
-                            "output_format": "jpg",
-
-                            "safety_tolerance": 2,
-
-                            "prompt_upsampling": False
-
-                        }
-
+                with open(temp_file_path, "rb") as image_file:
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "black-forest-labs/flux-kontext-pro",
+                            input={
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
+                            }
+                        )),
+                        timeout=60.0
                     )
 
                 logging.info(f"Получен ответ от FLUX: {output}")
@@ -8160,7 +8175,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
 
-                edited_response = requests.get(edited_image_url, timeout=30)
+                # Используем асинхронный вызов для предотвращения блокировки
+                loop = asyncio.get_event_loop()
+                edited_response = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    timeout=35.0
+                )
 
                 logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
 
@@ -8950,22 +8970,19 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-                    response = client.chat.completions.create(
-
-                        model="gpt-4o-mini",
-
-                        messages=[
-
-                            {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
-
-                            {"role": "user", "content": image_prompts}
-
-                        ],
-
-                        max_tokens=800,
-
-                        temperature=0.7,
-
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    response = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[
+                                {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
+                                {"role": "user", "content": image_prompts}
+                            ],
+                            max_tokens=800,
+                            temperature=0.7,
+                        )),
+                        timeout=30.0
                     )
 
                     raw_prompts = response.choices[0].message.content.strip()
@@ -10615,12 +10632,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     
 
                     # Генерация через Bria на Replicate
-                    output = replicate.run(
-
-                        "bria/image-3.2",
-
-                        input={"prompt": prompt_with_style, **replicate_params}
-
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "bria/image-3.2",
+                            input={"prompt": prompt_with_style, **replicate_params}
+                        )),
+                        timeout=60.0
                     )
 
                     
@@ -10914,12 +10933,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     
 
                     # Fallback на Ideogram если модель не поддерживается
-                    output = replicate.run(
-
-                        "ideogram-ai/ideogram-v3-turbo",
-
-                        input={"prompt": prompt_with_style, **replicate_params}
-
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "ideogram-ai/ideogram-v3-turbo",
+                            input={"prompt": prompt_with_style, **replicate_params}
+                        )),
+                        timeout=60.0
                     )
 
                     
@@ -14036,12 +14057,14 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Пробуем простой запрос к Replicate
 
         try:
-            output = replicate.run(
-
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-
-                input={"prompt": "test"}
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    input={"prompt": "test"}
+                )),
+                timeout=30.0
             )
 
             await update.message.reply_text("✅ Replicate API работает нормально")
@@ -14238,12 +14261,14 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 
         # Генерируем простое изображение через Ideogram
-        output = replicate.run(
-
-            "ideogram-ai/ideogram-v3-turbo",
-
-            input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        output = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
+            )),
+            timeout=30.0
         )
 
         
@@ -14956,22 +14981,19 @@ async def extract_scenes_from_script(script_text, format_type=None):
 
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-                    messages=[
-
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-
-            {"role": "user", "content": prompt}
-
-        ],
-
-            max_tokens=700,
-
-            temperature=0.5,
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=700,
+                temperature=0.5,
+            )),
+            timeout=30.0
         )
 
         scenes_text = response.choices[0].message.content.strip()
@@ -16308,12 +16330,14 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Пробуем простой запрос к Replicate
 
         try:
-            output = replicate.run(
-
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-
-                input={"prompt": "test"}
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    input={"prompt": "test"}
+                )),
+                timeout=30.0
             )
 
             await update.message.reply_text("✅ Replicate API работает нормально")
@@ -16510,12 +16534,14 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 
         # Генерируем простое изображение через Ideogram
-        output = replicate.run(
-
-            "ideogram-ai/ideogram-v3-turbo",
-
-            input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        output = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
+            )),
+            timeout=30.0
         )
 
         
@@ -17228,22 +17254,19 @@ async def extract_scenes_from_script(script_text, format_type=None):
 
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-                    messages=[
-
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-
-            {"role": "user", "content": prompt}
-
-        ],
-
-            max_tokens=700,
-
-            temperature=0.5,
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=700,
+                temperature=0.5,
+            )),
+            timeout=30.0
         )
 
         scenes_text = response.choices[0].message.content.strip()
@@ -17620,7 +17643,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            response = requests.get(original_image_url, timeout=30)
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                timeout=35.0
+            )
 
             if response.status_code != 200:
 
@@ -17726,26 +17754,22 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:output = replicate.run(
-
-                        "black-forest-labs/flux-kontext-pro",
-
-                        input={
-
-                            "input_image": image_file,
-
-                            "prompt": edit_prompt,
-
-                            "aspect_ratio": "match_input_image",
-
-                            "output_format": "jpg",
-
-                            "safety_tolerance": 2,
-
-                            "prompt_upsampling": False
-
-                        }
-
+                with open(temp_file_path, "rb") as image_file:
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "black-forest-labs/flux-kontext-pro",
+                            input={
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
+                            }
+                        )),
+                        timeout=60.0
                     )
 
                 logging.info(f"Получен ответ от FLUX: {output}")
@@ -17874,7 +17898,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
 
-                edited_response = requests.get(edited_image_url, timeout=30)
+                # Используем асинхронный вызов для предотвращения блокировки
+                loop = asyncio.get_event_loop()
+                edited_response = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    timeout=35.0
+                )
 
                 logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
 
@@ -19252,12 +19281,14 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Пробуем простой запрос к Replicate
 
         try:
-            output = replicate.run(
-
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-
-                input={"prompt": "test"}
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            output = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    input={"prompt": "test"}
+                )),
+                timeout=30.0
             )
 
             await update.message.reply_text("✅ Replicate API работает нормально")
@@ -19454,12 +19485,14 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 
         # Генерируем простое изображение через Ideogram
-        output = replicate.run(
-
-            "ideogram-ai/ideogram-v3-turbo",
-
-            input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        output = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: replicate.run(
+                "ideogram-ai/ideogram-v3-turbo",
+                input={"prompt": "A simple test image of a red apple on a white background, professional photography"}
+            )),
+            timeout=30.0
         )
 
         
@@ -20172,22 +20205,19 @@ async def extract_scenes_from_script(script_text, format_type=None):
 
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-                    messages=[
-
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-
-            {"role": "user", "content": prompt}
-
-        ],
-
-            max_tokens=700,
-
-            temperature=0.5,
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=700,
+                temperature=0.5,
+            )),
+            timeout=30.0
         )
 
         scenes_text = response.choices[0].message.content.strip()
@@ -20564,7 +20594,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            response = requests.get(original_image_url, timeout=30)
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                timeout=35.0
+            )
 
             if response.status_code != 200:
 
@@ -20670,26 +20705,22 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:output = replicate.run(
-
-                        "black-forest-labs/flux-kontext-pro",
-
-                        input={
-
-                            "input_image": image_file,
-
-                            "prompt": edit_prompt,
-
-                            "aspect_ratio": "match_input_image",
-
-                            "output_format": "jpg",
-
-                            "safety_tolerance": 2,
-
-                            "prompt_upsampling": False
-
-                        }
-
+                with open(temp_file_path, "rb") as image_file:
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "black-forest-labs/flux-kontext-pro",
+                            input={
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
+                            }
+                        )),
+                        timeout=60.0
                     )
 
                 logging.info(f"Получен ответ от FLUX: {output}")
@@ -20818,7 +20849,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
 
-                edited_response = requests.get(edited_image_url, timeout=30)
+                # Используем асинхронный вызов для предотвращения блокировки
+                loop = asyncio.get_event_loop()
+                edited_response = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    timeout=35.0
+                )
 
                 logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
 
@@ -21608,22 +21644,19 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-                    response = client.chat.completions.create(
-
-                        model="gpt-4o-mini",
-
-                        messages=[
-
-                            {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
-
-                            {"role": "user", "content": image_prompts}
-
-                        ],
-
-                        max_tokens=800,
-
-                        temperature=0.7,
-
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    response = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[
+                                {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
+                                {"role": "user", "content": image_prompts}
+                            ],
+                            max_tokens=800,
+                            temperature=0.7,
+                        )),
+                        timeout=30.0
                     )
 
                     raw_prompts = response.choices[0].message.content.strip()
@@ -23356,12 +23389,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     
 
                     # Генерация через Bria на Replicate
-                    output = replicate.run(
-
-                        "bria/image-3.2",
-
-                        input={"prompt": prompt_with_style, **replicate_params}
-
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "bria/image-3.2",
+                            input={"prompt": prompt_with_style, **replicate_params}
+                        )),
+                        timeout=60.0
                     )
 
                     
@@ -23655,12 +23690,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     
 
                     # Fallback на Ideogram если модель не поддерживается
-                    output = replicate.run(
-
-                        "ideogram-ai/ideogram-v3-turbo",
-
-                        input={"prompt": prompt_with_style, **replicate_params}
-
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await asyncio.wait_for(
+                        loop.run_in_executor(None, lambda: replicate.run(
+                            "ideogram-ai/ideogram-v3-turbo",
+                            input={"prompt": prompt_with_style, **replicate_params}
+                        )),
+                        timeout=60.0
                     )
 
                     
@@ -26687,22 +26724,19 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-            response = client.chat.completions.create(
-
-                model="gpt-4o-mini",
-
-                messages=[
-
-                    {"role": "system", "content": "Ты эксперт по созданию уникального контента для социальных сетей. Твоя задача - создавать качественный, нешаблонный контент, который точно описывает тему и привлекает внимание. Избегай общих фраз, используй конкретные детали."},
-
-                    {"role": "user", "content": content_prompt}
-
-                ],
-
-                max_tokens=1000,
-
-                temperature=0.8,
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "Ты эксперт по созданию уникального контента для социальных сетей. Твоя задача - создавать качественный, нешаблонный контент, который точно описывает тему и привлекает внимание. Избегай общих фраз, используй конкретные детали."},
+                        {"role": "user", "content": content_prompt}
+                    ],
+                    max_tokens=1000,
+                    temperature=0.8,
+                )),
+                timeout=30.0
             )
 
             gpt_reply = response.choices[0].message.content.strip()
@@ -27899,22 +27933,19 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-            translation_response = client.chat.completions.create(
-
-                model="gpt-4o-mini",
-
-                messages=[
-
-                    {"role": "system", "content": "Ты - эксперт по редактированию изображений. Переведи запрос на редактирование с русского на английский и улучши его для FLUX.1 Kontext Pro. Используй конкретные, детальные инструкции. Сохрани точный смысл. Отвечай только улучшенным переводом."},
-
-                    {"role": "user", "content": f"Переведи и улучши для редактирования изображения: {edit_prompt}"}
-
-                ],
-
-                max_tokens=200,
-
-                temperature=0.1
-
+            # Используем асинхронный вызов для предотвращения блокировки
+            loop = asyncio.get_event_loop()
+            translation_response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "Ты - эксперт по редактированию изображений. Переведи запрос на редактирование с русского на английский и улучши его для FLUX.1 Kontext Pro. Используй конкретные, детальные инструкции. Сохрани точный смысл. Отвечай только улучшенным переводом."},
+                        {"role": "user", "content": f"Переведи и улучши для редактирования изображения: {edit_prompt}"}
+                    ],
+                    max_tokens=200,
+                    temperature=0.1
+                )),
+                timeout=30.0
             )
 
             english_prompt = translation_response.choices[0].message.content.strip()
@@ -27987,22 +28018,19 @@ async def show_prompt_review(update, context, state):
 
                 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-                translation_response = client.chat.completions.create(
-
-                    model="gpt-4o-mini",
-
-                    messages=[
-
-                        {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
-
-                        {"role": "user", "content": f"Translate this prompt: {video_prompt}"}
-
-                    ],
-
-                    max_tokens=150,
-
-                    temperature=0.1
-
+                # Используем асинхронный вызов для предотвращения блокировки
+                loop = asyncio.get_event_loop()
+                translation_response = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
+                            {"role": "user", "content": f"Translate this prompt: {video_prompt}"}
+                        ],
+                        max_tokens=150,
+                        temperature=0.1
+                    )),
+                    timeout=30.0
                 )
 
                 english_prompt = translation_response.choices[0].message.content.strip()
@@ -28179,22 +28207,19 @@ Keep the enhancement reasonable and don't add completely new elements not implie
 
         
 
-        response = client.chat.completions.create(
-
-            model="gpt-4o-mini",
-
-            messages=[
-
-                {"role": "system", "content": system_content},
-
-                {"role": "user", "content": f"Enhance this prompt for video generation: {english_prompt}"}
-
-            ],
-
-            max_tokens=200,
-
-            temperature=0.7
-
+        # Используем асинхронный вызов для предотвращения блокировки
+        loop = asyncio.get_event_loop()
+        response = await asyncio.wait_for(
+            loop.run_in_executor(None, lambda: client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": f"Enhance this prompt for video generation: {english_prompt}"}
+                ],
+                max_tokens=200,
+                temperature=0.7
+            )),
+            timeout=30.0
         )
 
         
