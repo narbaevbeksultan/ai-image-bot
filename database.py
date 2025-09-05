@@ -1167,6 +1167,31 @@ class AnalyticsDB:
             logging.error(f"Ошибка установки кредитов пользователю: {e}")
             return False
 
+    def get_user_info_by_id(self, user_id: int) -> Optional[Dict]:
+        """Получает информацию о пользователе по user_id"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT user_id, username, first_name, last_name, first_seen, last_activity
+                    FROM users WHERE user_id = ?
+                ''', (user_id,))
+                result = cursor.fetchone()
+                
+                if result:
+                    return {
+                        'user_id': result[0],
+                        'username': result[1],
+                        'first_name': result[2],
+                        'last_name': result[3],
+                        'first_seen': result[4],
+                        'last_activity': result[5]
+                    }
+                return None
+        except Exception as e:
+            logging.error(f"Ошибка получения информации о пользователе по ID: {e}")
+            return None
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
 

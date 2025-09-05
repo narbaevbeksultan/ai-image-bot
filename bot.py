@@ -31232,12 +31232,12 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Проверяем аргументы команды
     if not context.args or len(context.args) < 2:
         await update.message.reply_text(
-            "📝 **Использование:** `/add_credits @username количество`\n"
-            "**Пример:** `/add_credits @john_doe 100`"
+            "📝 **Использование:** `/add_credits @username количество` или `/add_credits user_id количество`\n"
+            "**Примеры:** `/add_credits @john_doe 100` или `/add_credits 123456789 100`"
         )
         return
     
-    username = context.args[0]
+    user_identifier = context.args[0]
     try:
         credits_to_add = int(context.args[1])
         if credits_to_add <= 0:
@@ -31247,14 +31247,26 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("❌ Количество кредитов должно быть числом.")
         return
     
-    # Убираем @ если есть
-    if username.startswith('@'):
-        username = username[1:]
+    # Определяем, это username или user_id
+    user_id = None
+    user_info = None
     
-    # Ищем пользователя по username
-    user_id = analytics_db.get_user_id_by_username(username)
-    if not user_id:
-        await update.message.reply_text(f"❌ Пользователь @{username} не найден в базе данных.")
+    if user_identifier.startswith('@'):
+        # Поиск по username
+        username = user_identifier[1:]
+        user_id = analytics_db.get_user_id_by_username(username)
+        if user_id:
+            user_info = analytics_db.get_user_info_by_id(user_id)
+    else:
+        # Попытка поиска по user_id
+        try:
+            user_id = int(user_identifier)
+            user_info = analytics_db.get_user_info_by_id(user_id)
+        except ValueError:
+            pass
+    
+    if not user_id or not user_info:
+        await update.message.reply_text(f"❌ Пользователь {user_identifier} не найден в базе данных.")
         return
     
     # Получаем текущий баланс
@@ -31265,13 +31277,19 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     new_credits = current_credits + credits_to_add
     analytics_db.set_user_credits(user_id, new_credits)
     
+    # Формируем информацию о пользователе
+    username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
+    name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() or "Без имени"
+    
     # Логируем операцию
-    logging.info(f"Админ {update.effective_user.id} добавил {credits_to_add} кредитов пользователю {user_id} (@{username})")
+    logging.info(f"Админ {update.effective_user.id} добавил {credits_to_add} кредитов пользователю {user_id} ({username_display})")
     
     # Отправляем подтверждение админу
     await update.message.reply_text(
         f"✅ **Кредиты добавлены!**\n\n"
-        f"👤 **Пользователь:** @{username}\n"
+        f"👤 **Пользователь:** {name_display}\n"
+        f"🆔 **ID:** {user_id}\n"
+        f"📝 **Username:** {username_display}\n"
         f"➕ **Добавлено:** {credits_to_add} кредитов\n"
         f"💳 **Новый баланс:** {new_credits} кредитов"
     )
@@ -31299,21 +31317,33 @@ async def check_credits_command(update: Update, context: ContextTypes.DEFAULT_TY
     # Проверяем аргументы команды
     if not context.args or len(context.args) < 1:
         await update.message.reply_text(
-            "📝 **Использование:** `/check_credits @username`\n"
-            "**Пример:** `/check_credits @john_doe`"
+            "📝 **Использование:** `/check_credits @username` или `/check_credits user_id`\n"
+            "**Примеры:** `/check_credits @john_doe` или `/check_credits 123456789`"
         )
         return
     
-    username = context.args[0]
+    user_identifier = context.args[0]
     
-    # Убираем @ если есть
-    if username.startswith('@'):
-        username = username[1:]
+    # Определяем, это username или user_id
+    user_id = None
+    user_info = None
     
-    # Ищем пользователя по username
-    user_id = analytics_db.get_user_id_by_username(username)
-    if not user_id:
-        await update.message.reply_text(f"❌ Пользователь @{username} не найден в базе данных.")
+    if user_identifier.startswith('@'):
+        # Поиск по username
+        username = user_identifier[1:]
+        user_id = analytics_db.get_user_id_by_username(username)
+        if user_id:
+            user_info = analytics_db.get_user_info_by_id(user_id)
+    else:
+        # Попытка поиска по user_id
+        try:
+            user_id = int(user_identifier)
+            user_info = analytics_db.get_user_info_by_id(user_id)
+        except ValueError:
+            pass
+    
+    if not user_id or not user_info:
+        await update.message.reply_text(f"❌ Пользователь {user_identifier} не найден в базе данных.")
         return
     
     # Получаем информацию о пользователе
@@ -31321,9 +31351,15 @@ async def check_credits_command(update: Update, context: ContextTypes.DEFAULT_TY
     current_credits = credits_data.get('balance', 0)
     free_generations = analytics_db.get_free_generations_left(user_id)
     
+    # Формируем информацию о пользователе
+    username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
+    name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() or "Без имени"
+    
     await update.message.reply_text(
-        f"👤 **Информация о пользователе @{username}**\n\n"
+        f"👤 **Информация о пользователе**\n\n"
+        f"📝 **Имя:** {name_display}\n"
         f"🆔 **ID:** {user_id}\n"
+        f"📝 **Username:** {username_display}\n"
         f"💳 **Кредиты:** {current_credits}\n"
         f"🆓 **Бесплатные генерации:** {free_generations}"
     )
@@ -31340,12 +31376,12 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Проверяем аргументы команды
     if not context.args or len(context.args) < 2:
         await update.message.reply_text(
-            "📝 **Использование:** `/set_credits @username количество`\n"
-            "**Пример:** `/set_credits @john_doe 500`"
+            "📝 **Использование:** `/set_credits @username количество` или `/set_credits user_id количество`\n"
+            "**Примеры:** `/set_credits @john_doe 500` или `/set_credits 123456789 500`"
         )
         return
     
-    username = context.args[0]
+    user_identifier = context.args[0]
     try:
         credits_to_set = int(context.args[1])
         if credits_to_set < 0:
@@ -31355,14 +31391,26 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("❌ Количество кредитов должно быть числом.")
         return
     
-    # Убираем @ если есть
-    if username.startswith('@'):
-        username = username[1:]
+    # Определяем, это username или user_id
+    user_id = None
+    user_info = None
     
-    # Ищем пользователя по username
-    user_id = analytics_db.get_user_id_by_username(username)
-    if not user_id:
-        await update.message.reply_text(f"❌ Пользователь @{username} не найден в базе данных.")
+    if user_identifier.startswith('@'):
+        # Поиск по username
+        username = user_identifier[1:]
+        user_id = analytics_db.get_user_id_by_username(username)
+        if user_id:
+            user_info = analytics_db.get_user_info_by_id(user_id)
+    else:
+        # Попытка поиска по user_id
+        try:
+            user_id = int(user_identifier)
+            user_info = analytics_db.get_user_info_by_id(user_id)
+        except ValueError:
+            pass
+    
+    if not user_id or not user_info:
+        await update.message.reply_text(f"❌ Пользователь {user_identifier} не найден в базе данных.")
         return
     
     # Получаем старый баланс
@@ -31372,13 +31420,19 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Устанавливаем новые кредиты
     analytics_db.set_user_credits(user_id, credits_to_set)
     
+    # Формируем информацию о пользователе
+    username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
+    name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() or "Без имени"
+    
     # Логируем операцию
-    logging.info(f"Админ {update.effective_user.id} установил {credits_to_set} кредитов пользователю {user_id} (@{username}) (было: {old_credits})")
+    logging.info(f"Админ {update.effective_user.id} установил {credits_to_set} кредитов пользователю {user_id} ({username_display}) (было: {old_credits})")
     
     # Отправляем подтверждение админу
     await update.message.reply_text(
         f"✅ **Кредиты установлены!**\n\n"
-        f"👤 **Пользователь:** @{username}\n"
+        f"👤 **Пользователь:** {name_display}\n"
+        f"🆔 **ID:** {user_id}\n"
+        f"📝 **Username:** {username_display}\n"
         f"💳 **Новый баланс:** {credits_to_set} кредитов\n"
         f"📊 **Было:** {old_credits} кредитов"
     )
