@@ -89,7 +89,7 @@ async def check_pending_payments():
                                 f"Теперь вы можете использовать кредиты для генерации изображений!"
                             )
                             
-                            send_telegram_notification(user_id, notification_message)
+                            await send_telegram_notification(user_id, notification_message)
                             logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
                         else:
                             # Кредиты уже зачислены, просто обновляем статус платежа
@@ -124,7 +124,7 @@ async def start_payment_polling():
 # Создаем Flask приложение для callback
 flask_app = Flask(__name__)
 
-def send_telegram_notification(user_id: int, message: str):
+async def send_telegram_notification(user_id: int, message: str):
     """
     Отправляет уведомление пользователю в Telegram
     
@@ -220,7 +220,7 @@ def payment_callback():
                 )
                 
                 # Отправляем уведомление пользователю
-                notification_sent = send_telegram_notification(user_id, notification_message)
+                notification_sent = await send_telegram_notification(user_id, notification_message)
                 if notification_sent:
                     logging.info(f"Уведомление о зачислении кредитов отправлено пользователю {user_id}")
                 else:
