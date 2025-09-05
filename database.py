@@ -1129,6 +1129,44 @@ class AnalyticsDB:
             logging.error(f"Ошибка создания транзакции с платежом: {e}")
             return False
 
+    def get_user_id_by_username(self, username: str) -> Optional[int]:
+        """Получает user_id по username"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT user_id FROM users WHERE username = ?', (username,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except Exception as e:
+            logging.error(f"Ошибка получения user_id по username: {e}")
+            return None
+
+    def set_user_credits(self, user_id: int, credits: int) -> bool:
+        """Устанавливает точное количество кредитов пользователю"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Проверяем, есть ли запись о кредитах
+                cursor.execute('SELECT user_id FROM user_credits WHERE user_id = ?', (user_id,))
+                if not cursor.fetchone():
+                    # Создаем запись если её нет
+                    cursor.execute('''
+                        INSERT INTO user_credits (user_id, credits_balance, total_purchased, total_used)
+                        VALUES (?, ?, 0, 0)
+                    ''', (user_id, credits))
+                else:
+                    # Обновляем существующую запись
+                    cursor.execute('''
+                        UPDATE user_credits SET credits_balance = ? WHERE user_id = ?
+                    ''', (credits, user_id))
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logging.error(f"Ошибка установки кредитов пользователю: {e}")
+            return False
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
 

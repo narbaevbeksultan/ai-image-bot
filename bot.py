@@ -31056,6 +31056,11 @@ def main():
     app.add_handler(CommandHandler('test_image_send', test_image_send))
 
     app.add_handler(CommandHandler('edit_image', edit_image_command))
+    
+    # Админ-команды для управления кредитами
+    app.add_handler(CommandHandler('add_credits', add_credits_command))
+    app.add_handler(CommandHandler('check_credits', check_credits_command))
+    app.add_handler(CommandHandler('set_credits', set_credits_command))
 
     app.add_handler(CallbackQueryHandler(button_handler))
 
@@ -31212,6 +31217,171 @@ def main():
 
         app.run_polling()
 
+
+
+# ==================== АДМИН-КОМАНДЫ ДЛЯ УПРАВЛЕНИЯ КРЕДИТАМИ ====================
+
+async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для добавления кредитов пользователю (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    # Проверяем аргументы команды
+    if not context.args or len(context.args) < 2:
+        await update.message.reply_text(
+            "📝 **Использование:** `/add_credits @username количество`\n"
+            "**Пример:** `/add_credits @john_doe 100`"
+        )
+        return
+    
+    username = context.args[0]
+    try:
+        credits_to_add = int(context.args[1])
+        if credits_to_add <= 0:
+            await update.message.reply_text("❌ Количество кредитов должно быть положительным числом.")
+            return
+    except ValueError:
+        await update.message.reply_text("❌ Количество кредитов должно быть числом.")
+        return
+    
+    # Убираем @ если есть
+    if username.startswith('@'):
+        username = username[1:]
+    
+    # Ищем пользователя по username
+    user_id = analytics_db.get_user_id_by_username(username)
+    if not user_id:
+        await update.message.reply_text(f"❌ Пользователь @{username} не найден в базе данных.")
+        return
+    
+    # Получаем текущий баланс
+    credits_data = analytics_db.get_user_credits(user_id)
+    current_credits = credits_data.get('balance', 0)
+    
+    # Добавляем кредиты
+    new_credits = current_credits + credits_to_add
+    analytics_db.set_user_credits(user_id, new_credits)
+    
+    # Логируем операцию
+    logging.info(f"Админ {update.effective_user.id} добавил {credits_to_add} кредитов пользователю {user_id} (@{username})")
+    
+    # Отправляем подтверждение админу
+    await update.message.reply_text(
+        f"✅ **Кредиты добавлены!**\n\n"
+        f"👤 **Пользователь:** @{username}\n"
+        f"➕ **Добавлено:** {credits_to_add} кредитов\n"
+        f"💳 **Новый баланс:** {new_credits} кредитов"
+    )
+    
+    # Уведомляем пользователя (если возможно)
+    try:
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=f"🎉 **Вам начислено {credits_to_add} кредитов!**\n\n"
+                 f"💳 **Текущий баланс:** {new_credits} кредитов\n\n"
+                 f"Спасибо за использование нашего бота! 🚀"
+        )
+    except Exception as e:
+        logging.warning(f"Не удалось отправить уведомление пользователю {user_id}: {e}")
+
+
+async def check_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для проверки баланса пользователя (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    # Проверяем аргументы команды
+    if not context.args or len(context.args) < 1:
+        await update.message.reply_text(
+            "📝 **Использование:** `/check_credits @username`\n"
+            "**Пример:** `/check_credits @john_doe`"
+        )
+        return
+    
+    username = context.args[0]
+    
+    # Убираем @ если есть
+    if username.startswith('@'):
+        username = username[1:]
+    
+    # Ищем пользователя по username
+    user_id = analytics_db.get_user_id_by_username(username)
+    if not user_id:
+        await update.message.reply_text(f"❌ Пользователь @{username} не найден в базе данных.")
+        return
+    
+    # Получаем информацию о пользователе
+    credits_data = analytics_db.get_user_credits(user_id)
+    current_credits = credits_data.get('balance', 0)
+    free_generations = analytics_db.get_free_generations_left(user_id)
+    
+    await update.message.reply_text(
+        f"👤 **Информация о пользователе @{username}**\n\n"
+        f"🆔 **ID:** {user_id}\n"
+        f"💳 **Кредиты:** {current_credits}\n"
+        f"🆓 **Бесплатные генерации:** {free_generations}"
+    )
+
+
+async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для установки точного количества кредитов (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    # Проверяем аргументы команды
+    if not context.args or len(context.args) < 2:
+        await update.message.reply_text(
+            "📝 **Использование:** `/set_credits @username количество`\n"
+            "**Пример:** `/set_credits @john_doe 500`"
+        )
+        return
+    
+    username = context.args[0]
+    try:
+        credits_to_set = int(context.args[1])
+        if credits_to_set < 0:
+            await update.message.reply_text("❌ Количество кредитов не может быть отрицательным.")
+            return
+    except ValueError:
+        await update.message.reply_text("❌ Количество кредитов должно быть числом.")
+        return
+    
+    # Убираем @ если есть
+    if username.startswith('@'):
+        username = username[1:]
+    
+    # Ищем пользователя по username
+    user_id = analytics_db.get_user_id_by_username(username)
+    if not user_id:
+        await update.message.reply_text(f"❌ Пользователь @{username} не найден в базе данных.")
+        return
+    
+    # Получаем старый баланс
+    credits_data = analytics_db.get_user_credits(user_id)
+    old_credits = credits_data.get('balance', 0)
+    
+    # Устанавливаем новые кредиты
+    analytics_db.set_user_credits(user_id, credits_to_set)
+    
+    # Логируем операцию
+    logging.info(f"Админ {update.effective_user.id} установил {credits_to_set} кредитов пользователю {user_id} (@{username}) (было: {old_credits})")
+    
+    # Отправляем подтверждение админу
+    await update.message.reply_text(
+        f"✅ **Кредиты установлены!**\n\n"
+        f"👤 **Пользователь:** @{username}\n"
+        f"💳 **Новый баланс:** {credits_to_set} кредитов\n"
+        f"📊 **Было:** {old_credits} кредитов"
+    )
 
 
 if __name__ == '__main__':
