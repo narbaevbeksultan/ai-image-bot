@@ -8629,13 +8629,13 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         try:
 
             # Простая проверка доступности API
-
-            test_response = replicate.run(
-
-                "replicate/hello-world",
-
-                input={"text": "test"}
-
+            loop = asyncio.get_event_loop()
+            test_response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "replicate/hello-world",
+                    input={"text": "test"}
+                )),
+                timeout=30.0
             )
 
             # Если дошли до сюда, значит API работает
@@ -21303,13 +21303,13 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         try:
 
             # Простая проверка доступности API
-
-            test_response = replicate.run(
-
-                "replicate/hello-world",
-
-                input={"text": "test"}
-
+            loop = asyncio.get_event_loop()
+            test_response = await asyncio.wait_for(
+                loop.run_in_executor(None, lambda: replicate.run(
+                    "replicate/hello-world",
+                    input={"text": "test"}
+                )),
+                timeout=30.0
             )
 
             # Если дошли до сюда, значит API работает
