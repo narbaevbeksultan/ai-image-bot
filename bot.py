@@ -26371,7 +26371,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пользователь хочет генерировать с простым переводом
 
-        await generate_video(update, context, state)
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
 
         return
 
@@ -26381,7 +26395,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Пользователь выбрал улучшенный промпт
 
-        await generate_video(update, context, state)
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
 
         return
 
@@ -26439,7 +26467,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             del state['enhanced_prompt']  # Убираем улучшенный промпт
 
-        await generate_video(update, context, state)
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
 
         return
 
@@ -28039,7 +28081,21 @@ async def show_prompt_review(update, context, state):
 
         # Fallback к прямой генерации
 
-        await generate_video(update, context, state)
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
 
 
 
@@ -28229,9 +28285,42 @@ async def show_enhanced_prompt(update, context, state):
 
         # Fallback к прямой генерации
 
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
+
+
+
+async def generate_video_async(update, context, state):
+    """Асинхронная обертка для генерации видео"""
+    try:
         await generate_video(update, context, state)
-
-
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной генерации видео: {e}")
+        # Отправляем сообщение об ошибке пользователю
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="❌ **Ошибка при генерации видео**\n\nПопробуйте еще раз или обратитесь в поддержку."
+        )
 
 async def generate_video(update, context, state):
 
