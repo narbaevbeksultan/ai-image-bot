@@ -29561,11 +29561,6 @@ async def generate_video(update, context, state):
                                     else:
                                         logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
 
-                            except Exception as doc_send_error:
-
-                                logging.error(f"Ошибка при отправке локального файла как документа: {doc_send_error}")
-
-                                raise doc_send_error
 
                         
 
