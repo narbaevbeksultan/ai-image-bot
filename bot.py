@@ -809,7 +809,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -891,7 +893,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -3095,7 +3099,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -3177,7 +3183,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -6121,7 +6129,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -11769,6 +11779,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await show_about_bot(update, context)
 
+    elif data == "support":
+
+        await show_support(update, context)
+
     elif data == "main_menu":
 
         await show_main_menu(update, context)
@@ -13473,7 +13487,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -13555,7 +13571,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -15741,7 +15759,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -15823,7 +15843,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -18765,7 +18787,9 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")]
+        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
+
+        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
 
     ]
 
@@ -24471,6 +24495,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "about_bot":
 
         await show_about_bot(update, context)
+
+    elif data == "support":
+
+        await show_support(update, context)
 
     elif data == "main_menu":
 
@@ -31218,6 +31246,57 @@ def main():
         app.run_polling()
 
 
+
+# ==================== СИСТЕМА ПОДДЕРЖКИ ====================
+
+async def show_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показывает информацию о поддержке"""
+    
+    # Получаем информацию о пользователе
+    user_id = update.effective_user.id
+    user_info = analytics_db.get_user_info_by_id(user_id)
+    
+    # Формируем информацию о пользователе
+    username_display = f"@{user_info['username']}" if user_info and user_info['username'] else "Без username"
+    name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() if user_info else "Пользователь"
+    
+    support_text = f"""
+📞 **Поддержка**
+
+👤 **Ваша информация:**
+🆔 ID: `{user_id}`
+📝 Username: {username_display}
+📝 Имя: {name_display}
+
+💬 **Как связаться с поддержкой:**
+
+1️⃣ **Напишите мне напрямую в Telegram:**
+   👤 @aiimagebotmanager (основной канал связи)
+
+2️⃣ **Опишите проблему:**
+   • Проблема с оплатой
+   • Техническая ошибка
+   • Вопрос по использованию
+   • Другое
+
+3️⃣ **Приложите скриншоты** (если нужно)
+
+4️⃣ **Укажите ваш ID:** `{user_id}`
+
+⏰ **Время ответа:** обычно в течение 24 часов
+
+💡 **Совет:** Чем подробнее опишете проблему, тем быстрее смогу помочь!
+    """
+    
+    keyboard = [
+        [InlineKeyboardButton("🔙 Назад в меню", callback_data="main_menu")]
+    ]
+    
+    await update.callback_query.edit_message_text(
+        support_text,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode='Markdown'
+    )
 
 # ==================== АДМИН-КОМАНДЫ ДЛЯ УПРАВЛЕНИЯ КРЕДИТАМИ ====================
 
