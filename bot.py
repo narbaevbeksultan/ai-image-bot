@@ -26029,7 +26029,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-    # Обработчики для генерации видео
+    # Обработчики для генерации видео проба
 
     elif data == "video_generation":
 
