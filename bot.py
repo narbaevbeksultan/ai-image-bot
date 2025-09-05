@@ -29574,12 +29574,6 @@ async def generate_video(update, context, state):
 
                             logging.warning(f"Не удалось удалить временный файл: {cleanup_error}")
 
-                    else:
-
-                        raise Exception(f"Не удалось загрузить файл (статус: {response.status_code})")
-
-                        
-
                 except Exception as e:
 
                     local_error = e
