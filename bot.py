@@ -286,7 +286,7 @@ STEP_FORMAT = 'format'
 
 STEP_STYLE = 'style'
 
-STEP_TOPIC = 'topic'  # Добавляем недостающую константу hello
+STEP_TOPIC = 'topic'  # Добавляем недостающую константу
 
 STEP_DONE = 'done'    # Добавляем недостающую константу
 
