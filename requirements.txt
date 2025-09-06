@@ -15,7 +15,4 @@ requests==2.31.0
 Pillow==10.0.1
 
 # Дополнительные утилиты
-python-dateutil==2.8.2
-
-# Асинхронные операции
-aiofiles==23.2.1 
+python-dateutil==2.8.2 
