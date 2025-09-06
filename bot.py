@@ -276,7 +276,8 @@ logging.basicConfig(
 
 # Состояния пользователя
 
-USER_STATE = {}
+# USER_STATE заменен на context.user_data для параллельной работы
+# USER_STATE = {}
 
 
 
@@ -830,7 +831,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    USER_STATE[update.effective_user.id] = {'step': 'main_menu'}
+    context.user_data['step'] = 'main_menu'
 
 
 
@@ -2051,7 +2052,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    USER_STATE[user_id]['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -2567,7 +2568,8 @@ logging.basicConfig(
 
 # Состояния пользователя
 
-USER_STATE = {}
+# USER_STATE заменен на context.user_data для параллельной работы
+# USER_STATE = {}
 
 
 
@@ -3121,7 +3123,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    USER_STATE[update.effective_user.id] = {'step': 'main_menu'}
+    context.user_data['step'] = 'main_menu'
 
 
 
@@ -4324,7 +4326,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    USER_STATE[user_id]['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -4970,7 +4972,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                await async_http_get(original_image_url, timeout=30),
                 timeout=35.0
             )
 
@@ -5078,7 +5080,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
+                async with await async_open_file(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await asyncio.wait_for(
@@ -5225,7 +5227,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 # Используем асинхронный вызов для предотвращения блокировки
                 loop = asyncio.get_event_loop()
                 edited_response = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    await async_http_get(edited_image_url, timeout=30),
                     timeout=35.0
                 )
 
@@ -5329,7 +5331,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             # Отправляем отредактированное изображение из файла
 
-                            with open(temp_edited_path, 'rb') as edited_file:
+                            async with await async_open_file(temp_edited_path, 'rb') as edited_file:
 
                                 await context.bot.send_photo(
 
@@ -5618,7 +5620,8 @@ logging.basicConfig(
 
 # Состояния пользователя
 
-USER_STATE = {}
+# USER_STATE заменен на context.user_data для параллельной работы
+# USER_STATE = {}
 
 
 
@@ -7277,7 +7280,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    USER_STATE[user_id]['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -7923,7 +7926,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                await async_http_get(original_image_url, timeout=30),
                 timeout=35.0
             )
 
@@ -8031,7 +8034,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
+                async with await async_open_file(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await asyncio.wait_for(
@@ -8178,7 +8181,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 # Используем асинхронный вызов для предотвращения блокировки
                 loop = asyncio.get_event_loop()
                 edited_response = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    await async_http_get(edited_image_url, timeout=30),
                     timeout=35.0
                 )
 
@@ -8280,7 +8283,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             # Отправляем отредактированное изображение из файла
 
-                            with open(temp_edited_path, 'rb') as edited_file:
+                            async with await async_open_file(temp_edited_path, 'rb') as edited_file:
 
                                 await context.bot.send_photo(
 
@@ -11173,7 +11176,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     }
 
-    USER_STATE[user_id] = state
+    context.user_data = state
 
     
 
@@ -11325,7 +11328,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = query.from_user.id
 
-    state = USER_STATE.get(user_id, {})
+    state = context.user_data
 
     data = query.data
 
@@ -11711,7 +11714,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "create_simple_images":
     # Для простых изображений сначала выбираем ориентацию
-        USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
+        context.user_data = {'step': 'simple_orientation', 'format': 'изображения'}
     
         keyboard = [
             [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
@@ -11732,7 +11735,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Начинаем процесс редактирования изображения
 
-        USER_STATE[user_id] = {'step': 'upload_image_for_edit'}
+        context.user_data = {'step': 'upload_image_for_edit'}
 
         keyboard = [
 
@@ -11838,7 +11841,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Если выбрано "Другое", просим пользователя ввести формат вручную
 
-            USER_STATE[user_id] = {'step': 'custom_format'}
+            context.user_data = {'step': 'custom_format'}
 
             await query.edit_message_text(
 
@@ -11858,7 +11861,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" сначала выбираем ориентацию
 
-            USER_STATE[user_id] = {'step': 'simple_image_orientation', 'format': selected_format}
+            context.user_data = {'step': 'simple_image_orientation', 'format': selected_format}
 
             keyboard = [
 
@@ -11892,7 +11895,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         else:
 
-            USER_STATE[user_id] = {'step': STEP_STYLE, 'format': selected_format}
+            context.user_data = {'step': STEP_STYLE, 'format': selected_format}
 
             keyboard = [
 
@@ -11936,7 +11939,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             current_format = state.get('format', '')
 
-            USER_STATE[user_id] = {'step': 'custom_style', 'format': current_format}
+            context.user_data = {'step': 'custom_style', 'format': current_format}
 
             await query.edit_message_text(
 
@@ -11958,9 +11961,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Сохраняем стиль и переходим к выбору модели
 
-            USER_STATE[user_id]['style'] = selected_style
+            context.user_data['style'] = selected_style
 
-            USER_STATE[user_id]['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -12030,21 +12033,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if user_format in ['instagram reels', 'tiktok', 'youtube shorts']:
 
-                USER_STATE[user_id]['image_count'] = 'auto'  # Для коротких видео количество определяется из текста
+                context.user_data['image_count'] = 'auto'  # Для коротких видео количество определяется из текста
 
             elif user_format in ['instagram stories']:
 
-                USER_STATE[user_id]['image_count'] = 1  # Для Instagram Stories 1 изображение
+                context.user_data['image_count'] = 1  # Для Instagram Stories 1 изображение
 
             elif user_format in ['instagram post']:
 
-                USER_STATE[user_id]['image_count'] = 2  # Для постов 2 изображения
+                context.user_data['image_count'] = 2  # Для постов 2 изображения
 
             else:
 
-                USER_STATE[user_id]['image_count'] = 2  # По умолчанию 2 изображения
+                context.user_data['image_count'] = 2  # По умолчанию 2 изображения
 
-            USER_STATE[user_id]['step'] = 'image_gen_model'  # Новый шаг для выбора модели
+            context.user_data['step'] = 'image_gen_model'  # Новый шаг для выбора модели
 
             # Кнопки выбора модели генерации
 
@@ -12076,7 +12079,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif count_type == 'custom':
 
-            USER_STATE[user_id]['step'] = 'custom_image_count'
+            context.user_data['step'] = 'custom_image_count'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -12140,13 +12143,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         orientation = data.split(':', 1)[1]
 
-        USER_STATE[user_id]['simple_orientation'] = orientation
+        context.user_data['simple_orientation'] = orientation
 
         
 
         # Переходим к выбору модели
 
-        USER_STATE[user_id]['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -12210,8 +12213,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.startswith('simple_orientation:'):
         orientation = data.split(':', 1)[1]
-        USER_STATE[user_id]['orientation'] = orientation
-        USER_STATE[user_id]['step'] = 'image_gen_model'
+        context.user_data['orientation'] = orientation
+        context.user_data['step'] = 'image_gen_model'
         await show_model_selection(update, context)
         return
 
@@ -12219,7 +12222,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         selected_model = data.split(':', 1)[1]
 
-        USER_STATE[user_id]['image_gen_model'] = selected_model
+        context.user_data['image_gen_model'] = selected_model
 
         
 
@@ -12241,7 +12244,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору стиля
 
-            USER_STATE[user_id]['step'] = 'image_gen_style'
+            context.user_data['step'] = 'image_gen_style'
 
             keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
@@ -12271,7 +12274,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для остальных форматов переходим к выбору стиля изображения
 
-            USER_STATE[user_id]['step'] = 'image_gen_style'
+            context.user_data['step'] = 'image_gen_style'
 
             keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
@@ -12360,7 +12363,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         selected_img_style = data.split(':', 1)[1]
 
-        USER_STATE[user_id]['image_gen_style'] = selected_img_style
+        context.user_data['image_gen_style'] = selected_img_style
 
         
 
@@ -12372,7 +12375,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору количества изображений
 
-            USER_STATE[user_id]['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             keyboard = [
 
@@ -12414,7 +12417,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для остальных форматов переходим к вводу темы
 
-            USER_STATE[user_id]['step'] = STEP_TOPIC
+            context.user_data['step'] = STEP_TOPIC
 
             
 
@@ -12484,7 +12487,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if count_data == 'custom':
 
-            USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+            context.user_data['step'] = 'custom_image_count_simple'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -12498,11 +12501,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 if 1 <= count <= 10:
 
-                    USER_STATE[user_id]['image_count'] = count
+                    context.user_data['image_count'] = count
 
-                    USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
-                    state = USER_STATE[user_id]
+                    state = context.user_data
 
                     
 
@@ -12572,7 +12575,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_count_simple":
 
-        USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+        context.user_data['step'] = 'custom_image_count_simple'
 
         await query.edit_message_text("Введите количество изображений (от 1 до 10):")
 
@@ -12588,7 +12591,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['generated_scenes_count'] = 0
 
-            USER_STATE[user_id] = state
+            context.user_data = state
 
             
 
@@ -12636,7 +12639,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if user_format == 'изображения':
 
-            USER_STATE[user_id]['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -12670,13 +12673,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сбрасываем состояние пользователя
 
-        USER_STATE[user_id] = {'step': 'main_menu'}
+        context.user_data = {'step': 'main_menu'}
 
         await show_format_selection(update, context)
 
     elif data == "custom_image_prompt":
 
-        USER_STATE[user_id]['step'] = 'custom_image_prompt'
+        context.user_data['step'] = 'custom_image_prompt'
 
         await query.edit_message_text("Опишите, что вы хотите видеть на изображении (1-2 предложения):")
 
@@ -12694,7 +12697,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_style":
 
-        USER_STATE[user_id]['step'] = 'custom_image_style'
+        context.user_data['step'] = 'custom_image_style'
 
         await query.edit_message_text("Опишите стиль генерации изображения (например: фотографический, художественный, минималистичный, яркий, темный и т.д.):")
 
@@ -12704,7 +12707,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             user_format = state.get('format', '').lower()
 
-            state = USER_STATE.get(user_id, {})
+            state = context.user_data
 
             if user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_scenes' in state:
 
@@ -12736,7 +12739,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Сбрасываем состояние пользователя
 
-            USER_STATE[user_id] = {'step': STEP_FORMAT}
+            context.user_data = {'step': STEP_FORMAT}
 
     elif data.startswith('generate_with_count:'):
 
@@ -12746,7 +12749,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             user_format = state.get('format', '').lower()
 
-            state = USER_STATE.get(user_id, {})
+            state = context.user_data
 
             
 
@@ -12754,7 +12757,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['image_count'] = count
 
-            USER_STATE[user_id] = state
+            context.user_data = state
 
             
 
@@ -12782,7 +12785,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
-            USER_STATE[user_id] = {'step': STEP_FORMAT}
+            context.user_data = {'step': STEP_FORMAT}
 
     elif data.startswith('simple_image_count:'):
 
@@ -12790,7 +12793,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if count_data == 'custom':
 
-            USER_STATE[user_id]['step'] = 'custom_simple_image_count'
+            context.user_data['step'] = 'custom_simple_image_count'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -12804,11 +12807,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 if 1 <= count <= 10:
 
-                    USER_STATE[user_id]['image_count'] = count
+                    context.user_data['image_count'] = count
 
-                    USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
-                    state = USER_STATE[user_id]
+                    state = context.user_data
 
                     
 
@@ -12880,7 +12883,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Возврат к вводу описания для "Изображения"
 
-        USER_STATE[user_id]['step'] = 'simple_image_prompt'
+        context.user_data['step'] = 'simple_image_prompt'
 
         keyboard = [
 
@@ -12970,7 +12973,8 @@ logging.basicConfig(
 
 # Состояния пользователя
 
-USER_STATE = {}
+# USER_STATE заменен на context.user_data для параллельной работы
+# USER_STATE = {}
 
 
 
@@ -13524,7 +13528,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    USER_STATE[update.effective_user.id] = {'step': 'main_menu'}
+    context.user_data['step'] = 'main_menu'
 
 
 
@@ -14727,7 +14731,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    USER_STATE[user_id]['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -15243,7 +15247,8 @@ logging.basicConfig(
 
 # Состояния пользователя
 
-USER_STATE = {}
+# USER_STATE заменен на context.user_data для параллельной работы
+# USER_STATE = {}
 
 
 
@@ -15797,7 +15802,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    USER_STATE[update.effective_user.id] = {'step': 'main_menu'}
+    context.user_data['step'] = 'main_menu'
 
 
 
@@ -17000,7 +17005,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    USER_STATE[user_id]['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -17646,7 +17651,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                await async_http_get(original_image_url, timeout=30),
                 timeout=35.0
             )
 
@@ -17754,7 +17759,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
+                async with await async_open_file(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await asyncio.wait_for(
@@ -17901,7 +17906,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 # Используем асинхронный вызов для предотвращения блокировки
                 loop = asyncio.get_event_loop()
                 edited_response = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    await async_http_get(edited_image_url, timeout=30),
                     timeout=35.0
                 )
 
@@ -18003,7 +18008,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             # Отправляем отредактированное изображение из файла
 
-                            with open(temp_edited_path, 'rb') as edited_file:
+                            async with await async_open_file(temp_edited_path, 'rb') as edited_file:
 
                                 await context.bot.send_photo(
 
@@ -18292,7 +18297,8 @@ logging.basicConfig(
 
 # Состояния пользователя
 
-USER_STATE = {}
+# USER_STATE заменен на context.user_data для параллельной работы
+# USER_STATE = {}
 
 
 
@@ -19951,7 +19957,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    USER_STATE[user_id]['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -20597,7 +20603,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             response = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: requests.get(original_image_url, timeout=30)),
+                await async_http_get(original_image_url, timeout=30),
                 timeout=35.0
             )
 
@@ -20705,7 +20711,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
+                async with await async_open_file(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await asyncio.wait_for(
@@ -20852,7 +20858,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 # Используем асинхронный вызов для предотвращения блокировки
                 loop = asyncio.get_event_loop()
                 edited_response = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: requests.get(edited_image_url, timeout=30)),
+                    await async_http_get(edited_image_url, timeout=30),
                     timeout=35.0
                 )
 
@@ -20954,7 +20960,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             # Отправляем отредактированное изображение из файла
 
-                            with open(temp_edited_path, 'rb') as edited_file:
+                            async with await async_open_file(temp_edited_path, 'rb') as edited_file:
 
                                 await context.bot.send_photo(
 
@@ -23906,7 +23912,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     }
 
-    USER_STATE[user_id] = state
+    context.user_data = state
 
     
 
@@ -24058,7 +24064,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = query.from_user.id
 
-    state = USER_STATE.get(user_id, {})
+    state = context.user_data
 
     data = query.data
 
@@ -24444,7 +24450,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "create_simple_images":
     # Для простых изображений сначала выбираем ориентацию
-        USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
+        context.user_data = {'step': 'simple_orientation', 'format': 'изображения'}
     
         keyboard = [
             [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
@@ -24465,7 +24471,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Начинаем процесс редактирования изображения
 
-        USER_STATE[user_id] = {'step': 'upload_image_for_edit'}
+        context.user_data = {'step': 'upload_image_for_edit'}
 
         keyboard = [
 
@@ -24571,7 +24577,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Если выбрано "Другое", просим пользователя ввести формат вручную
 
-            USER_STATE[user_id] = {'step': 'custom_format'}
+            context.user_data = {'step': 'custom_format'}
 
             await query.edit_message_text(
 
@@ -24591,7 +24597,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" сначала выбираем ориентацию
 
-            USER_STATE[user_id] = {'step': 'simple_image_orientation', 'format': selected_format}
+            context.user_data = {'step': 'simple_image_orientation', 'format': selected_format}
 
             keyboard = [
 
@@ -24625,7 +24631,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         else:
 
-            USER_STATE[user_id] = {'step': STEP_STYLE, 'format': selected_format}
+            context.user_data = {'step': STEP_STYLE, 'format': selected_format}
 
             keyboard = [
 
@@ -24669,7 +24675,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             current_format = state.get('format', '')
 
-            USER_STATE[user_id] = {'step': 'custom_style', 'format': current_format}
+            context.user_data = {'step': 'custom_style', 'format': current_format}
 
             await query.edit_message_text(
 
@@ -24691,9 +24697,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Сохраняем стиль и переходим к выбору модели
 
-            USER_STATE[user_id]['style'] = selected_style
+            context.user_data['style'] = selected_style
 
-            USER_STATE[user_id]['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -24763,21 +24769,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if user_format in ['instagram reels', 'tiktok', 'youtube shorts']:
 
-                USER_STATE[user_id]['image_count'] = 'auto'  # Для коротких видео количество определяется из текста
+                context.user_data['image_count'] = 'auto'  # Для коротких видео количество определяется из текста
 
             elif user_format in ['instagram stories']:
 
-                USER_STATE[user_id]['image_count'] = 1  # Для Instagram Stories 1 изображение
+                context.user_data['image_count'] = 1  # Для Instagram Stories 1 изображение
 
             elif user_format in ['instagram post']:
 
-                USER_STATE[user_id]['image_count'] = 2  # Для постов 2 изображения
+                context.user_data['image_count'] = 2  # Для постов 2 изображения
 
             else:
 
-                USER_STATE[user_id]['image_count'] = 2  # По умолчанию 2 изображения
+                context.user_data['image_count'] = 2  # По умолчанию 2 изображения
 
-            USER_STATE[user_id]['step'] = 'image_gen_model'  # Новый шаг для выбора модели
+            context.user_data['step'] = 'image_gen_model'  # Новый шаг для выбора модели
 
             # Кнопки выбора модели генерации
 
@@ -24809,7 +24815,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif count_type == 'custom':
 
-            USER_STATE[user_id]['step'] = 'custom_image_count'
+            context.user_data['step'] = 'custom_image_count'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -24873,13 +24879,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         orientation = data.split(':', 1)[1]
 
-        USER_STATE[user_id]['simple_orientation'] = orientation
+        context.user_data['simple_orientation'] = orientation
 
         
 
         # Переходим к выбору модели
 
-        USER_STATE[user_id]['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -24943,8 +24949,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.startswith('simple_orientation:'):
         orientation = data.split(':', 1)[1]
-        USER_STATE[user_id]['orientation'] = orientation
-        USER_STATE[user_id]['step'] = 'image_gen_model'
+        context.user_data['orientation'] = orientation
+        context.user_data['step'] = 'image_gen_model'
         await show_model_selection(update, context)
         return
 
@@ -24952,7 +24958,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         selected_model = data.split(':', 1)[1]
 
-        USER_STATE[user_id]['image_gen_model'] = selected_model
+        context.user_data['image_gen_model'] = selected_model
 
         
 
@@ -24974,7 +24980,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору стиля
 
-            USER_STATE[user_id]['step'] = 'image_gen_style'
+            context.user_data['step'] = 'image_gen_style'
 
             keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
@@ -25004,7 +25010,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для остальных форматов переходим к выбору стиля изображения
 
-            USER_STATE[user_id]['step'] = 'image_gen_style'
+            context.user_data['step'] = 'image_gen_style'
 
             keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
@@ -25106,7 +25112,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         selected_img_style = data.split(':', 1)[1]
 
-        USER_STATE[user_id]['image_gen_style'] = selected_img_style
+        context.user_data['image_gen_style'] = selected_img_style
 
         
 
@@ -25118,7 +25124,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору количества изображений
 
-            USER_STATE[user_id]['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             keyboard = [
 
@@ -25160,7 +25166,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для остальных форматов переходим к вводу темы
 
-            USER_STATE[user_id]['step'] = STEP_TOPIC
+            context.user_data['step'] = STEP_TOPIC
 
             
 
@@ -25230,7 +25236,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if count_data == 'custom':
 
-            USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+            context.user_data['step'] = 'custom_image_count_simple'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -25244,11 +25250,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 if 1 <= count <= 10:
 
-                    USER_STATE[user_id]['image_count'] = count
+                    context.user_data['image_count'] = count
 
-                    USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
-                    state = USER_STATE[user_id]
+                    state = context.user_data
 
                     
 
@@ -25318,7 +25324,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_count_simple":
 
-        USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+        context.user_data['step'] = 'custom_image_count_simple'
 
         await query.edit_message_text("Введите количество изображений (от 1 до 10):")
 
@@ -25334,7 +25340,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['generated_scenes_count'] = 0
 
-            USER_STATE[user_id] = state
+            context.user_data = state
 
             
 
@@ -25382,7 +25388,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if user_format == 'изображения':
 
-            USER_STATE[user_id]['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -25416,13 +25422,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сбрасываем состояние пользователя
 
-        USER_STATE[user_id] = {'step': 'main_menu'}
+        context.user_data = {'step': 'main_menu'}
 
         await show_format_selection(update, context)
 
     elif data == "custom_image_prompt":
 
-        USER_STATE[user_id]['step'] = 'custom_image_prompt'
+        context.user_data['step'] = 'custom_image_prompt'
 
         await query.edit_message_text("Опишите, что вы хотите видеть на изображении (1-2 предложения):")
 
@@ -25440,7 +25446,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_style":
 
-        USER_STATE[user_id]['step'] = 'custom_image_style'
+        context.user_data['step'] = 'custom_image_style'
 
         await query.edit_message_text("Опишите стиль генерации изображения (например: фотографический, художественный, минималистичный, яркий, темный и т.д.):")
 
@@ -25450,7 +25456,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             user_format = state.get('format', '').lower()
 
-            state = USER_STATE.get(user_id, {})
+            state = context.user_data
 
             if user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_scenes' in state:
 
@@ -25482,7 +25488,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Сбрасываем состояние пользователя
 
-            USER_STATE[user_id] = {'step': STEP_FORMAT}
+            context.user_data = {'step': STEP_FORMAT}
 
     elif data.startswith('generate_with_count:'):
 
@@ -25492,7 +25498,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             user_format = state.get('format', '').lower()
 
-            state = USER_STATE.get(user_id, {})
+            state = context.user_data
 
             
 
@@ -25500,7 +25506,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['image_count'] = count
 
-            USER_STATE[user_id] = state
+            context.user_data = state
 
             
 
@@ -25528,7 +25534,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
-            USER_STATE[user_id] = {'step': STEP_FORMAT}
+            context.user_data = {'step': STEP_FORMAT}
 
     elif data.startswith('simple_image_count:'):
 
@@ -25536,7 +25542,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if count_data == 'custom':
 
-            USER_STATE[user_id]['step'] = 'custom_simple_image_count'
+            context.user_data['step'] = 'custom_simple_image_count'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -25550,11 +25556,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 if 1 <= count <= 10:
 
-                    USER_STATE[user_id]['image_count'] = count
+                    context.user_data['image_count'] = count
 
-                    USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
-                    state = USER_STATE[user_id]
+                    state = context.user_data
 
                     
 
@@ -25626,7 +25632,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Возврат к вводу описания для "Изображения"
 
-        USER_STATE[user_id]['step'] = 'simple_image_prompt'
+        context.user_data['step'] = 'simple_image_prompt'
 
         keyboard = [
 
@@ -25688,7 +25694,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Возврат к выбору количества изображений для "Изображения"
 
-        USER_STATE[user_id]['step'] = 'image_count_simple'
+        context.user_data['step'] = 'image_count_simple'
 
         keyboard = [
 
@@ -25728,7 +25734,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_count_after_text":
 
-        USER_STATE[user_id]['step'] = 'custom_count_after_text'
+        context.user_data['step'] = 'custom_count_after_text'
 
         await query.edit_message_text("Введите количество изображений:")
 
@@ -25764,7 +25770,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 state['generated_scenes_count'] = generated_count
 
-                USER_STATE[user_id] = state
+                context.user_data = state
 
                 
 
@@ -25812,7 +25818,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 state['generated_scenes_count'] = 0
 
-                USER_STATE[user_id] = state
+                context.user_data = state
 
                 
 
@@ -25840,7 +25846,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сброс состояния для генерации новых изображений
 
-        USER_STATE[user_id] = {'step': 'main_menu'}
+        context.user_data = {'step': 'main_menu'}
 
         await show_format_selection(update, context)
 
@@ -25970,7 +25976,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 state['generated_scenes_count'] = generated_count
 
-                USER_STATE[user_id] = state
+                context.user_data = state
 
                 
 
@@ -25998,7 +26004,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Запрос кастомного количества сцен
 
-        USER_STATE[user_id]['step'] = 'custom_scene_count'
+        context.user_data['step'] = 'custom_scene_count'
 
         total_scenes = state.get('total_scenes_count', 0)
 
@@ -26560,7 +26566,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logging.info(f"Получено сообщение от пользователя {user_id}: тип={type(update.message).__name__}, фото={bool(update.message.photo)}, текст={bool(update.message.text)}")
 
-    state = USER_STATE.get(user_id, {})
+    state = context.user_data
 
     step = state.get('step')
 
@@ -26574,11 +26580,11 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" сохраняем описание и предлагаем выбрать количество изображений
 
-            USER_STATE[user_id]['topic'] = update.message.text
+            context.user_data['topic'] = update.message.text
 
-            USER_STATE[user_id]['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
-            state = USER_STATE[user_id]
+            state = context.user_data
 
             
 
@@ -26628,11 +26634,11 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для остальных форматов - старая логика
 
-            USER_STATE[user_id]['topic'] = update.message.text
+            context.user_data['topic'] = update.message.text
 
-            USER_STATE[user_id]['step'] = STEP_DONE
+            context.user_data['step'] = STEP_DONE
 
-            state = USER_STATE[user_id]
+            state = context.user_data
 
             
 
@@ -26855,9 +26861,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                USER_STATE[user_id]['step'] = 'image_gen_model'
+                context.user_data['step'] = 'image_gen_model'
 
                 # Кнопки выбора модели генерации
 
@@ -26889,9 +26895,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -26969,9 +26975,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             return
 
-        USER_STATE[user_id]['format'] = custom_format
+        context.user_data['format'] = custom_format
 
-        USER_STATE[user_id]['step'] = STEP_STYLE
+        context.user_data['step'] = STEP_STYLE
 
         keyboard = [
 
@@ -27017,9 +27023,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сохраняем стиль и переходим к выбору модели генерации изображений
 
-        USER_STATE[user_id]['style'] = custom_style
+        context.user_data['style'] = custom_style
 
-        USER_STATE[user_id]['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -27065,7 +27071,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             return
 
-        USER_STATE[user_id]['step'] = STEP_DONE
+        context.user_data['step'] = STEP_DONE
 
         asyncio.create_task(send_images_async(update, context, state, prompt_type='user', user_prompt=user_prompt))
 
@@ -27077,9 +27083,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27167,7 +27173,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             return
 
-        USER_STATE[user_id]['image_gen_style'] = custom_style
+        context.user_data['image_gen_style'] = custom_style
 
         
 
@@ -27179,7 +27185,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору количества изображений
 
-            USER_STATE[user_id]['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             keyboard = [
 
@@ -27221,7 +27227,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для остальных форматов переходим к вводу темы
 
-            USER_STATE[user_id]['step'] = STEP_TOPIC
+            context.user_data['step'] = STEP_TOPIC
 
             
 
@@ -27263,9 +27269,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27339,9 +27345,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27431,11 +27437,11 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сохраняем промпт в состоянии
 
-        USER_STATE[user_id]['topic'] = user_prompt
+        context.user_data['topic'] = user_prompt
 
-        USER_STATE[user_id]['step'] = STEP_DONE
+        context.user_data['step'] = STEP_DONE
 
-        state = USER_STATE[user_id]
+        state = context.user_data
 
         
 
@@ -27601,9 +27607,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                USER_STATE[user_id]['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27687,7 +27693,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Сбрасываем состояние и возвращаемся к выбору формата
 
-            USER_STATE[user_id] = {'step': 'main_menu'}
+            context.user_data = {'step': 'main_menu'}
 
             await show_format_selection(update, context)
 
@@ -27721,9 +27727,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if 1 <= count <= 10:
 
-                USER_STATE[user_id]['image_count'] = count
+                context.user_data['image_count'] = count
 
-                state = USER_STATE[user_id]
+                state = context.user_data
 
                 
 
@@ -27785,7 +27791,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 state['generated_scenes_count'] = generated_count
 
-                USER_STATE[user_id] = state
+                context.user_data = state
 
                 
 
@@ -27821,9 +27827,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 selected_image_url = last_images[image_index]
 
-                USER_STATE[user_id]['selected_image_url'] = selected_image_url
+                context.user_data['selected_image_url'] = selected_image_url
 
-                USER_STATE[user_id]['step'] = 'enter_edit_prompt'
+                context.user_data['step'] = 'enter_edit_prompt'
 
                 
 
@@ -27873,9 +27879,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Сохраняем URL изображения
 
-            USER_STATE[user_id]['selected_image_url'] = file.file_path
+            context.user_data['selected_image_url'] = file.file_path
 
-            USER_STATE[user_id]['step'] = 'enter_edit_prompt'
+            context.user_data['step'] = 'enter_edit_prompt'
 
             
 
@@ -27974,9 +27980,9 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сбрасываем состояние
 
-        USER_STATE[user_id]['step'] = None
+        context.user_data['step'] = None
 
-        USER_STATE[user_id].pop('selected_image_url', None)
+        context.user_data.pop('selected_image_url', None)
 
     else:
 
@@ -31026,6 +31032,18 @@ async def setup_commands(application):
 
         logging.error(f"Ошибка при установке команд меню: {e}")
 
+
+async def async_open_file(file_path, mode='rb'):
+    """Асинхронное открытие файла"""
+    import aiofiles
+    return await aiofiles.open(file_path, mode)
+
+async def async_http_get(url, timeout=30):
+    """Асинхронный HTTP GET запрос"""
+    import aiohttp
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=timeout) as response:
+            return await response.read()
 
 async def send_images_async(update, context, state, prompt_type='auto', user_prompt=None, scenes=None):
     """Асинхронная обертка для send_images - позволяет параллельное выполнение"""
