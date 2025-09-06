@@ -2052,7 +2052,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    context.user_data['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -4326,7 +4326,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    context.user_data['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -7280,7 +7280,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    context.user_data['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -11963,7 +11963,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['style'] = selected_style
 
-    context.user_data['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -12047,7 +12047,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = 2  # По умолчанию 2 изображения
 
-    context.user_data['step'] = 'image_gen_model'  # Новый шаг для выбора модели
+            context.user_data['step'] = 'image_gen_model'  # Новый шаг для выбора модели
 
             # Кнопки выбора модели генерации
 
@@ -12149,7 +12149,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Переходим к выбору модели
 
-    context.user_data['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -12214,7 +12214,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith('simple_orientation:'):
         orientation = data.split(':', 1)[1]
         context.user_data['orientation'] = orientation
-    context.user_data['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
         await show_model_selection(update, context)
         return
 
@@ -12375,7 +12375,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору количества изображений
 
-    context.user_data['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             keyboard = [
 
@@ -12487,7 +12487,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if count_data == 'custom':
 
-    context.user_data['step'] = 'custom_image_count_simple'
+            context.user_data['step'] = 'custom_image_count_simple'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -12503,7 +12503,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     context.user_data['image_count'] = count
 
-                context.user_data['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
                     state = context.user_data
 
@@ -12575,7 +12575,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_count_simple":
 
-    context.user_data['step'] = 'custom_image_count_simple'
+        context.user_data['step'] = 'custom_image_count_simple'
 
         await query.edit_message_text("Введите количество изображений (от 1 до 10):")
 
@@ -12639,7 +12639,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if user_format == 'изображения':
 
-    context.user_data['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -12679,7 +12679,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_prompt":
 
-    context.user_data['step'] = 'custom_image_prompt'
+        context.user_data['step'] = 'custom_image_prompt'
 
         await query.edit_message_text("Опишите, что вы хотите видеть на изображении (1-2 предложения):")
 
@@ -12697,7 +12697,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_style":
 
-    context.user_data['step'] = 'custom_image_style'
+        context.user_data['step'] = 'custom_image_style'
 
         await query.edit_message_text("Опишите стиль генерации изображения (например: фотографический, художественный, минималистичный, яркий, темный и т.д.):")
 
@@ -12809,7 +12809,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     context.user_data['image_count'] = count
 
-                context.user_data['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
                     state = context.user_data
 
@@ -12883,7 +12883,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Возврат к вводу описания для "Изображения"
 
-    context.user_data['step'] = 'simple_image_prompt'
+        context.user_data['step'] = 'simple_image_prompt'
 
         keyboard = [
 
@@ -14731,7 +14731,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    context.user_data['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -17005,7 +17005,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    context.user_data['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -19957,7 +19957,7 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Сохраняем состояние для ожидания загрузки изображения
 
-    context.user_data['step'] = 'upload_image_for_edit'
+        context.user_data['step'] = 'upload_image_for_edit'
 
     
 
@@ -24699,7 +24699,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['style'] = selected_style
 
-    context.user_data['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -24783,7 +24783,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = 2  # По умолчанию 2 изображения
 
-    context.user_data['step'] = 'image_gen_model'  # Новый шаг для выбора модели
+            context.user_data['step'] = 'image_gen_model'  # Новый шаг для выбора модели
 
             # Кнопки выбора модели генерации
 
@@ -24885,7 +24885,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Переходим к выбору модели
 
-    context.user_data['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -24950,7 +24950,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith('simple_orientation:'):
         orientation = data.split(':', 1)[1]
         context.user_data['orientation'] = orientation
-    context.user_data['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
         await show_model_selection(update, context)
         return
 
@@ -25124,7 +25124,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору количества изображений
 
-    context.user_data['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             keyboard = [
 
@@ -25236,7 +25236,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if count_data == 'custom':
 
-    context.user_data['step'] = 'custom_image_count_simple'
+            context.user_data['step'] = 'custom_image_count_simple'
 
             await query.edit_message_text("Введите количество изображений:")
 
@@ -25252,7 +25252,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     context.user_data['image_count'] = count
 
-                context.user_data['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
                     state = context.user_data
 
@@ -25324,7 +25324,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_count_simple":
 
-    context.user_data['step'] = 'custom_image_count_simple'
+        context.user_data['step'] = 'custom_image_count_simple'
 
         await query.edit_message_text("Введите количество изображений (от 1 до 10):")
 
@@ -25388,7 +25388,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if user_format == 'изображения':
 
-    context.user_data['step'] = 'image_gen_model'
+            context.user_data['step'] = 'image_gen_model'
 
             keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -25428,7 +25428,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_prompt":
 
-    context.user_data['step'] = 'custom_image_prompt'
+        context.user_data['step'] = 'custom_image_prompt'
 
         await query.edit_message_text("Опишите, что вы хотите видеть на изображении (1-2 предложения):")
 
@@ -25446,7 +25446,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_image_style":
 
-    context.user_data['step'] = 'custom_image_style'
+        context.user_data['step'] = 'custom_image_style'
 
         await query.edit_message_text("Опишите стиль генерации изображения (например: фотографический, художественный, минималистичный, яркий, темный и т.д.):")
 
@@ -25558,7 +25558,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     context.user_data['image_count'] = count
 
-                context.user_data['step'] = 'simple_image_prompt'
+                    context.user_data['step'] = 'simple_image_prompt'
 
                     state = context.user_data
 
@@ -25632,7 +25632,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Возврат к вводу описания для "Изображения"
 
-    context.user_data['step'] = 'simple_image_prompt'
+        context.user_data['step'] = 'simple_image_prompt'
 
         keyboard = [
 
@@ -25694,7 +25694,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Возврат к выбору количества изображений для "Изображения"
 
-    context.user_data['step'] = 'image_count_simple'
+        context.user_data['step'] = 'image_count_simple'
 
         keyboard = [
 
@@ -25734,7 +25734,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "custom_count_after_text":
 
-    context.user_data['step'] = 'custom_count_after_text'
+        context.user_data['step'] = 'custom_count_after_text'
 
         await query.edit_message_text("Введите количество изображений:")
 
@@ -26004,7 +26004,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Запрос кастомного количества сцен
 
-    context.user_data['step'] = 'custom_scene_count'
+        context.user_data['step'] = 'custom_scene_count'
 
         total_scenes = state.get('total_scenes_count', 0)
 
@@ -26582,7 +26582,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['topic'] = update.message.text
 
-    context.user_data['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             state = context.user_data
 
@@ -26636,7 +26636,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['topic'] = update.message.text
 
-    context.user_data['step'] = STEP_DONE
+            context.user_data['step'] = STEP_DONE
 
             state = context.user_data
 
@@ -26863,7 +26863,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = count
 
-    context.user_data['step'] = 'image_gen_model'
+                context.user_data['step'] = 'image_gen_model'
 
                 # Кнопки выбора модели генерации
 
@@ -26897,7 +26897,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = count
 
-            context.user_data['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -26977,7 +26977,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data['format'] = custom_format
 
-    context.user_data['step'] = STEP_STYLE
+        context.user_data['step'] = STEP_STYLE
 
         keyboard = [
 
@@ -27025,7 +27025,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data['style'] = custom_style
 
-    context.user_data['step'] = 'image_gen_model'
+        context.user_data['step'] = 'image_gen_model'
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
@@ -27071,7 +27071,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             return
 
-    context.user_data['step'] = STEP_DONE
+        context.user_data['step'] = STEP_DONE
 
         asyncio.create_task(send_images_async(update, context, state, prompt_type='user', user_prompt=user_prompt))
 
@@ -27085,7 +27085,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = count
 
-            context.user_data['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27185,7 +27185,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Для "Изображения" переходим к выбору количества изображений
 
-    context.user_data['step'] = 'image_count_simple'
+            context.user_data['step'] = 'image_count_simple'
 
             keyboard = [
 
@@ -27271,7 +27271,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = count
 
-            context.user_data['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27347,7 +27347,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = count
 
-            context.user_data['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27439,7 +27439,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data['topic'] = user_prompt
 
-    context.user_data['step'] = STEP_DONE
+        context.user_data['step'] = STEP_DONE
 
         state = context.user_data
 
@@ -27609,7 +27609,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 context.user_data['image_count'] = count
 
-            context.user_data['step'] = 'simple_image_prompt'
+                context.user_data['step'] = 'simple_image_prompt'
 
                 keyboard = [
 
@@ -27980,7 +27980,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Сбрасываем состояние
 
-    context.user_data['step'] = None
+        context.user_data['step'] = None
 
         context.user_data.pop('selected_image_url', None)
 
