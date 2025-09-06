@@ -4866,7 +4866,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-            await context.bot.send_message(
+    await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -7820,7 +7820,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-            await context.bot.send_message(
+    await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -17545,7 +17545,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-            await context.bot.send_message(
+    await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -20497,7 +20497,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-            await context.bot.send_message(
+    await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
