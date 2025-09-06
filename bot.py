@@ -4866,7 +4866,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-                    await context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -4881,7 +4881,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
-                return None
+            return None
     else:
         logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
@@ -4895,7 +4895,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                 chat_id=chat_id,
 
@@ -4931,7 +4931,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -4959,7 +4959,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -4988,7 +4988,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -5024,7 +5024,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         except Exception as e:
 
@@ -5048,7 +5048,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -5116,7 +5116,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -5174,7 +5174,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -5202,7 +5202,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -5291,7 +5291,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             ]
 
-                            await context.bot.send_message(
+                    await context.bot.send_message(
 
                                 chat_id=chat_id,
 
@@ -5373,7 +5373,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -5399,7 +5399,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -5423,7 +5423,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         ]
 
-                        await context.bot.send_message(
+                await context.bot.send_message(
 
                             chat_id=chat_id,
 
@@ -5447,7 +5447,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -5473,7 +5473,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -7820,7 +7820,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-                    await context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -7835,7 +7835,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
-                return None
+            return None
     else:
         logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
@@ -7849,7 +7849,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                 chat_id=chat_id,
 
@@ -7885,7 +7885,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -7913,7 +7913,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -7942,7 +7942,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -7978,7 +7978,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         except Exception as e:
 
@@ -8002,7 +8002,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -8070,7 +8070,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -8128,7 +8128,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -8156,7 +8156,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -8243,7 +8243,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             ]
 
-                            await context.bot.send_message(
+                    await context.bot.send_message(
 
                                 chat_id=chat_id,
 
@@ -8325,7 +8325,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -8351,7 +8351,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -8375,7 +8375,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         ]
 
-                        await context.bot.send_message(
+                await context.bot.send_message(
 
                             chat_id=chat_id,
 
@@ -8399,7 +8399,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -8425,7 +8425,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -17545,7 +17545,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-                    await context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -17560,7 +17560,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
-                return None
+            return None
     else:
         logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
@@ -17574,7 +17574,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                 chat_id=chat_id,
 
@@ -17610,7 +17610,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -17638,7 +17638,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -17667,7 +17667,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -17703,7 +17703,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         except Exception as e:
 
@@ -17727,7 +17727,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -17795,7 +17795,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -17853,7 +17853,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -17881,7 +17881,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -17968,7 +17968,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             ]
 
-                            await context.bot.send_message(
+                    await context.bot.send_message(
 
                                 chat_id=chat_id,
 
@@ -18050,7 +18050,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -18076,7 +18076,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -18100,7 +18100,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         ]
 
-                        await context.bot.send_message(
+                await context.bot.send_message(
 
                             chat_id=chat_id,
 
@@ -18124,7 +18124,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -18150,7 +18150,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -20497,7 +20497,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-                    await context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=chat_id,
                 text="❌ **Доступ к редактированию заблокирован!**\n\n"
                      "✏️ **Редактирование изображений доступно:**\n"
@@ -20512,7 +20512,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
-                return None
+            return None
     else:
         logging.warning(f"DEBUG: user_id не найден! update.message={hasattr(update, 'message')}, update.callback_query={hasattr(update, 'callback_query')}")
 
@@ -20526,7 +20526,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                 chat_id=chat_id,
 
@@ -20562,7 +20562,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -20590,7 +20590,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -20619,7 +20619,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -20655,7 +20655,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         except Exception as e:
 
@@ -20679,7 +20679,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 )
 
-                return None
+            return None
 
         
 
@@ -20747,7 +20747,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -20805,7 +20805,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -20833,7 +20833,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -20920,7 +20920,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             ]
 
-                            await context.bot.send_message(
+                    await context.bot.send_message(
 
                                 chat_id=chat_id,
 
@@ -21002,7 +21002,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -21028,7 +21028,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                                 ]
 
-                                await context.bot.send_message(
+                        await context.bot.send_message(
 
                                     chat_id=chat_id,
 
@@ -21052,7 +21052,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         ]
 
-                        await context.bot.send_message(
+                await context.bot.send_message(
 
                             chat_id=chat_id,
 
@@ -21076,7 +21076,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -21102,7 +21102,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     ]
 
-                    await context.bot.send_message(
+            await context.bot.send_message(
 
                         chat_id=chat_id,
 
@@ -29165,7 +29165,7 @@ async def generate_video(update, context, state):
                         logging.error(f"Файл недоступен для скачивания (статус: {test_response.status})")
                         
                         # Отправляем сообщение с инструкциями
-                        await context.bot.send_message(
+                await context.bot.send_message(
                             chat_id=chat_id,
                             text=f"⚠️ **Файл недоступен для скачивания**\n\n"
                                  f"Статус: {test_response.status}\n"
@@ -29551,7 +29551,7 @@ async def generate_video(update, context, state):
                                     if file_size_mb > 50:
                                         logging.warning(f"Файл слишком большой для отправки: {file_size_mb:.1f} МБ")
                                         # Вместо исключения, отправляем сообщение с рекомендациями
-                                        await context.bot.send_message(
+                                await context.bot.send_message(
                                             chat_id=chat_id,
                                             text=(
                                                 f"⚠️ **Файл слишком большой!**\n\n"
@@ -29670,7 +29670,7 @@ async def generate_video(update, context, state):
                                     except Exception as doc_error:
                                         logging.error(f"Ошибка при отправке как документ: {doc_error}")
                                         # Отправляем ссылку как последний вариант
-                                        await context.bot.send_message(
+                                await context.bot.send_message(
                                             chat_id=chat_id,
                                             text=f"🎬 **Видео готово!**\n\n"
                                                  f"{prompt_caption}\n"
@@ -29793,7 +29793,7 @@ async def generate_video(update, context, state):
 
                             # Даже если GIF отправился, отправляем ссылку на MP4
 
-                            await context.bot.send_message(
+                    await context.bot.send_message(
 
                                 chat_id=chat_id,
 
