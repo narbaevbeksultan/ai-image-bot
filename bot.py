@@ -4864,7 +4864,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -7818,7 +7818,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -8611,7 +8611,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await send_text("❌ Ошибка: REPLICATE_API_TOKEN не установлен\n\nОбратитесь к администратору бота.", reply_markup=reply_markup)
 
@@ -8657,7 +8657,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     await send_text("❌ Недостаточно кредитов на Replicate\n\nПополните баланс на https://replicate.com/account/billing или обратитесь к администратору.", reply_markup=reply_markup)
 
@@ -8673,7 +8673,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     await send_text("❌ Ошибка авторизации Replicate API\n\nПроверьте токен или обратитесь к администратору.", reply_markup=reply_markup)
 
@@ -8689,7 +8689,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await send_text(f"❌ Ошибка при проверке Replicate API: {str(e)[:100]}...\n\nОбратитесь к администратору.", reply_markup=reply_markup)
 
@@ -8730,7 +8730,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             text = "❌ **У вас закончились бесплатные генерации и кредиты!**\n\n"
             text += f"🆓 Бесплатных генераций осталось: **{free_generations_left}**\n"
@@ -9084,7 +9084,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await send_text(msg, reply_markup=reply_markup)
 
@@ -9337,7 +9337,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                                 ]
 
-                                reply_markup = InlineKeyboardMarkup(keyboard)
+                        reply_markup = InlineKeyboardMarkup(keyboard)
 
                                 await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
 
@@ -9531,7 +9531,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
 
@@ -9545,7 +9545,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
 
@@ -9559,7 +9559,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка при генерации через Ideogram: {error_msg}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
 
@@ -9592,7 +9592,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                                 ]
 
-                                reply_markup = InlineKeyboardMarkup(keyboard)
+                        reply_markup = InlineKeyboardMarkup(keyboard)
 
                                 await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
 
@@ -9902,7 +9902,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
 
@@ -9916,7 +9916,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
 
@@ -9930,7 +9930,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка при генерации через Bytedance: {error_msg[:100]}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
 
@@ -11352,7 +11352,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not user_stats:
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "📊 Статистика пока недоступна.\n\nПопробуйте создать несколько изображений!",
 
@@ -11692,15 +11692,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if current_step == 'custom_image_prompt':
 
-                await query.edit_message_text("Попробуйте еще раз. Опишите, что должно быть на картинке:")
+        await query.edit_message_text("Попробуйте еще раз. Опишите, что должно быть на картинке:")
 
             elif current_step == 'custom_image_style':
 
-                await query.edit_message_text("Попробуйте еще раз. Опишите стиль генерации изображения:")
+        await query.edit_message_text("Попробуйте еще раз. Опишите стиль генерации изображения:")
 
             elif current_step == 'simple_image_prompt':
 
-                await query.edit_message_text("Попробуйте еще раз. Опишите, что вы хотите видеть на картинке:")
+        await query.edit_message_text("Попробуйте еще раз. Опишите, что вы хотите видеть на картинке:")
 
         else:
 
@@ -11843,7 +11843,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data = {'step': 'custom_format'}
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "Введите название формата (например: Facebook Post, Twitter, LinkedIn и т.д.):",
 
@@ -11883,9 +11883,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат выбран: {selected_format}\nВыберите ориентацию изображения:',
 
@@ -11919,9 +11919,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат выбран: {selected_format}\nТеперь выбери стиль:',
 
@@ -11941,7 +11941,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data = {'step': 'custom_style', 'format': current_format}
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "Введите название стиля (например: Деловой, Креативный, Романтичный и т.д.):",
 
@@ -11979,9 +11979,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Стиль выбран: {selected_style}\nВыберите модель для генерации изображений:',
 
@@ -12065,9 +12065,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Выберите модель для генерации изображений:",
 
@@ -12081,7 +12081,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'custom_image_count'
 
-            await query.edit_message_text("Введите количество изображений:")
+    await query.edit_message_text("Введите количество изображений:")
 
             return
 
@@ -12260,9 +12260,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
 
@@ -12290,9 +12290,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
 
@@ -12317,9 +12317,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат: {state.get("format", "")}\nВыберите ориентацию изображения:',
 
@@ -12349,9 +12349,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат: {state.get("format", "")}\nВыбери стиль:',
 
@@ -12403,9 +12403,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Стиль генерации выбран: {selected_img_style}\nСколько изображений сгенерировать?",
 
@@ -12441,9 +12441,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 message_text,
 
@@ -12489,7 +12489,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['step'] = 'custom_image_count_simple'
 
-            await query.edit_message_text("Введите количество изображений:")
+    await query.edit_message_text("Введите количество изображений:")
 
             return
 
@@ -12519,7 +12519,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     
 
@@ -12557,7 +12557,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     
 
-                    await query.edit_message_text(
+            await query.edit_message_text(
 
                         f"Количество выбрано: {count} изображений\n\nТеперь опишите, что вы хотите видеть на картинке:\n\n{tips}",
 
@@ -12567,11 +12567,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 else:
 
-                    await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
+            await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
 
             except ValueError:
 
-                await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+        await query.edit_message_text("Пожалуйста, выберите корректное количество:")
 
     elif data == "custom_image_count_simple":
 
@@ -12653,9 +12653,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "Выберите модель для генерации изображений:",
 
@@ -12733,9 +12733,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
             # Сбрасываем состояние пользователя
 
@@ -12781,9 +12781,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
             context.user_data = {'step': STEP_FORMAT}
 
@@ -12795,7 +12795,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'custom_simple_image_count'
 
-            await query.edit_message_text("Введите количество изображений:")
+    await query.edit_message_text("Введите количество изображений:")
 
             return
 
@@ -12825,7 +12825,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     
 
@@ -12863,7 +12863,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     
 
-                    await query.edit_message_text(
+            await query.edit_message_text(
 
                         f"Количество выбрано: {count} изображений\n\nТеперь опишите, что вы хотите видеть на картинке:\n\n{tips}",
 
@@ -12873,11 +12873,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 else:
 
-                    await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
+            await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
 
             except ValueError:
 
-                await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+        await query.edit_message_text("Пожалуйста, выберите корректное количество:")
 
     elif data == "simple_image_prompt_back":
 
@@ -17543,7 +17543,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -20495,7 +20495,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -21288,7 +21288,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await send_text("❌ Ошибка: REPLICATE_API_TOKEN не установлен\n\nОбратитесь к администратору бота.", reply_markup=reply_markup)
 
@@ -21334,7 +21334,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     await send_text("❌ Недостаточно кредитов на Replicate\n\nПополните баланс на https://replicate.com/account/billing или обратитесь к администратору.", reply_markup=reply_markup)
 
@@ -21350,7 +21350,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     await send_text("❌ Ошибка авторизации Replicate API\n\nПроверьте токен или обратитесь к администратору.", reply_markup=reply_markup)
 
@@ -21366,7 +21366,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await send_text(f"❌ Ошибка при проверке Replicate API: {str(e)[:100]}...\n\nОбратитесь к администратору.", reply_markup=reply_markup)
 
@@ -21407,7 +21407,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             text = "❌ **У вас закончились бесплатные генерации и кредиты!**\n\n"
             text += f"🆓 Бесплатных генераций осталось: **{free_generations_left}**\n"
@@ -21761,7 +21761,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await send_text(msg, reply_markup=reply_markup)
 
@@ -22014,7 +22014,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                                 ]
 
-                                reply_markup = InlineKeyboardMarkup(keyboard)
+                        reply_markup = InlineKeyboardMarkup(keyboard)
 
                                 await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
 
@@ -22208,7 +22208,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
 
@@ -22222,7 +22222,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
 
@@ -22236,7 +22236,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка при генерации через Ideogram: {error_msg}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
 
@@ -22269,7 +22269,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                                 ]
 
-                                reply_markup = InlineKeyboardMarkup(keyboard)
+                        reply_markup = InlineKeyboardMarkup(keyboard)
 
                                 await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
 
@@ -22737,7 +22737,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
 
@@ -22751,7 +22751,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
 
@@ -22765,7 +22765,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             ]
 
-                            reply_markup = InlineKeyboardMarkup(keyboard)
+                    reply_markup = InlineKeyboardMarkup(keyboard)
 
                             await send_text(f"❌ Ошибка при генерации через Bytedance: {error_msg[:100]}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
 
@@ -24088,7 +24088,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not user_stats:
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "📊 Статистика пока недоступна.\n\nПопробуйте создать несколько изображений!",
 
@@ -24428,15 +24428,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if current_step == 'custom_image_prompt':
 
-                await query.edit_message_text("Попробуйте еще раз. Опишите, что должно быть на картинке:")
+        await query.edit_message_text("Попробуйте еще раз. Опишите, что должно быть на картинке:")
 
             elif current_step == 'custom_image_style':
 
-                await query.edit_message_text("Попробуйте еще раз. Опишите стиль генерации изображения:")
+        await query.edit_message_text("Попробуйте еще раз. Опишите стиль генерации изображения:")
 
             elif current_step == 'simple_image_prompt':
 
-                await query.edit_message_text("Попробуйте еще раз. Опишите, что вы хотите видеть на картинке:")
+        await query.edit_message_text("Попробуйте еще раз. Опишите, что вы хотите видеть на картинке:")
 
         else:
 
@@ -24579,7 +24579,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data = {'step': 'custom_format'}
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "Введите название формата (например: Facebook Post, Twitter, LinkedIn и т.д.):",
 
@@ -24619,9 +24619,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат выбран: {selected_format}\nВыберите ориентацию изображения:',
 
@@ -24655,9 +24655,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат выбран: {selected_format}\nТеперь выбери стиль:',
 
@@ -24677,7 +24677,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data = {'step': 'custom_style', 'format': current_format}
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "Введите название стиля (например: Деловой, Креативный, Романтичный и т.д.):",
 
@@ -24715,9 +24715,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Стиль выбран: {selected_style}\nВыберите модель для генерации изображений:',
 
@@ -24801,9 +24801,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Выберите модель для генерации изображений:",
 
@@ -24817,7 +24817,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'custom_image_count'
 
-            await query.edit_message_text("Введите количество изображений:")
+    await query.edit_message_text("Введите количество изображений:")
 
             return
 
@@ -24996,9 +24996,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
 
@@ -25026,9 +25026,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
 
@@ -25066,9 +25066,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат: {state.get("format", "")}\nВыберите ориентацию изображения:',
 
@@ -25098,9 +25098,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f'Формат: {state.get("format", "")}\nВыбери стиль:',
 
@@ -25152,9 +25152,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 f"Стиль генерации выбран: {selected_img_style}\nСколько изображений сгенерировать?",
 
@@ -25190,9 +25190,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 message_text,
 
@@ -25238,7 +25238,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['step'] = 'custom_image_count_simple'
 
-            await query.edit_message_text("Введите количество изображений:")
+    await query.edit_message_text("Введите количество изображений:")
 
             return
 
@@ -25268,7 +25268,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     
 
@@ -25306,7 +25306,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     
 
-                    await query.edit_message_text(
+            await query.edit_message_text(
 
                         f"Количество выбрано: {count} изображений\n\nТеперь опишите, что вы хотите видеть на картинке:\n\n{tips}",
 
@@ -25316,11 +25316,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 else:
 
-                    await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
+            await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
 
             except ValueError:
 
-                await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+        await query.edit_message_text("Пожалуйста, выберите корректное количество:")
 
     elif data == "custom_image_count_simple":
 
@@ -25402,9 +25402,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "Выберите модель для генерации изображений:",
 
@@ -25482,9 +25482,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
             # Сбрасываем состояние пользователя
 
@@ -25530,9 +25530,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
             context.user_data = {'step': STEP_FORMAT}
 
@@ -25544,7 +25544,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'custom_simple_image_count'
 
-            await query.edit_message_text("Введите количество изображений:")
+    await query.edit_message_text("Введите количество изображений:")
 
             return
 
@@ -25574,7 +25574,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     ]
 
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
                     
 
@@ -25612,7 +25612,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     
 
-                    await query.edit_message_text(
+            await query.edit_message_text(
 
                         f"Количество выбрано: {count} изображений\n\nТеперь опишите, что вы хотите видеть на картинке:\n\n{tips}",
 
@@ -25622,11 +25622,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 else:
 
-                    await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
+            await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
 
             except ValueError:
 
-                await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+        await query.edit_message_text("Пожалуйста, выберите корректное количество:")
 
     elif data == "simple_image_prompt_back":
 
@@ -25774,13 +25774,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 
 
-                await query.edit_message_text(f'Генерирую изображения для оставшихся {len(remaining_scenes)} сцен...')
+        await query.edit_message_text(f'Генерирую изображения для оставшихся {len(remaining_scenes)} сцен...')
 
                 asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=remaining_scenes))
 
             else:
 
-                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+        await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
 
         except Exception as e:
 
@@ -25790,9 +25790,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
     elif data == "generate_all_scenes":
 
@@ -25822,13 +25822,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 
 
-                await query.edit_message_text(f'Генерирую изображения для всех {len(all_scenes)} сцен...')
+        await query.edit_message_text(f'Генерирую изображения для всех {len(all_scenes)} сцен...')
 
                 asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=all_scenes))
 
             else:
 
-                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+        await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
 
         except Exception as e:
 
@@ -25838,9 +25838,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
     elif data == "generate_more":
 
@@ -25916,9 +25916,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
-                await query.edit_message_text(
+        await query.edit_message_text(
 
                     f"Выберите сцены для генерации:\n"
 
@@ -25934,11 +25934,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             else:
 
-                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+        await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
 
         except Exception as e:
 
-            await query.edit_message_text(f"Ошибка при создании меню: {e}")
+    await query.edit_message_text(f"Ошибка при создании меню: {e}")
 
     elif data.startswith('generate_scenes_count:'):
 
@@ -25980,13 +25980,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 
 
-                await query.edit_message_text(f'Генерирую изображения для {len(scenes_to_generate)} сцен...')
+        await query.edit_message_text(f'Генерирую изображения для {len(scenes_to_generate)} сцен...')
 
                 asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes_to_generate))
 
             else:
 
-                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+        await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
 
         except Exception as e:
 
@@ -25996,9 +25996,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+    await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
 
     elif data == "custom_scene_count":
 
@@ -26302,7 +26302,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if state.get('video_type') == 'text_to_video':
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "🎭 **Создание видео по тексту**\n\n"
 
@@ -26332,7 +26332,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['step'] = 'waiting_for_image'
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "🖼️ **Создание видео из изображения**\n\n"
 
@@ -26512,7 +26512,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['enhancement_attempt'] = enhancement_attempt  # Обновляем счетчик в состоянии
 
-            await query.edit_message_text(
+    await query.edit_message_text(
 
                 "🔄 **Достигнут лимит попыток улучшения**\n\n"
 
@@ -26616,7 +26616,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             
 
@@ -26805,7 +26805,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text(
 
@@ -26833,7 +26833,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text(
 
@@ -26869,7 +26869,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 await update.message.reply_text(
 
@@ -26909,7 +26909,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 ]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 
 
@@ -27065,7 +27065,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text("Описание изображения содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
 
@@ -27097,7 +27097,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 ]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 
 
@@ -27167,7 +27167,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text("Описание стиля содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
 
@@ -27213,7 +27213,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ])
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text(
 
@@ -27251,7 +27251,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text(
 
@@ -27283,7 +27283,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 ]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 
 
@@ -27359,7 +27359,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 ]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 # Добавляем подсказки для "Изображения"
 
@@ -27427,7 +27427,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text("Описание изображения содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
 
@@ -27467,7 +27467,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text("Описание видео содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
 
@@ -27621,7 +27621,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 ]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 
 
@@ -27709,7 +27709,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             await update.message.reply_text(
 
@@ -28753,7 +28753,7 @@ async def generate_video(update, context, state):
 
                 ]
 
-                reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
                 
 
@@ -29869,7 +29869,7 @@ async def generate_video(update, context, state):
 
             ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
             
 
