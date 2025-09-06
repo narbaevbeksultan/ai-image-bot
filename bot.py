@@ -11871,9 +11871,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -11907,9 +11907,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -11965,11 +11965,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['step'] = 'image_gen_model'
 
-    keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -12051,11 +12051,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Кнопки выбора модели генерации
 
-    keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -12246,11 +12246,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'image_gen_style'
 
-    keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+            keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
             keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -12276,11 +12276,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'image_gen_style'
 
-    keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+            keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
             keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -12311,7 +12311,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("�� Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
                 [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
             ]
-    keyboard.extend([
+            keyboard.extend([
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
                 [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],  # ← ИЗМЕНЕНО
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
@@ -12339,7 +12339,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -12393,7 +12393,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -12429,7 +12429,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
             keyboard = [
 
@@ -12641,9 +12641,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['step'] = 'image_gen_model'
 
-    keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -24607,9 +24607,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -24643,9 +24643,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -24701,11 +24701,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['step'] = 'image_gen_model'
 
-    keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -24787,11 +24787,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Кнопки выбора модели генерации
 
-    keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -24982,11 +24982,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'image_gen_style'
 
-    keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+            keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
             keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -25012,11 +25012,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             context.user_data['step'] = 'image_gen_style'
 
-    keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+            keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
             keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -25056,7 +25056,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -25088,7 +25088,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -25142,7 +25142,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -25178,7 +25178,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
             keyboard = [
 
@@ -25390,9 +25390,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['step'] = 'image_gen_model'
 
-    keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -25908,7 +25908,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Навигация
 
-        keyboard.extend([
+                keyboard.extend([
 
                     [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")],
 
@@ -26606,7 +26606,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -26867,7 +26867,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 # Кнопки выбора модели генерации
 
-        keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+                keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
 
                 reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -27203,7 +27203,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             ]
 
-    keyboard.extend([
+            keyboard.extend([
 
                 [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
 
@@ -27239,7 +27239,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             
 
-    # Добавляем кнопки навигации
+            # Добавляем кнопки навигации
 
             keyboard = [
 
