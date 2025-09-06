@@ -4864,7 +4864,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
     await context.bot.send_message(
                 chat_id=chat_id,
@@ -7818,7 +7818,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
     await context.bot.send_message(
                 chat_id=chat_id,
@@ -8730,7 +8730,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             text = "❌ **У вас закончились бесплатные генерации и кредиты!**\n\n"
             text += f"🆓 Бесплатных генераций осталось: **{free_generations_left}**\n"
@@ -17543,7 +17543,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
     await context.bot.send_message(
                 chat_id=chat_id,
@@ -20495,7 +20495,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
     await context.bot.send_message(
                 chat_id=chat_id,
@@ -21407,7 +21407,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
             
             text = "❌ **У вас закончились бесплатные генерации и кредиты!**\n\n"
             text += f"🆓 Бесплатных генераций осталось: **{free_generations_left}**\n"
