@@ -22686,7 +22686,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     output = await asyncio.wait_for(
 
 
-                        loop.run_in_executor(None, lambda: replicate.run(
+                        loop.run_in_executor(THREAD_POOL, lambda: replicate.run(
 
 
                             "google/imagen-4-ultra",
@@ -28572,7 +28572,7 @@ async def generate_video(update, context, state):
 
             loop = asyncio.get_event_loop()
             test_output = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: replicate.run(
+                loop.run_in_executor(THREAD_POOL, lambda: replicate.run(
                     "replicate/hello-world",
                     input={"text": "test"}
                 )),
@@ -28739,7 +28739,7 @@ async def generate_video(update, context, state):
 
             loop = asyncio.get_event_loop()
             output = await asyncio.wait_for(
-                loop.run_in_executor(None, lambda: replicate.run(
+                loop.run_in_executor(THREAD_POOL, lambda: replicate.run(
                     "bytedance/seedance-1-pro",
                     input=input_data
                 )),
@@ -28771,7 +28771,7 @@ async def generate_video(update, context, state):
             try:
 
                 output = await asyncio.wait_for(
-                    loop.run_in_executor(None, lambda: replicate.run(
+                    loop.run_in_executor(THREAD_POOL, lambda: replicate.run(
                         "bytedance/seedance-1-pro",
                         input=minimal_input
                     )),
