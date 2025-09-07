@@ -5016,37 +5016,13 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         ]
                         reply_markup = InlineKeyboardMarkup(keyboard)
                         await send_text(f"❌ Ошибка загрузки изображения: {response.status}", reply_markup=reply_markup)
-                    return
+                    return None
                 
                 image_data = await response.read()
 
-            if response.status_code != 200:
+            logging.info(f"Изображение успешно загружено, размер: {len(image_data)} байт")
 
-                logging.error(f"Ошибка загрузки изображения: {response.status_code}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text=f"❌ Не удалось загрузить исходное изображение (статус: {response.status_code})",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            logging.info(f"Изображение успешно загружено, размер: {len(response.content)} байт")
-
-        except requests.exceptions.Timeout:
+        except asyncio.TimeoutError:
 
             logging.error("Таймаут при загрузке исходного изображения")
 
@@ -5487,7 +5463,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         
 
-            except requests.exceptions.Timeout:
+            except asyncio.TimeoutError:
 
                 logging.error("Таймаут при загрузке отредактированного изображения")
 
@@ -7965,37 +7941,13 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         ]
                         reply_markup = InlineKeyboardMarkup(keyboard)
                         await send_text(f"❌ Ошибка загрузки изображения: {response.status}", reply_markup=reply_markup)
-                    return
+                    return None
                 
                 image_data = await response.read()
 
-            if response.status_code != 200:
+            logging.info(f"Изображение успешно загружено, размер: {len(image_data)} байт")
 
-                logging.error(f"Ошибка загрузки изображения: {response.status_code}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text=f"❌ Не удалось загрузить исходное изображение (статус: {response.status_code})",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            logging.info(f"Изображение успешно загружено, размер: {len(response.content)} байт")
-
-        except requests.exceptions.Timeout:
+        except asyncio.TimeoutError:
 
             logging.error("Таймаут при загрузке исходного изображения")
 
@@ -8434,7 +8386,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         
 
-            except requests.exceptions.Timeout:
+            except asyncio.TimeoutError:
 
                 logging.error("Таймаут при загрузке отредактированного изображения")
 
@@ -17977,37 +17929,13 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         ]
                         reply_markup = InlineKeyboardMarkup(keyboard)
                         await send_text(f"❌ Ошибка загрузки изображения: {response.status}", reply_markup=reply_markup)
-                    return
+                    return None
                 
                 image_data = await response.read()
 
-            if response.status_code != 200:
+            logging.info(f"Изображение успешно загружено, размер: {len(image_data)} байт")
 
-                logging.error(f"Ошибка загрузки изображения: {response.status_code}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text=f"❌ Не удалось загрузить исходное изображение (статус: {response.status_code})",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            logging.info(f"Изображение успешно загружено, размер: {len(response.content)} байт")
-
-        except requests.exceptions.Timeout:
+        except asyncio.TimeoutError:
 
             logging.error("Таймаут при загрузке исходного изображения")
 
@@ -18446,7 +18374,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         
 
-            except requests.exceptions.Timeout:
+            except asyncio.TimeoutError:
 
                 logging.error("Таймаут при загрузке отредактированного изображения")
 
@@ -20924,37 +20852,13 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         ]
                         reply_markup = InlineKeyboardMarkup(keyboard)
                         await send_text(f"❌ Ошибка загрузки изображения: {response.status}", reply_markup=reply_markup)
-                    return
+                    return None
                 
                 image_data = await response.read()
 
-            if response.status_code != 200:
+            logging.info(f"Изображение успешно загружено, размер: {len(image_data)} байт")
 
-                logging.error(f"Ошибка загрузки изображения: {response.status_code}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text=f"❌ Не удалось загрузить исходное изображение (статус: {response.status_code})",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            logging.info(f"Изображение успешно загружено, размер: {len(response.content)} байт")
-
-        except requests.exceptions.Timeout:
+        except asyncio.TimeoutError:
 
             logging.error("Таймаут при загрузке исходного изображения")
 
@@ -21393,7 +21297,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                         
 
-            except requests.exceptions.Timeout:
+            except asyncio.TimeoutError:
 
                 logging.error("Таймаут при загрузке отредактированного изображения")
 
