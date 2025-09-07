@@ -824,21 +824,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
 
-    analytics_db.add_user(
+    # analytics_db.add_user(
 
-        user_id=user.id,
+    #     user_id=user.id,
 
-        username=user.username,
+    #     username=user.username,
 
-        first_name=user.first_name,
+    #     first_name=user.first_name,
 
-        last_name=user.last_name
+    #     last_name=user.last_name
 
-    )
+    # )
 
-    analytics_db.update_user_activity(user.id)
+    # analytics_db.update_user_activity(user.id)
 
-    analytics_db.log_action(user.id, "start_command")
+    # analytics_db.log_action(user.id, "start_command")
 
     
 
@@ -924,15 +924,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    # limits = analytics_db.get_user_limits(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    # credits = analytics_db.get_user_credits(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    # free_generations_left = analytics_db.get_free_generations_left(user_id)
 
     
 
@@ -1697,15 +1697,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    # analytics_db.update_user_activity(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    # analytics_db.log_action(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    # user_stats = analytics_db.get_user_stats(user_id)
 
     
 
