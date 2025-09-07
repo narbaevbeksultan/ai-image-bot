@@ -11860,9 +11860,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Обработка выбора ориентации для видео
         orientation = data.split(":", 1)[1]
         USER_STATE[user_id]['video_orientation'] = orientation
-        USER_STATE[user_id]['step'] = STEP_VIDEO_GENERATION
+        USER_STATE[user_id]['step'] = STEP_VIDEO_QUALITY
         
         keyboard = [
+            [InlineKeyboardButton("📺 480p (37 кредитов)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("📺 720p (71 кредит)", callback_data="video_quality:720p")],
+            [InlineKeyboardButton("📺 1080p (172 кредита)", callback_data="video_quality:1080p")],
             [InlineKeyboardButton("🔙 Назад", callback_data="create_video_from_text")],
             [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
         ]
@@ -11879,6 +11882,131 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 Выбрана ориентация: {orientation_text}
 
+Теперь выберите качество видео:
+
+📺 **480p** - 37 кредитов (базовое качество)
+📺 **720p** - 71 кредит (хорошее качество)  
+📺 **1080p** - 172 кредита (высокое качество)
+
+💡 **Рекомендации:**
+• 480p - для быстрого просмотра
+• 720p - оптимальное соотношение цена/качество
+• 1080p - для профессионального использования"""
+        
+        await query.edit_message_text(help_text, reply_markup=reply_markup)
+
+    elif data.startswith("video_quality:"):
+        # Обработка выбора качества для видео
+        quality = data.split(":", 1)[1]
+        USER_STATE[user_id]['video_quality'] = quality
+        USER_STATE[user_id]['step'] = STEP_VIDEO_DURATION
+        
+        # Рассчитываем стоимость для каждого варианта длительности
+        cost_5s = 0
+        cost_10s = 0
+        if quality == "480p":
+            cost_5s = 37
+            cost_10s = 71
+        elif quality == "720p":
+            cost_5s = 71
+            cost_10s = 138
+        elif quality == "1080p":
+            cost_5s = 172
+            cost_10s = 342
+        
+        keyboard = [
+            [InlineKeyboardButton(f"⏱️ 5 секунд ({cost_5s} кредитов)", callback_data="video_duration:5")],
+            [InlineKeyboardButton(f"⏱️ 10 секунд ({cost_10s} кредитов)", callback_data="video_duration:10")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_orientation_back")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        quality_text = {
+            '480p': '📺 480p (37 кредитов)',
+            '720p': '📺 720p (71 кредит)',
+            '1080p': '📺 1080p (172 кредита)'
+        }.get(quality, quality)
+        
+        orientation = USER_STATE[user_id].get('video_orientation', 'horizontal')
+        orientation_text = {
+            'vertical': '📱 Вертикальное (9:16)',
+            'horizontal': '🖥️ Горизонтальное (16:9)', 
+            'square': '⬜ Квадратное (1:1)'
+        }.get(orientation, orientation)
+        
+        help_text = f"""🎬 **Создание видео из текста**
+
+Выбрано:
+• Ориентация: {orientation_text}
+• Качество: {quality_text}
+
+Теперь выберите длительность видео:
+
+⏱️ **5 секунд** - {cost_5s} кредитов (стандартная длительность)
+⏱️ **10 секунд** - {cost_10s} кредитов (удвоенная длительность)
+
+💡 **Рекомендации:**
+• 5 сек - для коротких сцен и демонстраций
+• 10 сек - для более сложных сценариев"""
+        
+        await query.edit_message_text(help_text, reply_markup=reply_markup)
+
+    elif data.startswith("video_duration:"):
+        # Обработка выбора длительности для видео
+        duration = int(data.split(":", 1)[1])
+        USER_STATE[user_id]['video_duration'] = duration
+        USER_STATE[user_id]['step'] = STEP_VIDEO_GENERATION
+        
+        keyboard = [
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_quality_back")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        duration_text = f"⏱️ {duration} секунд"
+        
+        quality = USER_STATE[user_id].get('video_quality', '480p')
+        quality_text = {
+            '480p': '📺 480p',
+            '720p': '📺 720p',
+            '1080p': '📺 1080p'
+        }.get(quality, quality)
+        
+        orientation = USER_STATE[user_id].get('video_orientation', 'horizontal')
+        orientation_text = {
+            'vertical': '📱 Вертикальное (9:16)',
+            'horizontal': '🖥️ Горизонтальное (16:9)', 
+            'square': '⬜ Квадратное (1:1)'
+        }.get(orientation, orientation)
+        
+        # Рассчитываем стоимость
+        video_cost = 0
+        if duration == 5:
+            if quality == "480p":
+                video_cost = 37
+            elif quality == "720p":
+                video_cost = 71
+            elif quality == "1080p":
+                video_cost = 172
+        elif duration == 10:
+            if quality == "480p":
+                video_cost = 71
+            elif quality == "720p":
+                video_cost = 138
+            elif quality == "1080p":
+                video_cost = 342
+        
+        help_text = f"""🎬 **Создание видео из текста**
+
+Выбрано:
+• Ориентация: {orientation_text}
+• Качество: {quality_text}
+• Длительность: {duration_text}
+• Стоимость: {video_cost} кредитов
+
 Теперь опишите сценарий для видео. Например:
 • "Кот играет с мячиком в саду"
 • "Девушка танцует под музыку"
@@ -11887,9 +12015,74 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 💡 **Советы:**
 • Будьте конкретными в описании
 • Укажите основные объекты и действия
-• Опишите настроение или стиль
+• Опишите настроение или стиль"""
+        
+        await query.edit_message_text(help_text, reply_markup=reply_markup)
 
-⚠️ **Стоимость:** от 37 кредитов за 5-секундное видео"""
+    elif data == "video_orientation_back":
+        # Возврат к выбору ориентации
+        USER_STATE[user_id]['step'] = 'video_orientation'
+        
+        keyboard = [
+            [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="video_orientation:vertical")],
+            [InlineKeyboardButton("🖥️ Горизонтальное (16:9)", callback_data="video_orientation:horizontal")],
+            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="video_orientation:square")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="create_video_from_text")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        help_text = """🎬 **Создание видео из текста**
+
+Выберите ориентацию видео:
+
+📱 **Вертикальное (9:16)** - для TikTok, Instagram Reels, Stories
+🖥️ **Горизонтальное (16:9)** - для YouTube, обычные видео
+⬜ **Квадратное (1:1)** - для Instagram постов
+
+💡 **Рекомендации:**
+• Вертикальное - для мобильных платформ
+• Горизонтальное - для веб-платформ
+• Квадратное - универсальный формат"""
+        
+        await query.edit_message_text(help_text, reply_markup=reply_markup)
+
+    elif data == "video_quality_back":
+        # Возврат к выбору качества
+        orientation = USER_STATE[user_id].get('video_orientation', 'horizontal')
+        USER_STATE[user_id]['step'] = STEP_VIDEO_QUALITY
+        
+        keyboard = [
+            [InlineKeyboardButton("📺 480p (37 кредитов)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("📺 720p (71 кредит)", callback_data="video_quality:720p")],
+            [InlineKeyboardButton("📺 1080p (172 кредита)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_orientation_back")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        orientation_text = {
+            'vertical': '📱 Вертикальное (9:16)',
+            'horizontal': '🖥️ Горизонтальное (16:9)', 
+            'square': '⬜ Квадратное (1:1)'
+        }.get(orientation, orientation)
+        
+        help_text = f"""🎬 **Создание видео из текста**
+
+Выбрана ориентация: {orientation_text}
+
+Теперь выберите качество видео:
+
+📺 **480p** - 37 кредитов (базовое качество)
+📺 **720p** - 71 кредит (хорошее качество)  
+📺 **1080p** - 172 кредита (высокое качество)
+
+💡 **Рекомендации:**
+• 480p - для быстрого просмотра
+• 720p - оптимальное соотношение цена/качество
+• 1080p - для профессионального использования"""
         
         await query.edit_message_text(help_text, reply_markup=reply_markup)
 
