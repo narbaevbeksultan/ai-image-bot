@@ -1445,7 +1445,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             output = await replicate_run_async(
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 {"prompt": "test"},
                 timeout=30
             )
@@ -1506,7 +1506,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loop = asyncio.get_event_loop()
 
             output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+                    "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
                 timeout=30
             )
@@ -1639,7 +1639,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         output = await replicate_run_async(
-            "ideogram-ai/ideogram-v3-turbo",
+                "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
@@ -2376,8 +2376,8 @@ async def extract_scenes_from_script(script_text, format_type=None):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         messages = [
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-            {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
         ]
         scenes_text = await openai_chat_completion_async(messages, "gpt-4o-mini", 700, 0.5)
 
@@ -3716,7 +3716,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             output = await replicate_run_async(
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 {"prompt": "test"},
                 timeout=30
             )
@@ -3777,7 +3777,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loop = asyncio.get_event_loop()
 
             output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+                    "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
                 timeout=30
             )
@@ -3910,7 +3910,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         output = await replicate_run_async(
-            "ideogram-ai/ideogram-v3-turbo",
+                "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
@@ -4628,8 +4628,8 @@ async def extract_scenes_from_script(script_text, format_type=None):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         messages = [
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-            {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
         ]
         scenes_text = await openai_chat_completion_async(messages, "gpt-4o-mini", 700, 0.5)
 
@@ -5130,14 +5130,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "black-forest-labs/flux-kontext-pro",
+                            "black-forest-labs/flux-kontext-pro",
                         {
-                            "input_image": image_file,
-                            "prompt": edit_prompt,
-                            "aspect_ratio": "match_input_image",
-                            "output_format": "jpg",
-                            "safety_tolerance": 2,
-                            "prompt_upsampling": False
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
                         },
                         timeout=60
                     )
@@ -6666,7 +6666,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             output = await replicate_run_async(
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 {"prompt": "test"},
                 timeout=30
             )
@@ -6727,7 +6727,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loop = asyncio.get_event_loop()
 
             output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+                    "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
                 timeout=30
             )
@@ -6860,7 +6860,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         output = await replicate_run_async(
-            "ideogram-ai/ideogram-v3-turbo",
+                "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
@@ -7578,8 +7578,8 @@ async def extract_scenes_from_script(script_text, format_type=None):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         messages = [
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-            {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
         ]
         scenes_text = await openai_chat_completion_async(messages, "gpt-4o-mini", 700, 0.5)
 
@@ -8080,14 +8080,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "black-forest-labs/flux-kontext-pro",
+                            "black-forest-labs/flux-kontext-pro",
                         {
-                            "input_image": image_file,
-                            "prompt": edit_prompt,
-                            "aspect_ratio": "match_input_image",
-                            "output_format": "jpg",
-                            "safety_tolerance": 2,
-                            "prompt_upsampling": False
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
                         },
                         timeout=60
                     )
@@ -8684,7 +8684,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             # Простая проверка доступности API
             loop = asyncio.get_event_loop()
             test_response = await replicate_run_async(
-                "replicate/hello-world",
+                    "replicate/hello-world",
                 {"text": "test"},
                 timeout=30
             )
@@ -9021,8 +9021,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Используем асинхронную функцию для предотвращения блокировки
                     messages = [
-                        {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
-                        {"role": "user", "content": image_prompts}
+                                {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
+                                {"role": "user", "content": image_prompts}
                     ]
                     raw_prompts = await openai_chat_completion_async(messages, "gpt-4o-mini", 800, 0.7)
 
@@ -9392,7 +9392,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         try:
 
                             output = await replicate_run_async(
-                                "ideogram-ai/ideogram-v3-turbo",
+                                    "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
                             )
@@ -9406,7 +9406,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             try:
 
                                 output = await replicate_run_async(
-                                    "ideogram-ai/ideogram-v2",
+                                        "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
                                 )
@@ -9627,10 +9627,10 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         
 
                     output = await replicate_run_async(
-                        "bytedance/seedream-3",
+                                "bytedance/seedream-3",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=180
-                    )
+                        )
                         
 
                         
@@ -9963,7 +9963,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     loop = asyncio.get_event_loop()
 
                     output = await replicate_run_async(
-                        "google/imagen-4-ultra",
+                            "google/imagen-4-ultra",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -10424,7 +10424,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 await asyncio.sleep(retry_delay)
                             
                             output = await replicate_run_async(
-                                "luma/photon",
+                                    "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
                             )
@@ -10640,7 +10640,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "bria/image-3.2",
+                            "bria/image-3.2",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -10695,7 +10695,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
 
                     output = await replicate_run_async(
-                        "recraft-ai/recraft-v3-svg",
+                            "recraft-ai/recraft-v3-svg",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -10925,7 +10925,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "ideogram-ai/ideogram-v3-turbo",
+                            "ideogram-ai/ideogram-v3-turbo",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -14047,7 +14047,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             output = await replicate_run_async(
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 {"prompt": "test"},
                 timeout=30
             )
@@ -14108,7 +14108,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loop = asyncio.get_event_loop()
 
             output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+                    "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
                 timeout=30
             )
@@ -14241,7 +14241,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         output = await replicate_run_async(
-            "ideogram-ai/ideogram-v3-turbo",
+                "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
@@ -14959,8 +14959,8 @@ async def extract_scenes_from_script(script_text, format_type=None):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         messages = [
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-            {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
         ]
         scenes_text = await openai_chat_completion_async(messages, "gpt-4o-mini", 700, 0.5)
 
@@ -16299,7 +16299,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             output = await replicate_run_async(
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 {"prompt": "test"},
                 timeout=30
             )
@@ -16360,7 +16360,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loop = asyncio.get_event_loop()
 
             output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+                    "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
                 timeout=30
             )
@@ -16493,7 +16493,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         output = await replicate_run_async(
-            "ideogram-ai/ideogram-v3-turbo",
+                "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
@@ -17211,8 +17211,8 @@ async def extract_scenes_from_script(script_text, format_type=None):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         messages = [
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-            {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
         ]
         scenes_text = await openai_chat_completion_async(messages, "gpt-4o-mini", 700, 0.5)
 
@@ -17713,14 +17713,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "black-forest-labs/flux-kontext-pro",
+                            "black-forest-labs/flux-kontext-pro",
                         {
-                            "input_image": image_file,
-                            "prompt": edit_prompt,
-                            "aspect_ratio": "match_input_image",
-                            "output_format": "jpg",
-                            "safety_tolerance": 2,
-                            "prompt_upsampling": False
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
                         },
                         timeout=60
                     )
@@ -19247,7 +19247,7 @@ async def check_replicate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             output = await replicate_run_async(
-                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+                    "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 {"prompt": "test"},
                 timeout=30
             )
@@ -19308,7 +19308,7 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loop = asyncio.get_event_loop()
 
             output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+                    "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
                 timeout=30
             )
@@ -19441,7 +19441,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         output = await replicate_run_async(
-            "ideogram-ai/ideogram-v3-turbo",
+                "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
@@ -20159,8 +20159,8 @@ async def extract_scenes_from_script(script_text, format_type=None):
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         messages = [
-            {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
-            {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Ты помощник по созданию визуальных промптов для генерации изображений. НЕ добавляй людей в промпты, если они не упомянуты в сценарии."},
+                    {"role": "user", "content": prompt}
         ]
         scenes_text = await openai_chat_completion_async(messages, "gpt-4o-mini", 700, 0.5)
 
@@ -20661,14 +20661,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "black-forest-labs/flux-kontext-pro",
+                            "black-forest-labs/flux-kontext-pro",
                         {
-                            "input_image": image_file,
-                            "prompt": edit_prompt,
-                            "aspect_ratio": "match_input_image",
-                            "output_format": "jpg",
-                            "safety_tolerance": 2,
-                            "prompt_upsampling": False
+                                "input_image": image_file,
+                                "prompt": edit_prompt,
+                                "aspect_ratio": "match_input_image",
+                                "output_format": "jpg",
+                                "safety_tolerance": 2,
+                                "prompt_upsampling": False
                         },
                         timeout=60
                     )
@@ -21265,7 +21265,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             # Простая проверка доступности API
             loop = asyncio.get_event_loop()
             test_response = await replicate_run_async(
-                "replicate/hello-world",
+                    "replicate/hello-world",
                 {"text": "test"},
                 timeout=30
             )
@@ -21602,8 +21602,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     # Используем асинхронную функцию для предотвращения блокировки
                     messages = [
-                        {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
-                        {"role": "user", "content": image_prompts}
+                                {"role": "system", "content": "Ты эксперт по созданию промптов для генерации изображений. Создавай детальные, профессиональные промпты на английском языке, которые точно описывают тему и включают конкретные детали. Избегай общих фраз, используй специфичные элементы. НЕ добавляй людей в промпты, если они не упомянуты в теме."},
+                                {"role": "user", "content": image_prompts}
                     ]
                     raw_prompts = await openai_chat_completion_async(messages, "gpt-4o-mini", 800, 0.7)
 
@@ -21973,7 +21973,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         try:
 
                             output = await replicate_run_async(
-                                "ideogram-ai/ideogram-v3-turbo",
+                                    "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
                             )
@@ -21987,7 +21987,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             try:
 
                                 output = await replicate_run_async(
-                                    "ideogram-ai/ideogram-v2",
+                                        "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
                                 )
@@ -22208,10 +22208,10 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         
 
                     output = await replicate_run_async(
-                        "bytedance/seedream-3",
+                                "bytedance/seedream-3",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=180
-                    )
+                        )
                         
                       
                         
@@ -23094,7 +23094,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 await asyncio.sleep(retry_delay)
                             
                             output = await replicate_run_async(
-                                "luma/photon",
+                                    "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
                             )
@@ -23312,7 +23312,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "bria/image-3.2",
+                            "bria/image-3.2",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -23367,7 +23367,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
 
                     output = await replicate_run_async(
-                        "recraft-ai/recraft-v3-svg",
+                            "recraft-ai/recraft-v3-svg",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -23597,7 +23597,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
                     output = await replicate_run_async(
-                        "ideogram-ai/ideogram-v3-turbo",
+                            "ideogram-ai/ideogram-v3-turbo",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -26629,8 +26629,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             messages = [
-                {"role": "system", "content": "Ты эксперт по созданию уникального контента для социальных сетей. Твоя задача - создавать качественный, нешаблонный контент, который точно описывает тему и привлекает внимание. Избегай общих фраз, используй конкретные детали."},
-                {"role": "user", "content": content_prompt}
+                        {"role": "system", "content": "Ты эксперт по созданию уникального контента для социальных сетей. Твоя задача - создавать качественный, нешаблонный контент, который точно описывает тему и привлекает внимание. Избегай общих фраз, используй конкретные детали."},
+                        {"role": "user", "content": content_prompt}
             ]
             gpt_reply = await openai_chat_completion_async(messages, "gpt-4o-mini", 1000, 0.8)
 
@@ -27829,8 +27829,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             messages = [
-                {"role": "system", "content": "Ты - эксперт по редактированию изображений. Переведи запрос на редактирование с русского на английский и улучши его для FLUX.1 Kontext Pro. Используй конкретные, детальные инструкции. Сохрани точный смысл. Отвечай только улучшенным переводом."},
-                {"role": "user", "content": f"Переведи и улучши для редактирования изображения: {edit_prompt}"}
+                        {"role": "system", "content": "Ты - эксперт по редактированию изображений. Переведи запрос на редактирование с русского на английский и улучши его для FLUX.1 Kontext Pro. Используй конкретные, детальные инструкции. Сохрани точный смысл. Отвечай только улучшенным переводом."},
+                        {"role": "user", "content": f"Переведи и улучши для редактирования изображения: {edit_prompt}"}
             ]
             english_prompt = await openai_chat_completion_async(messages, "gpt-4o-mini", 200, 0.1)
 
@@ -27905,8 +27905,8 @@ async def show_prompt_review(update, context, state):
                 # Используем асинхронный вызов для предотвращения блокировки
                 loop = asyncio.get_event_loop()
                 messages = [
-                    {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
-                    {"role": "user", "content": f"Translate this prompt: {video_prompt}"}
+                            {"role": "system", "content": "Translate the user's request from Russian to English. Keep the exact meaning and do not add extra details. If the original is short, keep it short."},
+                            {"role": "user", "content": f"Translate this prompt: {video_prompt}"}
                 ]
                 english_prompt = await openai_chat_completion_async(messages, "gpt-4o-mini", 150, 0.1)
 
@@ -31156,7 +31156,7 @@ def main():
         print("🔄 Автоматическая проверка платежей запущена (каждые 45 секунд)")
 
         try:
-            app.run_polling()
+        app.run_polling()
         except KeyboardInterrupt:
             # Закрываем HTTP сессию при завершении
             asyncio.run(close_http_session())
