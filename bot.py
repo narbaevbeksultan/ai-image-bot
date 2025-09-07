@@ -1504,7 +1504,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
             loop = asyncio.get_event_loop()
-
             output = await replicate_run_async(
                     "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
@@ -1638,7 +1637,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-        output = await replicate_run_async(
+            output = await replicate_run_async(
                 "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
@@ -3775,7 +3774,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
             loop = asyncio.get_event_loop()
-
             output = await replicate_run_async(
                     "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
@@ -3909,7 +3907,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-        output = await replicate_run_async(
+            output = await replicate_run_async(
                 "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
@@ -5129,7 +5127,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 with open(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "black-forest-labs/flux-kontext-pro",
                         {
                                 "input_image": image_file,
@@ -6725,7 +6723,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
             loop = asyncio.get_event_loop()
-
             output = await replicate_run_async(
                     "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
@@ -6859,7 +6856,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-        output = await replicate_run_async(
+            output = await replicate_run_async(
                 "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
@@ -8079,7 +8076,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 with open(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "black-forest-labs/flux-kontext-pro",
                         {
                                 "input_image": image_file,
@@ -9390,8 +9387,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         # Используем Ideogram v3 Turbo (более стабильная версия)
 
                         try:
-
-                                output = await replicate_run_async(
+            output = await replicate_run_async(
                                     "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
@@ -9404,8 +9400,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             logging.warning(f"Ideogram v3 Turbo недоступен: {e}, пробуем v2...")
 
                             try:
-
-                                    output = await replicate_run_async(
+            output = await replicate_run_async(
                                         "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
@@ -9623,10 +9618,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         # Запускаем генерацию с увеличенным таймаутом для 2K качества
 
                         loop = asyncio.get_event_loop()
-
-                        
-
-                        output = await replicate_run_async(
+            output = await replicate_run_async(
                                 "bytedance/seedream-3",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=180
@@ -9961,8 +9953,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Генерация через Google Imagen 4 на Replicate (асинхронно)
 
                     loop = asyncio.get_event_loop()
-
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                         "google/imagen-4-ultra",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -10422,8 +10413,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 if send_text:
                                     await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
                                 await asyncio.sleep(retry_delay)
-                            
-                                output = await replicate_run_async(
+            output = await replicate_run_async(
                                     "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
@@ -10639,7 +10629,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Генерация через Bria на Replicate
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "bria/image-3.2",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -10692,10 +10682,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Генерация через Recraft AI на Replicate
 
                     loop = asyncio.get_event_loop()
-
-
-                        output = await replicate_run_async(
-                            "recraft-ai/recraft-v3-svg",
+            output = await replicate_run_async(
+                        "recraft-ai/recraft-v3-svg",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
@@ -10924,7 +10912,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Fallback на Ideogram если модель не поддерживается
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "ideogram-ai/ideogram-v3-turbo",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -14106,7 +14094,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
             loop = asyncio.get_event_loop()
-
             output = await replicate_run_async(
                     "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
@@ -14240,7 +14227,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-        output = await replicate_run_async(
+            output = await replicate_run_async(
                 "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
@@ -16358,7 +16345,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
             loop = asyncio.get_event_loop()
-
             output = await replicate_run_async(
                     "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
@@ -16492,7 +16478,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-        output = await replicate_run_async(
+            output = await replicate_run_async(
                 "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
@@ -17712,7 +17698,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 with open(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "black-forest-labs/flux-kontext-pro",
                         {
                                 "input_image": image_file,
@@ -19306,7 +19292,6 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
             loop = asyncio.get_event_loop()
-
             output = await replicate_run_async(
                     "ideogram-ai/ideogram-v3-turbo",
                 {"prompt": "simple test image"},
@@ -19440,7 +19425,7 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-        output = await replicate_run_async(
+            output = await replicate_run_async(
                 "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
@@ -20660,7 +20645,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 with open(temp_file_path, "rb") as image_file:
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "black-forest-labs/flux-kontext-pro",
                         {
                                 "input_image": image_file,
@@ -21971,8 +21956,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         # Используем Ideogram v3 Turbo (более стабильная версия)
 
                         try:
-
-                                output = await replicate_run_async(
+            output = await replicate_run_async(
                                     "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
@@ -21985,8 +21969,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             logging.warning(f"Ideogram v3 Turbo недоступен: {e}, пробуем v2...")
 
                             try:
-
-                                    output = await replicate_run_async(
+            output = await replicate_run_async(
                                         "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
@@ -22204,10 +22187,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         # Запускаем генерацию с увеличенным таймаутом для 2K качества
 
                         loop = asyncio.get_event_loop()
-
-                        
-
-                        output = await replicate_run_async(
+            output = await replicate_run_async(
                                 "bytedance/seedream-3",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=180
@@ -23092,8 +23072,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 if send_text:
                                     await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
                                 await asyncio.sleep(retry_delay)
-                            
-                                output = await replicate_run_async(
+            output = await replicate_run_async(
                                     "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
@@ -23311,7 +23290,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Генерация через Bria на Replicate
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "bria/image-3.2",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -23364,9 +23343,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Генерация через Recraft AI на Replicate
 
                     loop = asyncio.get_event_loop()
-
-
-                        output = await replicate_run_async(
+            output = await replicate_run_async(
                             "recraft-ai/recraft-v3-svg",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -23596,7 +23573,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     # Fallback на Ideogram если модель не поддерживается
                     # Используем асинхронный вызов для предотвращения блокировки
                     loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
+            output = await replicate_run_async(
                             "ideogram-ai/ideogram-v3-turbo",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
