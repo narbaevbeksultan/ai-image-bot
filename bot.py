@@ -1505,11 +1505,11 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             loop = asyncio.get_event_loop()
 
-                output = await replicate_run_async(
-                    "ideogram-ai/ideogram-v3-turbo",
-                    {"prompt": "simple test image"},
-                    timeout=30
-                )
+            output = await replicate_run_async(
+                "ideogram-ai/ideogram-v3-turbo",
+                {"prompt": "simple test image"},
+                timeout=30
+            )
 
             
 
@@ -3776,11 +3776,11 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             loop = asyncio.get_event_loop()
 
-                output = await replicate_run_async(
-                    "ideogram-ai/ideogram-v3-turbo",
-                    {"prompt": "simple test image"},
-                    timeout=30
-                )
+            output = await replicate_run_async(
+                "ideogram-ai/ideogram-v3-turbo",
+                {"prompt": "simple test image"},
+                timeout=30
+            )
 
             
 
@@ -6726,11 +6726,11 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             loop = asyncio.get_event_loop()
 
-                output = await replicate_run_async(
-                    "ideogram-ai/ideogram-v3-turbo",
-                    {"prompt": "simple test image"},
-                    timeout=30
-                )
+            output = await replicate_run_async(
+                "ideogram-ai/ideogram-v3-turbo",
+                {"prompt": "simple test image"},
+                timeout=30
+            )
 
             
 
@@ -9391,11 +9391,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         try:
 
-                        output = await replicate_run_async(
-                            "ideogram-ai/ideogram-v3-turbo",
-                            {"prompt": prompt_with_style, **replicate_params},
-                            timeout=60
-                        )
+                            output = await replicate_run_async(
+                                "ideogram-ai/ideogram-v3-turbo",
+                                {"prompt": prompt_with_style, **replicate_params},
+                                timeout=60
+                            )
 
                         except Exception as e:
 
@@ -9626,11 +9626,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         
 
-                        output = await replicate_run_async(
-                            "bytedance/seedream-3",
-                            {"prompt": prompt_with_style, **replicate_params},
-                            timeout=180
-                        )
+                    output = await replicate_run_async(
+                        "bytedance/seedream-3",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=180
+                    )
                         
 
                         
@@ -10694,11 +10694,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     loop = asyncio.get_event_loop()
 
 
-                        output = await replicate_run_async(
-                            "recraft-ai/recraft-v3-svg",
-                            {"prompt": prompt_with_style, **replicate_params},
-                            timeout=60
-                        )
+                    output = await replicate_run_async(
+                        "recraft-ai/recraft-v3-svg",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
 
                     
 
@@ -14107,11 +14107,11 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             loop = asyncio.get_event_loop()
 
-                output = await replicate_run_async(
-                    "ideogram-ai/ideogram-v3-turbo",
-                    {"prompt": "simple test image"},
-                    timeout=30
-                )
+            output = await replicate_run_async(
+                "ideogram-ai/ideogram-v3-turbo",
+                {"prompt": "simple test image"},
+                timeout=30
+            )
 
             
 
@@ -16359,11 +16359,11 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             loop = asyncio.get_event_loop()
 
-                output = await replicate_run_async(
-                    "ideogram-ai/ideogram-v3-turbo",
-                    {"prompt": "simple test image"},
-                    timeout=30
-                )
+            output = await replicate_run_async(
+                "ideogram-ai/ideogram-v3-turbo",
+                {"prompt": "simple test image"},
+                timeout=30
+            )
 
             
 
@@ -19307,11 +19307,11 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             loop = asyncio.get_event_loop()
 
-                output = await replicate_run_async(
-                    "ideogram-ai/ideogram-v3-turbo",
-                    {"prompt": "simple test image"},
-                    timeout=30
-                )
+            output = await replicate_run_async(
+                "ideogram-ai/ideogram-v3-turbo",
+                {"prompt": "simple test image"},
+                timeout=30
+            )
 
             
 
@@ -21972,11 +21972,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         try:
 
-                        output = await replicate_run_async(
-                            "ideogram-ai/ideogram-v3-turbo",
-                            {"prompt": prompt_with_style, **replicate_params},
-                            timeout=60
-                        )
+                            output = await replicate_run_async(
+                                "ideogram-ai/ideogram-v3-turbo",
+                                {"prompt": prompt_with_style, **replicate_params},
+                                timeout=60
+                            )
 
                         except Exception as e:
 
@@ -22207,11 +22207,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         
 
-                        output = await replicate_run_async(
-                            "bytedance/seedream-3",
-                            {"prompt": prompt_with_style, **replicate_params},
-                            timeout=180
-                        )
+                    output = await replicate_run_async(
+                        "bytedance/seedream-3",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=180
+                    )
                         
                       
                         
@@ -23366,11 +23366,11 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     loop = asyncio.get_event_loop()
 
 
-                        output = await replicate_run_async(
-                            "recraft-ai/recraft-v3-svg",
-                            {"prompt": prompt_with_style, **replicate_params},
-                            timeout=60
-                        )
+                    output = await replicate_run_async(
+                        "recraft-ai/recraft-v3-svg",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
 
                     
 
