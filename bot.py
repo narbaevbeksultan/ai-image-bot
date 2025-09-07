@@ -9387,8 +9387,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         # Используем Ideogram v3 Turbo (более стабильная версия)
 
                         try:
-                        output = await replicate_run_async(
-                                    "ideogram-ai/ideogram-v3-turbo",
+                            output = await replicate_run_async(
+                                "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
                             )
@@ -9400,7 +9400,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             logging.warning(f"Ideogram v3 Turbo недоступен: {e}, пробуем v2...")
 
                             try:
-            output = await replicate_run_async(
+                                output = await replicate_run_async(
                                         "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
@@ -21956,7 +21956,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         # Используем Ideogram v3 Turbo (более стабильная версия)
 
                         try:
-                        output = await replicate_run_async(
+                            output = await replicate_run_async(
                                     "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
@@ -21969,7 +21969,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                             logging.warning(f"Ideogram v3 Turbo недоступен: {e}, пробуем v2...")
 
                             try:
-            output = await replicate_run_async(
+                                output = await replicate_run_async(
                                         "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
@@ -31133,7 +31133,7 @@ def main():
         print("🔄 Автоматическая проверка платежей запущена (каждые 45 секунд)")
 
         try:
-        app.run_polling()
+            app.run_polling()
         except KeyboardInterrupt:
             # Закрываем HTTP сессию при завершении
             asyncio.run(close_http_session())
