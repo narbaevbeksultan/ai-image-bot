@@ -24224,6 +24224,2510 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
 
 
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+
+    await query.answer()
+
+    user_id = query.from_user.id
+
+    state = USER_STATE.get(user_id, {})
+
+    data = query.data
+
+
+
+    # Обработка статистики пользователя
+
+    if data == "user_stats":
+
+        analytics_db.update_user_activity(user_id)
+
+        analytics_db.log_action(user_id, "view_stats_button")
+
+        
+
+        # Получаем статистику пользователя
+
+        user_stats = analytics_db.get_user_stats(user_id)
+
+        
+
+        if not user_stats:
+
+            await query.edit_message_text(
+
+                "📊 Статистика пока недоступна.\n\nПопробуйте создать несколько изображений!",
+
+                reply_markup=InlineKeyboardMarkup([[
+
+                    InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content"),
+
+                    InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+
+                ]])
+
+            )
+
+            return
+
+        
+
+        # Формируем текст статистики
+
+        stats_text = f"""
+
+📊 **Ваша статистика:**
+
+
+
+🎨 **Общая статистика:**
+
+• Всего генераций: {user_stats['total_generations']}
+
+• Ошибок: {user_stats['total_errors']}
+
+• Первое использование: {user_stats['first_seen'][:10]}
+
+• Последняя активность: {user_stats['last_activity'][:10]}
+
+
+
+📈 **По моделям:**
+
+"""
+
+        
+
+        # Добавляем статистику по моделям
+
+        if user_stats['models_stats']:
+
+            for model, count, avg_time, successful in user_stats['models_stats'][:5]:
+
+                success_rate = (successful / count * 100) if count > 0 else 0
+
+                avg_time_str = f"{avg_time:.1f}с" if avg_time else "N/A"
+
+                stats_text += f"• {model}: {count} ({success_rate:.0f}% успешно, {avg_time_str})\n"
+
+        else:
+
+            stats_text += "• Нет данных\n"
+
+        
+
+        stats_text += "\n📱 **По форматам:**\n"
+
+        
+
+        # Добавляем статистику по форматам
+
+        if user_stats['formats_stats']:
+
+            for format_type, count in user_stats['formats_stats'][:5]:
+
+                stats_text += f"• {format_type}: {count}\n"
+
+        else:
+
+            stats_text += "• Нет данных\n"
+
+        
+
+        keyboard = [
+
+            [InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ]
+
+        
+
+        await query.edit_message_text(
+
+            stats_text,
+
+            reply_markup=InlineKeyboardMarkup(keyboard)
+
+        )
+
+        return
+
+
+
+    # Новые обработчики навигации
+
+    if data == "help_filters":
+
+        help_filters_text = (
+
+            "🚫 **Проблема с фильтрами моделей**\n\n"
+
+            "Некоторые модели имеют строгие фильтры безопасности и могут блокировать:\n\n"
+
+            "❌ **Что может блокироваться:**\n"
+
+            "• Слова типа 'сексуальная', 'красивая', 'привлекательная'\n"
+
+            "• Описания взглядов: 'смотрит в камеру', 'приглашающий взгляд'\n"
+
+            "• Определенные комбинации слов о внешности\n\n"
+
+            "✅ **Как решить:**\n"
+
+            "• Используйте нейтральные слова: 'женщина' вместо 'красивая'\n"
+
+            "• Выберите другую модель: Ideogram, Bytedance, Google Imagen\n"
+
+            "• Добавьте контекст: 'профессиональная фотография'\n"
+
+            "• Попробуйте: 'элегантная женщина с темными волосами'\n\n"
+
+            "💡 **Рекомендации:**\n"
+
+            "• Для портретов лучше использовать Ideogram или Bytedance\n"
+
+            "• Для пейзажей и архитектуры подходят все модели"
+
+        )
+
+        keyboard = [
+
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(help_filters_text, reply_markup=reply_markup)
+
+    elif data == "ideogram_tips":
+
+        tips_text = """
+
+🎨 **Советы по использованию Ideogram**
+
+
+
+## Почему Ideogram может генерировать изображения, не соответствующие описанию?
+
+
+
+### Основные причины:
+
+1. **Слишком сложные промпты** - Ideogram лучше работает с простыми, четкими описаниями
+
+2. **Перегруженность параметрами** - Множество стилей и форматов могут "забивать" основное описание
+
+3. **Особенности модели** - Ideogram специализируется на тексте и логотипах
+
+
+
+## ✅ Как улучшить результаты:
+
+
+
+### 1. **Используйте простые описания**
+
+```
+
+❌ Плохо: "Очень красивая девушка с длинными волнистыми каштановыми волосами, одетая в элегантное красное платье"
+
+✅ Хорошо: "девушка в красном платье"
+
+```
+
+
+
+### 2. **Фокусируйтесь на главном объекте**
+
+```
+
+❌ Плохо: "Современный дом с большими окнами, красивым садом, бассейном, гаражом"
+
+✅ Хорошо: "современный дом с большими окнами"
+
+```
+
+
+
+### 3. **Избегайте длинных фраз**
+
+- Используйте 3-7 ключевых слов
+
+- Убирайте лишние прилагательные
+
+- Фокусируйтесь на сути
+
+
+
+## 🎯 Лучшие практики:
+
+
+
+### Для портретов:
+
+- "женщина с темными волосами"
+
+- "мужчина в костюме"
+
+- "девушка в платье"
+
+
+
+### Для пейзажей:
+
+- "горный пейзаж"
+
+- "городская улица"
+
+- "лесная тропа"
+
+
+
+## ⚠️ Ограничения Ideogram:
+
+
+
+1. **Не идеален для фотореалистичных изображений** - лучше используйте Bytedance или Google Imagen
+
+2. **Медленная генерация** - может занимать до 60 секунд
+
+3. **Чувствителен к сложным промптам** - лучше работает с простыми описаниями
+
+
+
+## 🔄 Альтернативы:
+
+
+
+Если Ideogram не дает желаемых результатов:
+
+- **Bytedance (Seedream-3)** - для фотореалистичных изображений
+
+- **Google Imagen 4 Ultra** - для максимального качества и детализации
+
+- **Luma Photon** - для креативных и художественных изображений
+
+
+
+💡 **Главный совет:** Начните с простого описания и постепенно добавляйте детали!
+
+"""
+
+        keyboard = [
+
+            [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(tips_text, reply_markup=reply_markup)
+
+    elif data == "help_image_edit":
+
+        help_image_edit_text = (
+
+            "📤 **Как редактировать изображения с FLUX**\n\n"
+
+            "FLUX.1 Kontext Pro - это мощная модель для редактирования изображений через текст.\n\n"
+
+            "🎨 **Что можно делать:**\n"
+
+            "• **Смена стиля**: 'преврати в акварельную живопись', 'сделай в стиле масляной живописи'\n"
+
+            "• **Изменение объектов**: 'измени прическу на короткую боб', 'замени красное платье на синее'\n"
+
+            "• **Редактирование текста**: 'замени текст \"старый\" на \"новый\"'\n"
+
+            "• **Смена фона**: 'смени фон на пляжный, сохранив человека в том же положении'\n"
+
+            "• **Сохранение идентичности**: 'измени стиль, но сохрани лицо человека'\n\n"
+
+            "💡 **Советы для лучшего результата:**\n"
+
+            "• Будьте конкретны: 'короткая черная прическа' вместо 'другая прическа'\n"
+
+            "• Указывайте, что сохранить: 'сохрани лицо, измени только одежду'\n"
+
+            "• Используйте точные цвета: 'синее платье' вместо 'другое платье'\n"
+
+            "• Для текста используйте кавычки: 'замени \"старый текст\" на \"новый\"'\n\n"
+
+            "⚠️ **Ограничения:**\n"
+
+            "• Изображение должно быть подходящим для редактирования\n"
+
+            "• Не работает с изображениями, содержащими логотипы или защищенный контент\n"
+
+            "• Максимальный размер файла: 10MB"
+
+        )
+
+        keyboard = [
+
+            [InlineKeyboardButton("📤 Начать редактирование", callback_data="edit_image")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(help_image_edit_text, reply_markup=reply_markup)
+
+    elif data == "retry_generation":
+
+        # Возвращаемся к предыдущему шагу для повторной попытки
+
+        current_step = state.get('step', '')
+
+        if current_step in ['custom_image_prompt', 'custom_image_style', 'simple_image_prompt']:
+
+            # Возвращаемся к предыдущему шагу
+
+            if current_step == 'custom_image_prompt':
+
+                await query.edit_message_text("Попробуйте еще раз. Опишите, что должно быть на картинке:")
+
+            elif current_step == 'custom_image_style':
+
+                await query.edit_message_text("Попробуйте еще раз. Опишите стиль генерации изображения:")
+
+            elif current_step == 'simple_image_prompt':
+
+                await query.edit_message_text("Попробуйте еще раз. Опишите, что вы хотите видеть на картинке:")
+
+        else:
+
+            # Если не можем определить предыдущий шаг, возвращаемся в главное меню
+
+            await show_main_menu(update, context)
+
+    elif data == "create_content":
+
+        await show_format_selection(update, context)
+
+    elif data == "create_simple_images":
+    # Для простых изображений сначала выбираем ориентацию
+        USER_STATE[user_id] = {'step': 'simple_orientation', 'format': 'изображения'}
+    
+        keyboard = [
+            [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+        ]
+        keyboard.extend([
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            "Выберите ориентацию изображения:",
+            reply_markup=reply_markup
+        )
+
+    elif data == "edit_image":
+
+        # Начинаем процесс редактирования изображения
+
+        USER_STATE[user_id] = {'step': 'upload_image_for_edit'}
+
+        keyboard = [
+
+            [InlineKeyboardButton("❓ Как редактировать изображения", callback_data="help_image_edit")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        
+
+        help_text = """📤 **Редактирование изображений с FLUX**
+
+
+
+Загрузите изображение, которое хотите отредактировать.
+
+
+
+💡 **Что можно делать:**
+
+• Изменить стиль (акварель, масло, эскиз)
+
+• Заменить объекты (прическа, одежда, цвета)
+
+• Редактировать текст на изображениях
+
+• Сменить фон, сохранив объекты
+
+• Сохранить идентичность персонажей
+
+
+
+📋 **Как это работает:**
+
+1. Загрузите изображение
+
+2. Опишите, что хотите изменить
+
+3. Получите отредактированную версию
+
+
+
+⚠️ **Ограничения:**
+
+• Максимальный размер: 10MB
+
+• Поддерживаемые форматы: JPG, PNG
+
+• Изображение должно быть "подходящим" для редактирования"""
+
+        
+
+        await query.edit_message_text(help_text, reply_markup=reply_markup)
+
+    elif data == "how_to_use":
+
+        await show_how_to_use(update, context)
+
+    elif data == "about_bot":
+
+        await show_about_bot(update, context)
+
+    elif data == "support":
+
+        await show_support(update, context)
+
+    elif data == "main_menu":
+
+        await show_main_menu(update, context)
+
+    elif data == "format_selection":
+
+        await show_format_selection(update, context)
+
+    # ОБРАБОТЧИКИ ДЛЯ КРЕДИТОВ
+
+    elif data == "subscription_menu":
+
+        await show_subscription_menu(update, context)
+
+    elif data == "credit_packages":
+
+        await show_credit_packages(update, context)
+
+    elif data.startswith("buy_credits:"):
+
+        await handle_credit_purchase(update, context)
+
+    elif data.startswith("check_payment:"):
+
+        await check_payment_status(update, context)
+
+    elif data.startswith('format:'):
+
+        selected_format = data.split(':', 1)[1]
+
+        if selected_format == 'custom':
+
+            # Если выбрано "Другое", просим пользователя ввести формат вручную
+
+            USER_STATE[user_id] = {'step': 'custom_format'}
+
+            await query.edit_message_text(
+
+                "Введите название формата (например: Facebook Post, Twitter, LinkedIn и т.д.):",
+
+                reply_markup=InlineKeyboardMarkup([
+
+                    [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                ])
+
+            )
+
+        elif selected_format == 'Изображения':
+
+            # Для "Изображения" сначала выбираем ориентацию
+
+            USER_STATE[user_id] = {'step': 'simple_image_orientation', 'format': selected_format}
+
+            keyboard = [
+
+                [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+
+                [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+
+            ]
+
+            # Добавляем кнопки навигации
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f'Формат выбран: {selected_format}\nВыберите ориентацию изображения:',
+
+                reply_markup=reply_markup
+
+            )
+
+        else:
+
+            USER_STATE[user_id] = {'step': STEP_STYLE, 'format': selected_format}
+
+            keyboard = [
+
+                [InlineKeyboardButton(style, callback_data=f"style:{style}")] for style in STYLES
+
+            ]
+
+            # Добавляем кнопку "Другое"
+
+            keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
+
+            # Добавляем кнопки навигации
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f'Формат выбран: {selected_format}\nТеперь выбери стиль:',
+
+                reply_markup=reply_markup
+
+            )
+
+    elif data.startswith('style:'):
+
+        selected_style = data.split(':', 1)[1]
+
+        if selected_style == 'custom':
+
+            # Сохраняем формат из текущего состояния
+
+            current_format = state.get('format', '')
+
+            USER_STATE[user_id] = {'step': 'custom_style', 'format': current_format}
+
+            await query.edit_message_text(
+
+                "Введите название стиля (например: Деловой, Креативный, Романтичный и т.д.):",
+
+                reply_markup=InlineKeyboardMarkup([
+
+                    [InlineKeyboardButton("🔙 Назад", callback_data="style_back")],
+
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                ])
+
+            )
+
+            return
+
+        else:
+
+            # Сохраняем стиль и переходим к выбору модели
+
+            USER_STATE[user_id]['style'] = selected_style
+
+            USER_STATE[user_id]['step'] = 'image_gen_model'
+
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+
+            # Добавляем кнопки навигации
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="style_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f'Стиль выбран: {selected_style}\nВыберите модель для генерации изображений:',
+
+                reply_markup=reply_markup
+
+            )
+
+    elif data == "style_back":
+
+        # Возврат к выбору стиля
+
+        keyboard = [
+
+            [InlineKeyboardButton(style, callback_data=f"style:{style}")] for style in STYLES
+
+        ]
+
+        # Добавляем кнопку "Другое"
+
+        keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f'Формат: {state.get("format", "")}\nВыбери стиль:',
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data.startswith('image_count:'):
+
+        count_type = data.split(':', 1)[1]
+
+        if count_type == 'default':
+
+            user_format = state.get('format', '').lower()
+
+            if user_format in ['instagram reels', 'tiktok', 'youtube shorts']:
+
+                USER_STATE[user_id]['image_count'] = 'auto'  # Для коротких видео количество определяется из текста
+
+            elif user_format in ['instagram stories']:
+
+                USER_STATE[user_id]['image_count'] = 1  # Для Instagram Stories 1 изображение
+
+            elif user_format in ['instagram post']:
+
+                USER_STATE[user_id]['image_count'] = 2  # Для постов 2 изображения
+
+            else:
+
+                USER_STATE[user_id]['image_count'] = 2  # По умолчанию 2 изображения
+
+            USER_STATE[user_id]['step'] = 'image_gen_model'  # Новый шаг для выбора модели
+
+            # Кнопки выбора модели генерации
+
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+
+            # Добавляем кнопки навигации
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="image_count_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f"Выберите модель для генерации изображений:",
+
+                reply_markup=reply_markup
+
+            )
+
+            return
+
+        elif count_type == 'custom':
+
+            USER_STATE[user_id]['step'] = 'custom_image_count'
+
+            await query.edit_message_text("Введите количество изображений:")
+
+            return
+
+    elif data == "image_count_back":
+
+        # Возврат к выбору количества изображений
+
+        user_format = state.get('format', '').lower()
+
+        if user_format in ['reels']:
+
+            default_text = "по количеству в тексте"
+
+        elif user_format in ['tiktok']:
+
+            default_text = "по количеству в тексте"
+
+        elif user_format in ['instagram stories']:
+
+            default_text = "1 изображение"
+
+        elif user_format in ['пост']:
+
+            default_text = "2 изображения"
+
+        else:
+
+            default_text = "2 изображения"
+
+        keyboard = [
+
+            [InlineKeyboardButton(f"По умолчанию ({default_text})", callback_data="image_count:default")],
+
+            [InlineKeyboardButton("Выбрать количество", callback_data="image_count:custom")]
+
+        ]
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="style_back")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f"Стиль: {state.get('style', '')}\nСколько изображений сгенерировать?",
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data.startswith('simple_orientation:'):
+
+        orientation = data.split(':', 1)[1]
+
+        USER_STATE[user_id]['simple_orientation'] = orientation
+
+        
+
+        # Переходим к выбору модели
+
+        USER_STATE[user_id]['step'] = 'image_gen_model'
+
+        keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+
+        # Добавляем кнопки навигации
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="simple_orientation_back")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        
+
+        orientation_text = "Вертикальное (9:16)" if orientation == "vertical" else "Квадратное (1:1)"
+
+        await query.edit_message_text(
+
+            f'Ориентация выбрана: {orientation_text}\nВыберите модель для генерации изображений:',
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data == "simple_orientation_back":
+
+        # Возврат к выбору ориентации
+
+        keyboard = [
+
+            [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+
+            [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+
+        ]
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f'Формат: {state.get("format", "")}\nВыберите ориентацию изображения:',
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data.startswith('simple_orientation:'):
+        orientation = data.split(':', 1)[1]
+        USER_STATE[user_id]['orientation'] = orientation
+        USER_STATE[user_id]['step'] = 'image_gen_model'
+        await show_model_selection(update, context)
+        return
+
+    elif data.startswith('image_gen_model:'):
+
+        selected_model = data.split(':', 1)[1]
+
+        USER_STATE[user_id]['image_gen_model'] = selected_model
+
+        
+
+        # Добавляем специальные подсказки для Ideogram
+
+        ideogram_tips = ""
+
+        if selected_model == 'Ideogram':
+
+            ideogram_tips = "\n\n💡 **Советы для Ideogram:**\n• Используйте простые, четкие описания\n• Избегайте длинных сложных фраз\n• Фокусируйтесь на главном объекте\n• Ideogram лучше работает с текстом и логотипами"
+
+        
+
+        # Проверяем формат для разного поведения
+
+        user_format = state.get('format', '').lower()
+
+        if user_format == 'изображения':
+
+            # Для "Изображения" переходим к выбору стиля
+
+            USER_STATE[user_id]['step'] = 'image_gen_style'
+
+            keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+
+            keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="model_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
+
+                reply_markup=reply_markup
+
+            )
+
+        else:
+
+            # Для остальных форматов переходим к выбору стиля изображения
+
+            USER_STATE[user_id]['step'] = 'image_gen_style'
+
+            keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+
+            keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="model_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f"Модель выбрана: {selected_model}{ideogram_tips}\n\nВыберите стиль генерации изображения:",
+
+                reply_markup=reply_markup
+
+            )
+
+        return
+
+    elif data == "model_back":
+
+        # Возврат к выбору модели
+
+        user_format = state.get('format', '').lower()
+
+        if user_format == 'изображения':
+
+            # Для "Изображения" возвращаемся к выбору ориентации
+
+            keyboard = [
+
+                [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+
+                [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
+
+            ]
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f'Формат: {state.get("format", "")}\nВыберите ориентацию изображения:',
+
+                reply_markup=reply_markup
+
+            )
+
+        else:
+
+            # Для остальных форматов возвращаемся к выбору стиля
+
+            keyboard = [
+
+                [InlineKeyboardButton(style, callback_data=f"style:{style}")] for style in STYLES
+
+            ]
+
+            keyboard.append([InlineKeyboardButton("📄 Другое", callback_data="style:custom")])
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f'Формат: {state.get("format", "")}\nВыбери стиль:',
+
+                reply_markup=reply_markup
+
+            )
+
+    elif data.startswith('image_gen_style:'):
+
+        selected_img_style = data.split(':', 1)[1]
+
+        USER_STATE[user_id]['image_gen_style'] = selected_img_style
+
+        
+
+        # Проверяем формат для разного поведения
+
+        user_format = state.get('format', '').lower()
+
+        if user_format == 'изображения':
+
+            # Для "Изображения" переходим к выбору количества изображений
+
+            USER_STATE[user_id]['step'] = 'image_count_simple'
+
+            keyboard = [
+
+                [InlineKeyboardButton("1 изображение", callback_data="image_count_simple:1")],
+
+                [InlineKeyboardButton("2 изображения", callback_data="image_count_simple:2")],
+
+                [InlineKeyboardButton("3 изображения", callback_data="image_count_simple:3")],
+
+                [InlineKeyboardButton("4 изображения", callback_data="image_count_simple:4")],
+
+                [InlineKeyboardButton("5 изображений", callback_data="image_count_simple:5")],
+
+                [InlineKeyboardButton("Выбрать другое количество", callback_data="image_count_simple:custom")]
+
+            ]
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                f"Стиль генерации выбран: {selected_img_style}\nСколько изображений сгенерировать?",
+
+                reply_markup=reply_markup
+
+            )
+
+        else:
+
+            # Для остальных форматов переходим к вводу темы
+
+            USER_STATE[user_id]['step'] = STEP_TOPIC
+
+            
+
+            # Создаем подсказки в зависимости от формата
+
+            format_tips = get_format_tips(user_format)
+
+            message_text = f"Стиль генерации выбран: {selected_img_style}\n\nРасскажите, что должно получиться:\n\n{format_tips}"
+
+            
+
+            # Добавляем кнопки навигации
+
+            keyboard = [
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                message_text,
+
+                reply_markup=reply_markup
+
+            )
+
+        return
+
+    elif data == "style_gen_back":
+
+        # Возврат к выбору стиля генерации
+
+        keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
+
+        keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="model_back")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f"Модель: {state.get('image_gen_model', '')}\nВыберите стиль генерации изображения:",
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data.startswith('image_count_simple:'):
+
+        count_data = data.split(':', 1)[1]
+
+        if count_data == 'custom':
+
+            USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+
+            await query.edit_message_text("Введите количество изображений:")
+
+            return
+
+        else:
+
+            try:
+
+                count = int(count_data)
+
+                if 1 <= count <= 10:
+
+                    USER_STATE[user_id]['image_count'] = count
+
+                    USER_STATE[user_id]['step'] = 'simple_image_prompt'
+
+                    state = USER_STATE[user_id]
+
+                    
+
+                    keyboard = [
+
+                        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                        [InlineKeyboardButton("🔙 Назад", callback_data="simple_image_count_back")],
+
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                    ]
+
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+
+                    
+
+                    tips = """💡 Советы для лучшего результата:
+
+• Опишите главный объект и его детали
+
+• Укажите стиль, материалы, цвета
+
+• Добавьте информацию об освещении
+
+• Опишите ракурс или композицию
+
+• Укажите атмосферу и контекст
+
+
+
+✅ Примеры:
+
+• "Современный дом с большими окнами, окруженный садом, закатное освещение"
+
+• "Космический корабль в открытом космосе, звезды, футуристический дизайн"
+
+• "Цветущий сад с розами, бабочки, солнечный день"
+
+
+
+❌ Избегайте:
+
+• "красиво", "хорошо", "красивая картинка"
+
+• Слишком общие описания
+
+• Противоположные требования"""
+
+                    
+
+                    await query.edit_message_text(
+
+                        f"Количество выбрано: {count} изображений\n\nТеперь опишите, что вы хотите видеть на картинке:\n\n{tips}",
+
+                        reply_markup=reply_markup
+
+                    )
+
+                else:
+
+                    await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
+
+            except ValueError:
+
+                await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+
+    elif data == "custom_image_count_simple":
+
+        USER_STATE[user_id]['step'] = 'custom_image_count_simple'
+
+        await query.edit_message_text("Введите количество изображений (от 1 до 10):")
+
+        return
+
+    elif data == "more_images":
+
+        user_format = state.get('format', '').lower()
+
+        if user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_scenes' in state:
+
+            # Для генерации тех же сцен заново, сбрасываем счетчик
+
+            state['generated_scenes_count'] = 0
+
+            USER_STATE[user_id] = state
+
+            
+
+            await update.callback_query.edit_message_text('Генерирую новые изображения по тем же сценам...')
+
+            await send_images(update, context, state, prompt_type='auto', scenes=state['last_scenes'])
+
+        elif user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_script' in state:
+
+            await update.callback_query.edit_message_text('Генерирую новые изображения по сценам...')
+
+            scenes = await extract_scenes_from_script(state['last_script'], user_format)
+
+            state['last_scenes'] = scenes
+
+            await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+
+        else:
+
+            await send_images(update, context, state, prompt_type=state.get('last_prompt_type', 'auto'), user_prompt=state.get('last_user_prompt'))
+
+    elif data == "more_images_same_settings":
+
+        # Генерация с теми же настройками для "Изображения"
+
+        user_format = state.get('format', '').lower()
+
+        if user_format == 'изображения':
+
+            await update.callback_query.edit_message_text('Генерирую новые изображения с теми же настройками...')
+
+            await send_images(update, context, state, prompt_type=state.get('last_prompt_type', 'user'), user_prompt=state.get('last_user_prompt'))
+
+        else:
+
+            # Fallback для других форматов
+
+            await send_images(update, context, state, prompt_type=state.get('last_prompt_type', 'auto'), user_prompt=state.get('last_user_prompt'))
+
+    elif data == "change_settings":
+
+        # Возврат к выбору модели для изменения настроек
+
+        user_format = state.get('format', '').lower()
+
+        if user_format == 'изображения':
+
+            USER_STATE[user_id]['step'] = 'image_gen_model'
+
+            keyboard = [[InlineKeyboardButton(f"{model} ({MODEL_DESCRIPTIONS[model]})", callback_data=f"image_gen_model:{model}")] for model in IMAGE_GEN_MODELS]
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="format_selection")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(
+
+                "Выберите модель для генерации изображений:",
+
+                reply_markup=reply_markup
+
+            )
+
+        else:
+
+            # Для других форматов возвращаемся к главному меню
+
+            await show_main_menu(update, context)
+
+    elif data == "reset":
+
+        # Сбрасываем состояние пользователя
+
+        USER_STATE[user_id] = {'step': 'main_menu'}
+
+        await show_format_selection(update, context)
+
+    elif data == "custom_image_prompt":
+
+        USER_STATE[user_id]['step'] = 'custom_image_prompt'
+
+        await query.edit_message_text("Опишите, что вы хотите видеть на изображении (1-2 предложения):")
+
+    elif data == "edit_image":
+
+        # Перенаправляем на команду редактирования
+
+        await edit_image_command(update, context)
+
+
+
+    elif data == "back_to_main":
+
+        await show_main_menu(update, context)
+
+    elif data == "custom_image_style":
+
+        USER_STATE[user_id]['step'] = 'custom_image_style'
+
+        await query.edit_message_text("Опишите стиль генерации изображения (например: фотографический, художественный, минималистичный, яркий, темный и т.д.):")
+
+    elif data == "generate_images":
+
+        try:
+
+            user_format = state.get('format', '').lower()
+
+            state = USER_STATE.get(user_id, {})
+
+            if user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_scenes' in state:
+
+                await send_images(update, context, state, prompt_type='auto', scenes=state['last_scenes'])
+
+            elif user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_script' in state:
+
+                scenes = await extract_scenes_from_script(state['last_script'], user_format)
+
+                state['last_scenes'] = scenes
+
+                await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+
+            else:
+
+                await send_images(update, context, state, prompt_type='auto')
+
+        except Exception as e:
+
+            keyboard = [
+
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+
+            # Сбрасываем состояние пользователя
+
+            USER_STATE[user_id] = {'step': STEP_FORMAT}
+
+    elif data.startswith('generate_with_count:'):
+
+        try:
+
+            count = int(data.split(':', 1)[1])
+
+            user_format = state.get('format', '').lower()
+
+            state = USER_STATE.get(user_id, {})
+
+            
+
+            # Устанавливаем количество изображений
+
+            state['image_count'] = count
+
+            USER_STATE[user_id] = state
+
+            
+
+            if 'last_scenes' in state:
+
+                # Ограничиваем сцены до выбранного количества
+
+                scenes = state['last_scenes'][:count]
+
+                await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+
+            else:
+
+                await send_images(update, context, state, prompt_type='auto')
+
+        except Exception as e:
+
+            keyboard = [
+
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+
+            USER_STATE[user_id] = {'step': STEP_FORMAT}
+
+    elif data.startswith('simple_image_count:'):
+
+        count_data = data.split(':', 1)[1]
+
+        if count_data == 'custom':
+
+            USER_STATE[user_id]['step'] = 'custom_simple_image_count'
+
+            await query.edit_message_text("Введите количество изображений:")
+
+            return
+
+        else:
+
+            try:
+
+                count = int(count_data)
+
+                if 1 <= count <= 10:
+
+                    USER_STATE[user_id]['image_count'] = count
+
+                    USER_STATE[user_id]['step'] = 'simple_image_prompt'
+
+                    state = USER_STATE[user_id]
+
+                    
+
+                    keyboard = [
+
+                        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                        [InlineKeyboardButton("🔙 Назад", callback_data="simple_image_count_back")],
+
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                    ]
+
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+
+                    
+
+                    tips = """💡 Советы для лучшего результата:
+
+• Опишите главный объект и его детали
+
+• Укажите стиль, материалы, цвета
+
+• Добавьте информацию об освещении
+
+• Опишите ракурс или композицию
+
+• Укажите атмосферу и контекст
+
+
+
+✅ Примеры:
+
+• "Современный дом с большими окнами, окруженный садом, закатное освещение"
+
+• "Космический корабль в открытом космосе, звезды, футуристический дизайн"
+
+• "Цветущий сад с розами, бабочки, солнечный день"
+
+
+
+❌ Избегайте:
+
+• "красиво", "хорошо", "красивая картинка"
+
+• Слишком общие описания
+
+• Противоположные требования"""
+
+                    
+
+                    await query.edit_message_text(
+
+                        f"Количество выбрано: {count} изображений\n\nТеперь опишите, что вы хотите видеть на картинке:\n\n{tips}",
+
+                        reply_markup=reply_markup
+
+                    )
+
+                else:
+
+                    await query.edit_message_text("Пожалуйста, выберите количество от 1 до 10:")
+
+            except ValueError:
+
+                await query.edit_message_text("Пожалуйста, выберите корректное количество:")
+
+    elif data == "simple_image_prompt_back":
+
+        # Возврат к вводу описания для "Изображения"
+
+        USER_STATE[user_id]['step'] = 'simple_image_prompt'
+
+        keyboard = [
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        
+
+        tips = """💡 Советы для лучшего результата:
+
+• Опишите главный объект и его детали
+
+• Укажите стиль, материалы, цвета
+
+• Добавьте информацию об освещении
+
+• Опишите ракурс или композицию
+
+• Укажите атмосферу и контекст
+
+
+
+✅ Примеры:
+
+• "Современный дом с большими окнами, окруженный садом, закатное освещение"
+
+• "Космический корабль в открытом космосе, звезды, футуристический дизайн"
+
+• "Цветущий сад с розами, бабочки, солнечный день"
+
+
+
+❌ Избегайте:
+
+• "красиво", "хорошо", "красивая картинка"
+
+• Слишком общие описания
+
+• Противоположные требования"""
+
+        
+
+        await query.edit_message_text(
+
+            f"Опишите, что вы хотите видеть на картинке:\n\n{tips}",
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data == "simple_image_count_back":
+
+        # Возврат к выбору количества изображений для "Изображения"
+
+        USER_STATE[user_id]['step'] = 'image_count_simple'
+
+        keyboard = [
+
+            [InlineKeyboardButton("1 изображение", callback_data="simple_image_count:1")],
+
+            [InlineKeyboardButton("2 изображения", callback_data="simple_image_count:2")],
+
+            [InlineKeyboardButton("3 изображения", callback_data="simple_image_count:3")],
+
+            [InlineKeyboardButton("4 изображения", callback_data="simple_image_count:4")],
+
+            [InlineKeyboardButton("5 изображений", callback_data="simple_image_count:5")],
+
+            [InlineKeyboardButton("Выбрать другое количество", callback_data="simple_image_count:custom")]
+
+        ]
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+        ])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f"Стиль генерации: {state.get('image_gen_style', '')}\nСколько изображений сгенерировать?",
+
+            reply_markup=reply_markup
+
+        )
+
+    elif data == "custom_count_after_text":
+
+        USER_STATE[user_id]['step'] = 'custom_count_after_text'
+
+        await query.edit_message_text("Введите количество изображений:")
+
+    elif data == "generate_remaining_scenes":
+
+        # Генерация оставшихся сцен
+
+        try:
+
+            user_format = state.get('format', '').lower()
+
+            if 'last_scenes' in state and 'generated_scenes_count' in state:
+
+                generated_count = state.get('generated_scenes_count', 0)
+
+                total_scenes = state.get('last_scenes', [])
+
+                
+
+                # Берем только оставшиеся сцены
+
+                remaining_scenes = total_scenes[generated_count:]
+
+                
+
+                # Устанавливаем количество изображений равным количеству оставшихся сцен
+
+                state['image_count'] = len(remaining_scenes)
+
+                
+
+                # Временно сбрасываем счетчик, чтобы send_images правильно посчитала новые сцены
+
+                state['generated_scenes_count'] = generated_count
+
+                USER_STATE[user_id] = state
+
+                
+
+                await query.edit_message_text(f'Генерирую изображения для оставшихся {len(remaining_scenes)} сцен...')
+
+                await send_images(update, context, state, prompt_type='auto', scenes=remaining_scenes)
+
+            else:
+
+                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+
+        except Exception as e:
+
+            keyboard = [
+
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+
+    elif data == "generate_all_scenes":
+
+        # Генерация всех сцен
+
+        try:
+
+            user_format = state.get('format', '').lower()
+
+            if 'last_scenes' in state:
+
+                all_scenes = state.get('last_scenes', [])
+
+                
+
+                # Устанавливаем количество изображений равным количеству всех сцен
+
+                state['image_count'] = len(all_scenes)
+
+                
+
+                # Сбрасываем счетчик, чтобы генерировать все сцены заново
+
+                state['generated_scenes_count'] = 0
+
+                USER_STATE[user_id] = state
+
+                
+
+                await query.edit_message_text(f'Генерирую изображения для всех {len(all_scenes)} сцен...')
+
+                await send_images(update, context, state, prompt_type='auto', scenes=all_scenes)
+
+            else:
+
+                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+
+        except Exception as e:
+
+            keyboard = [
+
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+
+    elif data == "generate_more":
+
+        # Сброс состояния для генерации новых изображений
+
+        USER_STATE[user_id] = {'step': 'main_menu'}
+
+        await show_format_selection(update, context)
+
+    elif data == "select_scene_count":
+
+        # Показать меню выбора количества сцен
+
+        try:
+
+            user_format = state.get('format', '').lower()
+
+            if 'last_scenes' in state:
+
+                total_scenes = state.get('last_scenes', [])
+
+                generated_count = state.get('generated_scenes_count', 0)
+
+                
+
+                keyboard = []
+
+                
+
+                # Кнопки для выбора количества оставшихся сцен
+
+                remaining_count = len(total_scenes) - generated_count
+
+                if remaining_count > 0:
+
+                    for i in range(1, min(remaining_count + 1, 6)):  # Максимум 5 кнопок
+
+                        start_scene = generated_count + 1
+
+                        end_scene = generated_count + i
+
+                        if i == 1:
+
+                            scene_text = f"Сцена {start_scene}"
+
+                        else:
+
+                            scene_text = f"Сцены {start_scene}-{end_scene}"
+
+                        keyboard.append([InlineKeyboardButton(scene_text, callback_data=f"generate_scenes_count:{i}")])
+
+                
+
+                # Кнопка для всех сцен
+
+                keyboard.append([InlineKeyboardButton(f"Все сцены 1-{len(total_scenes)}", callback_data=f"generate_scenes_count:{len(total_scenes)}")])
+
+                
+
+                # Кнопка для кастомного количества
+
+                keyboard.append([InlineKeyboardButton("🔢 Другое количество", callback_data="custom_scene_count")])
+
+                
+
+                # Навигация
+
+                keyboard.extend([
+
+                    [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")],
+
+                ])
+
+                
+
+                reply_markup = InlineKeyboardMarkup(keyboard)
+
+                await query.edit_message_text(
+
+                    f"Выберите сцены для генерации:\n"
+
+                    f"Всего сцен: {len(total_scenes)}\n"
+
+                    f"Уже сгенерировано: сцены 1-{generated_count}\n"
+
+                    f"Доступно для генерации: сцены {generated_count + 1}-{len(total_scenes)}",
+
+                    reply_markup=reply_markup
+
+                )
+
+            else:
+
+                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+
+        except Exception as e:
+
+            await query.edit_message_text(f"Ошибка при создании меню: {e}")
+
+    elif data.startswith('generate_scenes_count:'):
+
+        # Генерация определенного количества сцен
+
+        try:
+
+            count = int(data.split(':', 1)[1])
+
+            user_format = state.get('format', '').lower()
+
+            
+
+            if 'last_scenes' in state:
+
+                all_scenes = state.get('last_scenes', [])
+
+                generated_count = state.get('generated_scenes_count', 0)
+
+                
+
+                # Берем сцены начиная с уже сгенерированных
+
+                scenes_to_generate = all_scenes[generated_count:generated_count + count]
+
+                
+
+                # Устанавливаем количество изображений равным количеству выбранных сцен
+
+                state['image_count'] = len(scenes_to_generate)
+
+                
+
+                # Временно сбрасываем счетчик, чтобы send_images правильно посчитала новые сцены
+
+                state['generated_scenes_count'] = generated_count
+
+                USER_STATE[user_id] = state
+
+                
+
+                await query.edit_message_text(f'Генерирую изображения для {len(scenes_to_generate)} сцен...')
+
+                await send_images(update, context, state, prompt_type='auto', scenes=scenes_to_generate)
+
+            else:
+
+                await query.edit_message_text("Ошибка: не найдены сохраненные сцены")
+
+        except Exception as e:
+
+            keyboard = [
+
+                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await query.edit_message_text(f"Ошибка при генерации изображений: {e}\nПопробуйте еще раз или выберите действие ниже:", reply_markup=reply_markup)
+
+    elif data == "custom_scene_count":
+
+        # Запрос кастомного количества сцен
+
+        USER_STATE[user_id]['step'] = 'custom_scene_count'
+
+        total_scenes = state.get('total_scenes_count', 0)
+
+        generated_count = state.get('generated_scenes_count', 0)
+
+        remaining_count = total_scenes - generated_count
+
+        
+
+        await query.edit_message_text(
+
+            f"Введите количество сцен для генерации (от 1 до {remaining_count}):\n"
+
+            f"Всего сцен: {total_scenes}\n"
+
+            f"Уже сгенерировано: сцены 1-{generated_count}\n"
+
+            f"Доступно для генерации: сцены {generated_count + 1}-{total_scenes}"
+
+        )
+
+    elif data == "back_to_main_options":
+
+        # Возврат к основным опциям после генерации изображений
+
+        user_format = state.get('format', '').lower()
+
+        generated_count = state.get('generated_scenes_count', 0)
+
+        total_count = state.get('total_scenes_count', 0)
+
+        
+
+        keyboard = []
+
+        
+
+        # Кнопка для генерации тех же изображений заново
+
+        keyboard.append([InlineKeyboardButton("🔄 Сгенерировать ещё (те же сцены)", callback_data="more_images")])
+
+        
+
+        # Если есть еще сцены для генерации, добавляем кнопки
+
+        if total_count > generated_count:
+
+            remaining_count = total_count - generated_count
+
+            start_scene = generated_count + 1
+
+            end_scene = total_count
+
+            keyboard.append([InlineKeyboardButton(f"📸 Сгенерировать сцены {start_scene}-{end_scene}", callback_data="generate_remaining_scenes")])
+
+            keyboard.append([InlineKeyboardButton(f"📸 Сгенерировать все сцены 1-{total_count}", callback_data="generate_all_scenes")])
+
+        
+
+        # Кнопка для выбора конкретного количества
+
+        keyboard.append([InlineKeyboardButton("🔢 Выбрать количество сцен", callback_data="select_scene_count")])
+
+        
+
+        # Кнопки для генерации видео
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("🎬 Создать видео из изображений", callback_data="create_video_from_images")],
+
+            [InlineKeyboardButton("🎭 Создать видео по сценарию", callback_data="create_video_from_script")],
+
+        ])
+
+        
+
+        # Остальные кнопки
+
+        keyboard.extend([
+
+            [InlineKeyboardButton("Уточнить, что должно быть на картинке", callback_data="custom_image_prompt")],
+
+            [InlineKeyboardButton("🔄 Сбросить", callback_data="reset")],
+
+        ])
+
+        
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text("Хотите другие варианты или уточнить, что должно быть на картинке?", reply_markup=reply_markup)
+
+
+
+    # Обработчики для генерации видео проба
+
+    elif data == "video_generation":
+
+        # Показываем меню выбора типа генерации видео
+
+        keyboard = [
+
+            [InlineKeyboardButton("🎭 Создать видео по тексту", callback_data="video_text_to_video")],
+
+            [InlineKeyboardButton("🖼️ Создать видео из изображения", callback_data="video_image_to_video")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            "🎬 **Генерация видео**\n\n"
+
+            "Выберите тип генерации видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+
+    elif data == "create_video_from_script":
+
+        # Создание видео по сценарию (text-to-video)
+
+        state['video_type'] = 'text_to_video'
+
+        state['step'] = STEP_VIDEO_QUALITY
+
+        keyboard = [
+
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
+
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            "🎭 **Создание видео по сценарию**\n\n"
+
+            "Выберите качество видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+
+    elif data == "create_video_from_images":
+
+        # Создание видео из изображений (image-to-video)
+
+        state['video_type'] = 'image_to_video'
+
+        state['step'] = STEP_VIDEO_QUALITY
+
+        keyboard = [
+
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
+
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            "🎬 **Создание видео из изображений**\n\n"
+
+            "Выберите качество видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+
+    elif data.startswith("video_quality:"):
+
+        # Обработка выбора качества видео
+
+        quality = data.split(":")[1]
+
+        state['video_quality'] = quality
+
+        state['step'] = STEP_VIDEO_DURATION
+
+        
+
+        keyboard = [
+
+            [InlineKeyboardButton("⏱️ 5 секунд", callback_data="video_duration:5")],
+
+            [InlineKeyboardButton("⏱️ 10 секунд", callback_data="video_duration:10")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_video_quality")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f"🎬 **Качество выбрано: {quality}**\n\n"
+
+            "Выберите длительность видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+    elif data == "back_to_video_quality":
+        state['step'] = STEP_VIDEO_QUALITY
+        keyboard = [
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+        ]
+        await query.edit_message_text(
+            "Выберите качество видео:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    elif data.startswith("video_duration:"):
+
+        # Обработка выбора длительности видео
+
+        duration = int(data.split(":")[1])
+
+        state['video_duration'] = duration
+
+        state['step'] = 'waiting_for_aspect_ratio'
+
+        
+
+        # Запрашиваем выбор пропорции сторон
+
+        keyboard = [
+
+            [InlineKeyboardButton("📱 Instagram Stories/Reels (9:16)", callback_data="aspect_ratio:9:16")],
+
+            [InlineKeyboardButton("📷 Instagram Post (1:1)", callback_data="aspect_ratio:1:1")],
+
+            [InlineKeyboardButton("🖥️ YouTube/Обычное (16:9)", callback_data="aspect_ratio:16:9")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            f"⏱️ **Длительность выбрана: {duration} сек**\n\n"
+
+            "Выберите пропорцию сторон видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+
+    elif data.startswith("aspect_ratio:"):
+
+        # Обработка выбора пропорции сторон
+
+        aspect_ratio = data.split(":")[1] + ":" + data.split(":")[2]  # Получаем "9:16", "1:1", "16:9"
+
+        state['aspect_ratio'] = aspect_ratio
+
+        state['step'] = STEP_VIDEO_GENERATION
+
+        
+
+        # Запрашиваем промпт для видео
+
+        if state.get('video_type') == 'text_to_video':
+
+            await query.edit_message_text(
+
+                "🎭 **Создание видео по тексту**\n\n"
+
+                "Опишите, что должно происходить в видео:\n\n"
+
+                "💡 Примеры:\n"
+
+                "• Красивая природа с цветущими деревьями\n"
+
+                "• Космический корабль летит среди звезд\n"
+
+                "• Городской пейзаж с небоскребами\n\n"
+
+                "🌐 **Ваш промпт будет автоматически переведен на английский для лучшего качества видео**",
+
+                reply_markup=InlineKeyboardMarkup([[
+
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+
+                ]])
+
+            )
+
+        else:
+
+            # Для image-to-video переходим к загрузке изображения
+
+            state['step'] = 'waiting_for_image'
+
+            await query.edit_message_text(
+
+                "🖼️ **Создание видео из изображения**\n\n"
+
+                "Пожалуйста, загрузите изображение, из которого хотите создать видео.\n\n"
+
+                "💡 Рекомендуется использовать качественные изображения в формате JPG или PNG.",
+
+                reply_markup=InlineKeyboardMarkup([[
+
+                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+
+                ]])
+
+            )
+
+
+
+    elif data == "video_text_to_video":
+
+        # Прямая генерация видео по тексту из главного меню
+
+        state['video_type'] = 'text_to_video'
+
+        state['step'] = STEP_VIDEO_QUALITY
+
+        keyboard = [
+
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
+
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            "🎭 **Создание видео по тексту**\n\n"
+
+            "Выберите качество видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+
+    elif data == "video_image_to_video":
+
+        # Прямая генерация видео из изображения из главного меню
+
+        state['video_type'] = 'image_to_video'
+
+        state['step'] = STEP_VIDEO_QUALITY
+
+        keyboard = [
+
+            [InlineKeyboardButton("⚡ Быстрое (480p)", callback_data="video_quality:480p")],
+
+            [InlineKeyboardButton("🔄 Среднее (720p)", callback_data="video_quality:720p")],
+
+            [InlineKeyboardButton("⭐ Качественное (1080p)", callback_data="video_quality:1080p")],
+
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
+
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await query.edit_message_text(
+
+            "🖼️ **Создание видео из изображения**\n\n"
+
+            "Выберите качество видео:",
+
+            reply_markup=reply_markup
+
+        )
+
+
+
+    elif data == "waiting":
+
+        # Обработка кнопки "Генерация..." - просто игнорируем
+
+        await query.answer("⏳ Генерация в процессе...")
+
+
+
+    # Новые обработчики для контроля качества промптов
+
+    elif data == "enhance_prompt":
+
+        # Пользователь хочет улучшить промпт
+
+        await show_enhanced_prompt(update, context, state)
+
+        return
+
+        
+
+    elif data == "generate_as_is":
+
+        # Пользователь хочет генерировать с простым переводом
+
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
+
+        return
+
+        
+
+    elif data == "use_enhanced":
+
+        # Пользователь выбрал улучшенный промпт
+
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
+
+        return
+
+        
+
+    elif data == "show_another_enhancement":
+
+        # Пользователь хочет другой вариант улучшения
+
+        enhancement_attempt = state.get('enhancement_attempt', 1) + 1
+
+        if enhancement_attempt <= 3:  # Максимум 3 попытки
+
+            state['enhancement_attempt'] = enhancement_attempt
+
+            await show_enhanced_prompt(update, context, state)
+
+        else:
+
+            # Показываем сообщение о достижении лимита
+
+            keyboard = [
+
+                [InlineKeyboardButton("✅ Использовать текущий", callback_data="use_enhanced")],
+
+                [InlineKeyboardButton("❌ Вернуться к простому", callback_data="use_simple")]
+
+            ]
+
+            state['enhancement_attempt'] = enhancement_attempt  # Обновляем счетчик в состоянии
+
+            await query.edit_message_text(
+
+                "🔄 **Достигнут лимит попыток улучшения**\n\n"
+
+                "Вы можете:\n"
+
+                "• Использовать текущий улучшенный промпт\n"
+
+                "• Вернуться к простому переводу",
+
+                reply_markup=InlineKeyboardMarkup(keyboard)
+
+            )
+
+        return
+
+        
+
+    elif data == "use_simple":
+
+        # Пользователь хочет вернуться к простому переводу
+
+        if 'enhanced_prompt' in state:
+
+            del state['enhanced_prompt']  # Убираем улучшенный промпт
+
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+        
+        # Отправляем уведомление о начале обработки
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!"
+        )
+
+        return
+
+
+
+
+
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
