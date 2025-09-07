@@ -9391,7 +9391,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         try:
 
-                            output = await replicate_run_async(
+                                output = await replicate_run_async(
                                     "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
@@ -9405,7 +9405,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             try:
 
-                                output = await replicate_run_async(
+                                    output = await replicate_run_async(
                                         "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
@@ -9626,7 +9626,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         
 
-                    output = await replicate_run_async(
+                        output = await replicate_run_async(
                                 "bytedance/seedream-3",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=180
@@ -9962,7 +9962,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     loop = asyncio.get_event_loop()
 
-                    output = await replicate_run_async(
+                        output = await replicate_run_async(
                             "google/imagen-4-ultra",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -10423,7 +10423,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                     await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
                                 await asyncio.sleep(retry_delay)
                             
-                            output = await replicate_run_async(
+                                output = await replicate_run_async(
                                     "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
@@ -10694,7 +10694,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     loop = asyncio.get_event_loop()
 
 
-                    output = await replicate_run_async(
+                        output = await replicate_run_async(
                             "recraft-ai/recraft-v3-svg",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
@@ -21972,7 +21972,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         try:
 
-                            output = await replicate_run_async(
+                                output = await replicate_run_async(
                                     "ideogram-ai/ideogram-v3-turbo",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=60
@@ -21986,7 +21986,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                             try:
 
-                                output = await replicate_run_async(
+                                    output = await replicate_run_async(
                                         "ideogram-ai/ideogram-v2",
                                     {"prompt": prompt_with_style, **replicate_params},
                                     timeout=60
@@ -22207,7 +22207,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                         
 
-                    output = await replicate_run_async(
+                        output = await replicate_run_async(
                                 "bytedance/seedream-3",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=180
@@ -23093,7 +23093,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                     await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
                                 await asyncio.sleep(retry_delay)
                             
-                            output = await replicate_run_async(
+                                output = await replicate_run_async(
                                     "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
@@ -23366,7 +23366,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                     loop = asyncio.get_event_loop()
 
 
-                    output = await replicate_run_async(
+                        output = await replicate_run_async(
                             "recraft-ai/recraft-v3-svg",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
