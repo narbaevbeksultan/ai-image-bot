@@ -1637,8 +1637,8 @@ async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Генерируем простое изображение через Ideogram
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
-            output = await replicate_run_async(
-                "ideogram-ai/ideogram-v3-turbo",
+        output = await replicate_run_async(
+            "ideogram-ai/ideogram-v3-turbo",
             {"prompt": "A simple test image of a red apple on a white background, professional photography"},
             timeout=30
         )
