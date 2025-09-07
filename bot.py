@@ -104,12 +104,203 @@ async def openai_chat_completion_async(messages: list, model: str = "gpt-4o-mini
         logging.error(f"Ошибка при выполнении OpenAI chat completion: {e}")
         raise
 
+# Асинхронные обертки для операций с базой данных
+async def analytics_db_add_user_async(user_id: int, username: str = None, first_name: str = None, last_name: str = None):
+    """Асинхронная обертка для analytics_db.add_user"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.add_user(user_id, username, first_name, last_name)
+    )
+
+async def analytics_db_update_user_activity_async(user_id: int):
+    """Асинхронная обертка для analytics_db.update_user_activity"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.update_user_activity(user_id)
+    )
+
+async def analytics_db_log_action_async(user_id: int, action_type: str, action_data: str = None):
+    """Асинхронная обертка для analytics_db.log_action"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.log_action(user_id, action_type, action_data)
+    )
+
+async def analytics_db_get_user_limits_async(user_id: int):
+    """Асинхронная обертка для analytics_db.get_user_limits"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_user_limits(user_id)
+    )
+
+async def analytics_db_get_user_credits_async(user_id: int):
+    """Асинхронная обертка для analytics_db.get_user_credits"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_user_credits(user_id)
+    )
+
+async def analytics_db_get_free_generations_left_async(user_id: int):
+    """Асинхронная обертка для analytics_db.get_free_generations_left"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_free_generations_left(user_id)
+    )
+
+async def analytics_db_increment_free_generations_async(user_id: int):
+    """Асинхронная обертка для analytics_db.increment_free_generations"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.increment_free_generations(user_id)
+    )
+
+async def analytics_db_use_credits_async(user_id: int, amount: int, description: str = "Использование кредитов"):
+    """Асинхронная обертка для analytics_db.use_credits"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.use_credits(user_id, amount, description)
+    )
+
+async def analytics_db_log_generation_async(user_id: int, model_name: str, format_type: str, 
+                                          prompt: str, image_count: int, success: bool, 
+                                          error_message: str = None, generation_time: float = None):
+    """Асинхронная обертка для analytics_db.log_generation"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.log_generation(user_id, model_name, format_type, prompt, 
+                                          image_count, success, error_message, generation_time)
+    )
+
+async def analytics_db_get_user_stats_async(user_id: int):
+    """Асинхронная обертка для analytics_db.get_user_stats"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_user_stats(user_id)
+    )
+
+async def analytics_db_get_global_stats_async(days: int = 30):
+    """Асинхронная обертка для analytics_db.get_global_stats"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_global_stats(days)
+    )
+
+async def analytics_db_get_daily_stats_async(days: int = 7):
+    """Асинхронная обертка для analytics_db.get_daily_stats"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_daily_stats(days)
+    )
+
+async def analytics_db_get_total_credits_statistics_async():
+    """Асинхронная обертка для analytics_db.get_total_credits_statistics"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_total_credits_statistics()
+    )
+
+async def analytics_db_get_pending_payments_async():
+    """Асинхронная обертка для analytics_db.get_pending_payments"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_pending_payments()
+    )
+
+async def analytics_db_get_credit_transaction_by_payment_id_async(payment_id: str):
+    """Асинхронная обертка для analytics_db.get_credit_transaction_by_payment_id"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_credit_transaction_by_payment_id(payment_id)
+    )
+
+async def analytics_db_add_credits_async(user_id: int, amount: int, payment_id: int = None, 
+                                        description: str = "Покупка кредитов"):
+    """Асинхронная обертка для analytics_db.add_credits"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.add_credits(user_id, amount, payment_id, description)
+    )
+
+async def analytics_db_create_credit_transaction_with_payment_async(user_id: int, amount: int, description: str, payment_id: str):
+    """Асинхронная обертка для analytics_db.create_credit_transaction_with_payment"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.create_credit_transaction_with_payment(user_id, amount, description, payment_id)
+    )
+
+async def analytics_db_update_payment_status_async(payment_id: str, status: str):
+    """Асинхронная обертка для analytics_db.update_payment_status"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.update_payment_status(payment_id, status)
+    )
+
+async def analytics_db_get_payment_by_order_id_async(order_id: str):
+    """Асинхронная обертка для analytics_db.get_payment_by_order_id"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_payment_by_order_id(order_id)
+    )
+
+async def analytics_db_set_user_credits_async(user_id: int, credits: int):
+    """Асинхронная обертка для analytics_db.set_user_credits"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.set_user_credits(user_id, credits)
+    )
+
+async def analytics_db_create_payment_with_credits_async(user_id: int, amount: float, currency: str = "UAH", 
+                                                       payment_id: str = None, order_id: str = None, 
+                                                       credit_amount: int = None):
+    """Асинхронная обертка для analytics_db.create_payment_with_credits"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.create_payment_with_credits(user_id, amount, currency, payment_id, order_id, credit_amount)
+    )
+
+async def analytics_db_get_user_info_by_id_async(user_id: int):
+    """Асинхронная обертка для analytics_db.get_user_info_by_id"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_user_info_by_id(user_id)
+    )
+
+async def analytics_db_get_user_id_by_username_async(username: str):
+    """Асинхронная обертка для analytics_db.get_user_id_by_username"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_user_id_by_username(username)
+    )
+
 # Функция для автоматической проверки статуса платежей
 async def check_pending_payments():
     """Проверяет статус всех pending платежей и зачисляет кредиты при завершении"""
     try:
         # Получаем все pending платежи из базы данных
-        pending_payments = analytics_db.get_pending_payments()
+        pending_payments = await analytics_db_get_pending_payments_async()
         
         if not pending_payments:
             return
@@ -142,17 +333,17 @@ async def check_pending_payments():
                     if credit_amount and credit_amount > 0:
                         # Проверяем, не зачислены ли уже кредиты за этот платеж
                         # Ищем транзакцию с этим payment_id
-                        existing_transaction = analytics_db.get_credit_transaction_by_payment_id(payment_id)
+                        existing_transaction = await analytics_db_get_credit_transaction_by_payment_id_async(payment_id)
                         
                         if not existing_transaction:
                             # Кредиты еще не зачислены, зачисляем
-                            analytics_db.add_credits(user_id, credit_amount)
+                            await analytics_db_add_credits_async(user_id, credit_amount)
                             
                             # Создаем транзакцию с привязкой к платежу
-                            analytics_db.create_credit_transaction_with_payment(user_id, credit_amount, f"Покупка кредитов (платеж {payment_id})", payment_id)
+                            await analytics_db_create_credit_transaction_with_payment_async(user_id, credit_amount, f"Покупка кредитов (платеж {payment_id})", payment_id)
                             
                             # Обновляем статус платежа
-                            analytics_db.update_payment_status(payment_id, 'success')
+                            await analytics_db_update_payment_status_async(payment_id, 'success')
                             
                             # Отправляем уведомление пользователю
                             notification_message = (
@@ -167,12 +358,12 @@ async def check_pending_payments():
                             logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
                         else:
                             # Кредиты уже зачислены, просто обновляем статус платежа
-                            analytics_db.update_payment_status(payment_id, 'success')
+                            await analytics_db_update_payment_status_async(payment_id, 'success')
                             logging.info(f"Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
                 
                 elif payment_status == 'failed':
                     # Обновляем статус неудачного платежа
-                    analytics_db.update_payment_status(payment_id, 'failed')
+                    await analytics_db_update_payment_status_async(payment_id, 'failed')
                     logging.info(f"Платеж {payment_id} завершился неудачно")
                 
             except Exception as e:
@@ -277,16 +468,16 @@ async def payment_callback():
         # Если платеж успешен, зачисляем кредиты
         if status == "completed":
             # Получаем информацию о заказе из базы
-            payment_record = analytics_db.get_payment_by_order_id(order_id)
+            payment_record = await analytics_db_get_payment_by_order_id_async(order_id)
             if payment_record:
                 user_id = payment_record.get("user_id")
                 credit_amount = payment_record.get("credit_amount")
                 
                 # Зачисляем кредиты пользователю
-                analytics_db.add_credits(user_id, credit_amount)
+                await analytics_db_add_credits_async(user_id, credit_amount)
                 
                 # Обновляем статус платежа
-                analytics_db.update_payment_status(payment_id, "completed")
+                await analytics_db_update_payment_status_async(payment_id, "completed")
                 
                 logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
                 
@@ -824,7 +1015,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
 
-    analytics_db.add_user(
+    await analytics_db_add_user_async(
 
         user_id=user.id,
 
@@ -836,9 +1027,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    analytics_db.update_user_activity(user.id)
+    await analytics_db_update_user_activity_async(user.id)
 
-    analytics_db.log_action(user.id, "start_command")
+    await analytics_db_log_action_async(user.id, "start_command")
 
     
 
@@ -924,15 +1115,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -1697,15 +1888,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    await analytics_db_log_action_async(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    user_stats = await analytics_db_get_user_stats_async(user_id)
 
     
 
@@ -1818,7 +2009,7 @@ async def credits_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text("❌ У вас нет доступа к этой команде.")
         return
     try:
-        stats = analytics_db.get_total_credits_statistics()
+        stats = await analytics_db_get_total_credits_statistics_async()
         stats_text = f"""🪙 **СТАТИСТИКА КРЕДИТОВ БОТА**
 📊 **ОБЩАЯ СТАТИСТИКА:**
 • 👥 Пользователей с кредитами: {stats['total_users']}
@@ -1854,17 +2045,17 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "admin_stats_command")
+    await analytics_db_log_action_async(user_id, "admin_stats_command")
 
     
 
     # Получаем глобальную статистику
 
-    global_stats = analytics_db.get_global_stats(30)
+    global_stats = await analytics_db_get_global_stats_async(30)
 
-    daily_stats = analytics_db.get_daily_stats(7)
+    daily_stats = await analytics_db_get_daily_stats_async(7)
 
     
 
@@ -3093,7 +3284,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
 
-    analytics_db.add_user(
+    await analytics_db_add_user_async(
 
         user_id=user.id,
 
@@ -3105,9 +3296,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    analytics_db.update_user_activity(user.id)
+    await analytics_db_update_user_activity_async(user.id)
 
-    analytics_db.log_action(user.id, "start_command")
+    await analytics_db_log_action_async(user.id, "start_command")
 
     
 
@@ -3193,15 +3384,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -3967,15 +4158,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    await analytics_db_log_action_async(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    user_stats = await analytics_db_get_user_stats_async(user_id)
 
     
 
@@ -4105,17 +4296,17 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "admin_stats_command")
+    await analytics_db_log_action_async(user_id, "admin_stats_command")
 
     
 
     # Получаем глобальную статистику
 
-    global_stats = analytics_db.get_global_stats(30)
+    global_stats = await analytics_db_get_global_stats_async(30)
 
-    daily_stats = analytics_db.get_daily_stats(7)
+    daily_stats = await analytics_db_get_daily_stats_async(7)
 
     
 
@@ -4878,8 +5069,8 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
     if user_id:
         logging.info(f"DEBUG: Найден user_id={user_id}")
-        free_generations_left = analytics_db.get_free_generations_left(user_id)
-        user_credits = analytics_db.get_user_credits(user_id)
+        free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+        user_credits = await analytics_db_get_user_credits_async(user_id)
         
         # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
         logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
@@ -5297,14 +5488,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         if generation_type == "free":
                             # Списываем бесплатную генерацию
                             logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
-                            if analytics_db.increment_free_generations(user_id):
+                            if await analytics_db_increment_free_generations_async(user_id):
                                 logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
                             else:
                                 logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
                         elif generation_type == "credits":
                             # Списываем кредиты
                             logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
-                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                            if await analytics_db_use_credits_async(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
                                 logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
                             else:
                                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -6144,15 +6335,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -6916,15 +7107,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    await analytics_db_log_action_async(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    user_stats = await analytics_db_get_user_stats_async(user_id)
 
     
 
@@ -7054,17 +7245,17 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "admin_stats_command")
+    await analytics_db_log_action_async(user_id, "admin_stats_command")
 
     
 
     # Получаем глобальную статистику
 
-    global_stats = analytics_db.get_global_stats(30)
+    global_stats = await analytics_db_get_global_stats_async(30)
 
-    daily_stats = analytics_db.get_daily_stats(7)
+    daily_stats = await analytics_db_get_daily_stats_async(7)
 
     
 
@@ -7827,8 +8018,8 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
     if user_id:
         logging.info(f"DEBUG: Найден user_id={user_id}")
-        free_generations_left = analytics_db.get_free_generations_left(user_id)
-        user_credits = analytics_db.get_user_credits(user_id)
+        free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+        user_credits = await analytics_db_get_user_credits_async(user_id)
         
         # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
         logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
@@ -8246,14 +8437,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         if generation_type == "free":
                             # Списываем бесплатную генерацию
                             logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
-                            if analytics_db.increment_free_generations(user_id):
+                            if await analytics_db_increment_free_generations_async(user_id):
                                 logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
                             else:
                                 logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
                         elif generation_type == "credits":
                             # Списываем кредиты
                             logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
-                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                            if await analytics_db_use_credits_async(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
                                 logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
                             else:
                                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -8626,9 +8817,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     # Логируем начало генерации
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "start_generation", f"format:{state.get('format', 'unknown')}, model:{state.get('image_gen_model', 'unknown')}")
+    await analytics_db_log_action_async(user_id, "start_generation", f"format:{state.get('format', 'unknown')}, model:{state.get('image_gen_model', 'unknown')}")
 
     
 
@@ -8744,8 +8935,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     # Проверяем лимиты пользователя
     user_id = update.effective_user.id
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
-    user_credits = analytics_db.get_user_credits(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+    user_credits = await analytics_db_get_user_credits_async(user_id)
     
     # Определяем стоимость генерации
     selected_model = state.get('image_gen_model', 'Ideogram')
@@ -11049,7 +11240,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     if processed_count > 0:
 
-        analytics_db.log_generation(
+        await analytics_db_log_generation_async(
 
             user_id=user_id,
 
@@ -11067,14 +11258,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
         )
 
-        analytics_db.log_action(user_id, "generation_success", f"count:{processed_count}, time:{generation_time:.1f}s")
+        await analytics_db_log_action_async(user_id, "generation_success", f"count:{processed_count}, time:{generation_time:.1f}s")
         
         # Списываем кредиты или увеличиваем счетчик бесплатных генераций
         if generation_type == "free":
             # Списываем по количеству реально созданных изображений
             for i in range(processed_count):
-                if analytics_db.get_free_generations_left(user_id) > 0:
-                    analytics_db.increment_free_generations(user_id)
+                if await analytics_db_get_free_generations_left_async(user_id) > 0:
+                    await analytics_db_increment_free_generations_async(user_id)
                 else:
                     # Если бесплатные закончились, переключаемся на кредиты
                     generation_type = "credits"
@@ -11084,7 +11275,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             if generation_type == "credits":
                 remaining_count = processed_count - i
                 total_cost = generation_cost * remaining_count
-                analytics_db.use_credits(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
+                await analytics_db_use_credits_async(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
                 logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {remaining_count} изображений")
             else:
                 logging.info(f"Пользователь {user_id} использовал {processed_count} бесплатных генераций")
@@ -11092,7 +11283,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         elif generation_type == "credits":
             # Списываем кредиты за каждое изображение
             total_cost = generation_cost * processed_count
-            if analytics_db.use_credits(user_id, total_cost, f"Генерация {processed_count} изображений через {selected_model}"):
+            if await analytics_db_use_credits_async(user_id, total_cost, f"Генерация {processed_count} изображений через {selected_model}"):
                 logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {processed_count} изображений")
             else:
                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -11101,7 +11292,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
         # Логируем неудачную генерацию
 
-        analytics_db.log_generation(
+        await analytics_db_log_generation_async(
 
             user_id=user_id,
 
@@ -11121,7 +11312,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
         )
 
-        analytics_db.log_action(user_id, "generation_failed", f"time:{generation_time:.1f}s")
+        await analytics_db_log_action_async(user_id, "generation_failed", f"time:{generation_time:.1f}s")
 
     
 
@@ -11300,7 +11491,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
 
-    analytics_db.add_user(
+    await analytics_db_add_user_async(
 
         user_id=user.id,
 
@@ -11312,9 +11503,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    analytics_db.update_user_activity(user.id)
+    await analytics_db_update_user_activity_async(user.id)
 
-    analytics_db.log_action(user.id, "start_command")
+    await analytics_db_log_action_async(user.id, "start_command")
 
     
 
@@ -11400,15 +11591,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -12174,15 +12365,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    await analytics_db_log_action_async(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    user_stats = await analytics_db_get_user_stats_async(user_id)
 
     
 
@@ -12312,17 +12503,17 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "admin_stats_command")
+    await analytics_db_log_action_async(user_id, "admin_stats_command")
 
     
 
     # Получаем глобальную статистику
 
-    global_stats = analytics_db.get_global_stats(30)
+    global_stats = await analytics_db_get_global_stats_async(30)
 
-    daily_stats = analytics_db.get_daily_stats(7)
+    daily_stats = await analytics_db_get_daily_stats_async(7)
 
     
 
@@ -13551,7 +13742,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
 
-    analytics_db.add_user(
+    await analytics_db_add_user_async(
 
         user_id=user.id,
 
@@ -13563,9 +13754,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     )
 
-    analytics_db.update_user_activity(user.id)
+    await analytics_db_update_user_activity_async(user.id)
 
-    analytics_db.log_action(user.id, "start_command")
+    await analytics_db_log_action_async(user.id, "start_command")
 
     
 
@@ -13651,15 +13842,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -14425,15 +14616,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    await analytics_db_log_action_async(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    user_stats = await analytics_db_get_user_stats_async(user_id)
 
     
 
@@ -14563,17 +14754,17 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "admin_stats_command")
+    await analytics_db_log_action_async(user_id, "admin_stats_command")
 
     
 
     # Получаем глобальную статистику
 
-    global_stats = analytics_db.get_global_stats(30)
+    global_stats = await analytics_db_get_global_stats_async(30)
 
-    daily_stats = analytics_db.get_daily_stats(7)
+    daily_stats = await analytics_db_get_daily_stats_async(7)
 
     
 
@@ -15336,8 +15527,8 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
     if user_id:
         logging.info(f"DEBUG: Найден user_id={user_id}")
-        free_generations_left = analytics_db.get_free_generations_left(user_id)
-        user_credits = analytics_db.get_user_credits(user_id)
+        free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+        user_credits = await analytics_db_get_user_credits_async(user_id)
         
         # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
         logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
@@ -15755,14 +15946,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         if generation_type == "free":
                             # Списываем бесплатную генерацию
                             logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
-                            if analytics_db.increment_free_generations(user_id):
+                            if await analytics_db_increment_free_generations_async(user_id):
                                 logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
                             else:
                                 logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
                         elif generation_type == "credits":
                             # Списываем кредиты
                             logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
-                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                            if await analytics_db_use_credits_async(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
                                 logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
                             else:
                                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -16600,15 +16791,15 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем информацию о статусе
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -17372,15 +17563,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "stats_command")
+    await analytics_db_log_action_async(user_id, "stats_command")
 
     
 
     # Получаем статистику пользователя
 
-    user_stats = analytics_db.get_user_stats(user_id)
+    user_stats = await analytics_db_get_user_stats_async(user_id)
 
     
 
@@ -17510,17 +17701,17 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "admin_stats_command")
+    await analytics_db_log_action_async(user_id, "admin_stats_command")
 
     
 
     # Получаем глобальную статистику
 
-    global_stats = analytics_db.get_global_stats(30)
+    global_stats = await analytics_db_get_global_stats_async(30)
 
-    daily_stats = analytics_db.get_daily_stats(7)
+    daily_stats = await analytics_db_get_daily_stats_async(7)
 
     
 
@@ -18283,8 +18474,8 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
     if user_id:
         logging.info(f"DEBUG: Найден user_id={user_id}")
-        free_generations_left = analytics_db.get_free_generations_left(user_id)
-        user_credits = analytics_db.get_user_credits(user_id)
+        free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+        user_credits = await analytics_db_get_user_credits_async(user_id)
         
         # Редактирование доступно за бесплатные генерации ИЛИ за кредиты
         logging.info(f"DEBUG: free_generations_left={free_generations_left}, user_credits['balance']={user_credits['balance']}")
@@ -18702,14 +18893,14 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                         if generation_type == "free":
                             # Списываем бесплатную генерацию
                             logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
-                            if analytics_db.increment_free_generations(user_id):
+                            if await analytics_db_increment_free_generations_async(user_id):
                                 logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
                             else:
                                 logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
                         elif generation_type == "credits":
                             # Списываем кредиты
                             logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
-                            if analytics_db.use_credits(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                            if await analytics_db_use_credits_async(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
                                 logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
                             else:
                                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -19082,9 +19273,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     # Логируем начало генерации
 
-    analytics_db.update_user_activity(user_id)
+    await analytics_db_update_user_activity_async(user_id)
 
-    analytics_db.log_action(user_id, "start_generation", f"format:{state.get('format', 'unknown')}, model:{state.get('image_gen_model', 'unknown')}")
+    await analytics_db_log_action_async(user_id, "start_generation", f"format:{state.get('format', 'unknown')}, model:{state.get('image_gen_model', 'unknown')}")
 
     
 
@@ -19200,8 +19391,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     # Проверяем лимиты пользователя
     user_id = update.effective_user.id
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
-    user_credits = analytics_db.get_user_credits(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+    user_credits = await analytics_db_get_user_credits_async(user_id)
     
     # Определяем стоимость генерации
     selected_model = state.get('image_gen_model', 'Ideogram')
@@ -21571,7 +21762,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     if processed_count > 0:
 
-        analytics_db.log_generation(
+        await analytics_db_log_generation_async(
 
             user_id=user_id,
 
@@ -21589,14 +21780,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
         )
 
-        analytics_db.log_action(user_id, "generation_success", f"count:{processed_count}, time:{generation_time:.1f}s")
+        await analytics_db_log_action_async(user_id, "generation_success", f"count:{processed_count}, time:{generation_time:.1f}s")
         
         # Списываем кредиты или увеличиваем счетчик бесплатных генераций
         if generation_type == "free":
             # Списываем по количеству реально созданных изображений
             for i in range(processed_count):
-                if analytics_db.get_free_generations_left(user_id) > 0:
-                    analytics_db.increment_free_generations(user_id)
+                if await analytics_db_get_free_generations_left_async(user_id) > 0:
+                    await analytics_db_increment_free_generations_async(user_id)
                 else:
                     # Если бесплатные закончились, переключаемся на кредиты
                     generation_type = "credits"
@@ -21606,7 +21797,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             if generation_type == "credits":
                 remaining_count = processed_count - i
                 total_cost = generation_cost * remaining_count
-                analytics_db.use_credits(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
+                await analytics_db_use_credits_async(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
                 logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {remaining_count} изображений")
             else:
                 logging.info(f"Пользователь {user_id} использовал {processed_count} бесплатных генераций")
@@ -21614,7 +21805,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         elif generation_type == "credits":
             # Списываем кредиты за каждое изображение
             total_cost = generation_cost * processed_count
-            if analytics_db.use_credits(user_id, total_cost, f"Генерация {processed_count} изображений через {selected_model}"):
+            if await analytics_db_use_credits_async(user_id, total_cost, f"Генерация {processed_count} изображений через {selected_model}"):
                 logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {processed_count} изображений")
             else:
                 logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -21625,7 +21816,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
         # Логируем неудачную генерацию
 
-        analytics_db.log_generation(
+        await analytics_db_log_generation_async(
 
             user_id=user_id,
 
@@ -21645,7 +21836,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
         )
 
-        analytics_db.log_action(user_id, "generation_failed", f"time:{generation_time:.1f}s")
+        await analytics_db_log_action_async(user_id, "generation_failed", f"time:{generation_time:.1f}s")
 
     
 
@@ -21835,15 +22026,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "user_stats":
 
-        analytics_db.update_user_activity(user_id)
+        await analytics_db_update_user_activity_async(user_id)
 
-        analytics_db.log_action(user_id, "view_stats_button")
+        await analytics_db_log_action_async(user_id, "view_stats_button")
 
         
 
         # Получаем статистику пользователя
 
-        user_stats = analytics_db.get_user_stats(user_id)
+        user_stats = await analytics_db_get_user_stats_async(user_id)
 
         
 
@@ -26150,8 +26341,8 @@ async def generate_video(update, context, state):
         return
 
     # Проверяем доступ к видео (только за кредиты)
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
-    user_credits = analytics_db.get_user_credits(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
+    user_credits = await analytics_db_get_user_credits_async(user_id)
 
     # Получаем параметры видео для расчета стоимости
     video_type = state.get('video_type', 'text_to_video')
@@ -27097,7 +27288,7 @@ async def generate_video(update, context, state):
                     # Для других длительностей используем базовую цену 480p 5s
                     base_cost = 37
                 
-                if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                     logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
                 else:
                     logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -27200,7 +27391,7 @@ async def generate_video(update, context, state):
                         # Для других длительностей используем базовую цену 480p 5s
                         base_cost = 37
                     
-                    if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                    if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                         logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
                     else:
                         logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -27438,7 +27629,7 @@ async def generate_video(update, context, state):
                                         # Для других длительностей используем базовую цену 480p 5s
                                         base_cost = 37
                                     
-                                    if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                                    if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                                         logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
                                     else:
                                         logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -27520,7 +27711,7 @@ async def generate_video(update, context, state):
                                     # Для других длительностей используем базовую цену 480p 5s
                                     base_cost = 37
                                 
-                                if analytics_db.use_credits(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
+                                if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                                     logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
                                 else:
                                     logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
@@ -28187,15 +28378,15 @@ async def show_subscription_menu(update: Update, context: ContextTypes.DEFAULT_T
 
     # Получаем информацию о пользователе
 
-    limits = analytics_db.get_user_limits(user_id)
+    limits = await analytics_db_get_user_limits_async(user_id)
 
-    credits = analytics_db.get_user_credits(user_id)
+    credits = await analytics_db_get_user_credits_async(user_id)
 
     
 
     # Формируем текст статуса
 
-    free_generations_left = analytics_db.get_free_generations_left(user_id)
+    free_generations_left = await analytics_db_get_free_generations_left_async(user_id)
 
     
 
@@ -28469,7 +28660,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         # Создаем запись о платеже в базе данных с количеством кредитов
         order_id = payment_result.get('order_id', f"order{int(time.time())}")
-        payment_record = analytics_db.create_payment_with_credits(
+        payment_record = await analytics_db_create_payment_with_credits_async(
             user_id=user_id,
             amount=package['price'],
             currency=package['currency'],
@@ -28668,7 +28859,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
             if abs(package['price'] - amount) < 1.0:  # Погрешность 1 сомль
 
                 # Проверяем, не зачислены ли уже кредиты за этот платеж
-                existing_transaction = analytics_db.get_credit_transaction_by_payment_id(payment_id)
+                existing_transaction = await analytics_db_get_credit_transaction_by_payment_id_async(payment_id)
                 
                 if existing_transaction:
                     # Кредиты уже зачислены
@@ -28676,7 +28867,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
                     return
                 
                 # Активируем кредиты
-                success = analytics_db.add_credits(
+                success = await analytics_db_add_credits_async(
                     user_id=user_id,
                     amount=package['credits'],
                     payment_id=payment_id,
@@ -28684,7 +28875,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
                 )
                 
                 # Создаем транзакцию с привязкой к платежу
-                analytics_db.create_credit_transaction_with_payment(user_id, package['credits'], f"Покупка пакета: {package['credits']} кредитов", payment_id)
+                await analytics_db_create_credit_transaction_with_payment_async(user_id, package['credits'], f"Покупка пакета: {package['credits']} кредитов", payment_id)
 
                 
 
@@ -29037,7 +29228,7 @@ async def show_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Получаем информацию о пользователе
     user_id = update.effective_user.id
-    user_info = analytics_db.get_user_info_by_id(user_id)
+    user_info = await analytics_db_get_user_info_by_id_async(user_id)
     
     # Формируем информацию о пользователе
     username_display = f"@{user_info['username']}" if user_info and user_info['username'] else "Без username"
@@ -29116,14 +29307,14 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if user_identifier.startswith('@'):
         # Поиск по username
         username = user_identifier[1:]
-        user_id = analytics_db.get_user_id_by_username(username)
+        user_id = await analytics_db_get_user_id_by_username_async(username)
         if user_id:
-            user_info = analytics_db.get_user_info_by_id(user_id)
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
     else:
         # Попытка поиска по user_id
         try:
             user_id = int(user_identifier)
-            user_info = analytics_db.get_user_info_by_id(user_id)
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
         except ValueError:
             pass
     
@@ -29137,7 +29328,7 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     # Добавляем кредиты
     new_credits = current_credits + credits_to_add
-    analytics_db.set_user_credits(user_id, new_credits)
+    await analytics_db_set_user_credits_async(user_id, new_credits)
     
     # Формируем информацию о пользователе
     username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
@@ -29193,14 +29384,14 @@ async def check_credits_command(update: Update, context: ContextTypes.DEFAULT_TY
     if user_identifier.startswith('@'):
         # Поиск по username
         username = user_identifier[1:]
-        user_id = analytics_db.get_user_id_by_username(username)
+        user_id = await analytics_db_get_user_id_by_username_async(username)
         if user_id:
-            user_info = analytics_db.get_user_info_by_id(user_id)
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
     else:
         # Попытка поиска по user_id
         try:
             user_id = int(user_identifier)
-            user_info = analytics_db.get_user_info_by_id(user_id)
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
         except ValueError:
             pass
     
@@ -29260,14 +29451,14 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if user_identifier.startswith('@'):
         # Поиск по username
         username = user_identifier[1:]
-        user_id = analytics_db.get_user_id_by_username(username)
+        user_id = await analytics_db_get_user_id_by_username_async(username)
         if user_id:
-            user_info = analytics_db.get_user_info_by_id(user_id)
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
     else:
         # Попытка поиска по user_id
         try:
             user_id = int(user_identifier)
-            user_info = analytics_db.get_user_info_by_id(user_id)
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
         except ValueError:
             pass
     
@@ -29280,7 +29471,7 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     old_credits = credits_data.get('balance', 0)
     
     # Устанавливаем новые кредиты
-    analytics_db.set_user_credits(user_id, credits_to_set)
+    await analytics_db_set_user_credits_async(user_id, credits_to_set)
     
     # Формируем информацию о пользователе
     username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
