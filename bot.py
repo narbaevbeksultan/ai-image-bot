@@ -10413,8 +10413,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 if send_text:
                                     await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
                                 await asyncio.sleep(retry_delay)
-            output = await replicate_run_async(
-                                    "luma/photon",
+                            
+                            output = await replicate_run_async(
+                                "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
                             )
@@ -23072,8 +23073,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                                 if send_text:
                                     await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
                                 await asyncio.sleep(retry_delay)
-            output = await replicate_run_async(
-                                    "luma/photon",
+                            
+                            output = await replicate_run_async(
+                                "luma/photon",
                                 {"prompt": prompt_with_style, **replicate_params},
                                 timeout=180
                             )
