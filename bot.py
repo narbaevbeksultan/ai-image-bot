@@ -9962,8 +9962,8 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                     loop = asyncio.get_event_loop()
 
-                        output = await replicate_run_async(
-                            "google/imagen-4-ultra",
+                    output = await replicate_run_async(
+                        "google/imagen-4-ultra",
                         {"prompt": prompt_with_style, **replicate_params},
                         timeout=60
                     )
