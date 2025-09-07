@@ -28064,7 +28064,7 @@ Keep the enhancement reasonable and don't add completely new elements not implie
         # Используем асинхронный вызов для предотвращения блокировки
         loop = asyncio.get_event_loop()
         response = await asyncio.wait_for(
-            loop.run_in_executor(None, lambda: client.chat.completions.create(
+            loop.run_in_executor(THREAD_POOL, lambda: client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_content},
