@@ -5088,9 +5088,9 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             # Открываем изображение с помощью PIL для получения размеров
 
-            # with Image.open(temp_file_path) as img:
+            with Image.open(temp_file_path) as img:
 
-            #     width, height = img.size
+                width, height = img.size
 
             
 
@@ -8013,9 +8013,9 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             # Открываем изображение с помощью PIL для получения размеров
 
-            # with Image.open(temp_file_path) as img:
+            with Image.open(temp_file_path) as img:
 
-            #     width, height = img.size
+                width, height = img.size
 
             
 
@@ -18001,9 +18001,9 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             # Открываем изображение с помощью PIL для получения размеров
 
-            # with Image.open(temp_file_path) as img:
+            with Image.open(temp_file_path) as img:
 
-            #     width, height = img.size
+                width, height = img.size
 
             
 
@@ -20924,9 +20924,9 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             # Открываем изображение с помощью PIL для получения размеров
 
-            # with Image.open(temp_file_path) as img:
+            with Image.open(temp_file_path) as img:
 
-            #     width, height = img.size
+                width, height = img.size
 
             
 
