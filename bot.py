@@ -13055,7 +13055,19 @@ MODEL_DESCRIPTIONS = {
 }
 
 
-
+    # Обработка создания видео
+    elif data == "create_video":
+        USER_STATE[user_id] = {'step': 'video_format'}
+        await query.edit_message_text(
+            "🎬 Выберите формат для видео:",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📱 Instagram Reels", callback_data="video_format:Instagram Reels")],
+                [InlineKeyboardButton("🎵 TikTok", callback_data="video_format:TikTok")],
+                [InlineKeyboardButton("📺 YouTube Shorts", callback_data="video_format:YouTube Shorts")],
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ])
+        )
+        
 # Характеристики моделей видео
 
 VIDEO_MODEL_DESCRIPTIONS = {
