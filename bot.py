@@ -11850,6 +11850,78 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await query.edit_message_text(help_text, reply_markup=reply_markup)
 
+    elif data == "enhance_prompt":
+        # Обработка улучшения промпта для видео
+        video_prompt = state.get('video_prompt', '')
+        if not video_prompt:
+            await query.edit_message_text("❌ Ошибка: промпт не найден. Попробуйте снова.", 
+                                        reply_markup=InlineKeyboardMarkup([[
+                                            InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+                                        ]]))
+            return
+        
+        # Переводим промпт на английский
+        try:
+            import openai
+            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            
+            translation_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Переведи следующий текст на английский язык, сохранив смысл и стиль:"},
+                    {"role": "user", "content": video_prompt}
+                ],
+                max_tokens=200,
+                temperature=0.3
+            )
+            english_prompt = translation_response.choices[0].message.content.strip()
+        except Exception as e:
+            logging.error(f"Ошибка перевода промпта: {e}")
+            english_prompt = video_prompt
+        
+        # Улучшаем промпт
+        try:
+            enhanced_prompt = await enhance_prompt_with_gpt(video_prompt, english_prompt)
+            state['enhanced_prompt'] = enhanced_prompt
+            
+            # Показываем улучшенный промпт
+            prompt_text = f"📝 **Оригинальный промпт:** {video_prompt}\n🌐 **Переведенный промпт:** {english_prompt}\n✨ **Улучшенный промпт:** {enhanced_prompt}"
+            
+            keyboard = [
+                [InlineKeyboardButton("🎬 Генерировать с улучшенным промптом", callback_data="generate_enhanced_video")],
+                [InlineKeyboardButton("🔄 Попробовать другое улучшение", callback_data="enhance_prompt")],
+                [InlineKeyboardButton("❌ Отменить", callback_data="main_menu")]
+            ]
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(prompt_text, reply_markup=reply_markup)
+            
+        except Exception as e:
+            logging.error(f"Ошибка улучшения промпта: {e}")
+            await query.edit_message_text("❌ Ошибка при улучшении промпта. Попробуйте снова.", 
+                                        reply_markup=InlineKeyboardMarkup([[
+                                            InlineKeyboardButton("🔄 Попробовать снова", callback_data="enhance_prompt"),
+                                            InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+                                        ]]))
+
+    elif data == "generate_as_is":
+        # Генерируем видео с оригинальным промптом
+        await query.edit_message_text("🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!")
+        
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+
+    elif data == "generate_enhanced_video":
+        # Генерируем видео с улучшенным промптом
+        enhanced_prompt = state.get('enhanced_prompt', '')
+        if enhanced_prompt:
+            state['video_prompt'] = enhanced_prompt
+        
+        await query.edit_message_text("🎬 **Видео в обработке...**\n\nГенерация может занять несколько минут. Вы получите уведомление, когда видео будет готово!")
+        
+        # Запускаем генерацию видео в фоне
+        asyncio.create_task(generate_video_async(update, context, state))
+
     elif data == "how_to_use":
 
         await show_how_to_use(update, context)
