@@ -84,17 +84,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
         # Определяем параметры для Replicate
         user_format = state.get('format', '')
         simple_orientation = state.get('simple_orientation', None)
-        
-        # Простые параметры для Ideogram
-        replicate_params = {}
-        if user_format == '1:1':
-            replicate_params['aspect_ratio'] = '1:1'
-        elif user_format == '16:9':
-            replicate_params['aspect_ratio'] = '16:9'
-        elif user_format == '9:16':
-            replicate_params['aspect_ratio'] = '9:16'
-        else:
-            replicate_params['aspect_ratio'] = '1:1'
+        replicate_params = get_replicate_params_for_model(selected_model, user_format, simple_orientation)
         
         if send_text:
             await send_text(f'Генерирую изображение {idx}...')
@@ -134,10 +124,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 
                 # Проверяем, является ли output объектом FileOutput
                 if hasattr(output, 'url'):
-                    if callable(output.url):
-                        image_url = output.url()
-                    else:
-                        image_url = output.url
+                    image_url = output.url()
                 elif hasattr(output, '__iter__') and not isinstance(output, str):
                     try:
                         output_list = list(output)
@@ -9463,53 +9450,1868 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     media = []
 
-    # ПАРАЛЛЕЛЬНАЯ ГЕНЕРАЦИЯ ИЗОБРАЖЕНИЙ
-    # Создаем задачи для параллельной генерации всех изображений
-    tasks = []
     for idx, prompt in enumerate(safe_prompts, 1):
+
         if idx > max_scenes:
+
             break
-        # Создаем задачу для генерации одного изображения
-        task = generate_single_image_async(idx, prompt, state, send_text)
-        tasks.append(task)
 
-    # Запускаем все задачи параллельно
-    if tasks:
-        if send_text:
-            await send_text(f"🚀 Запускаю параллельную генерацию {len(tasks)} изображений...")
+        # Добавляем стиль генерации к промпту (упрощенная версия для Ideogram)
 
-        # Ждем завершения всех задач
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        image_gen_style = state.get('image_gen_style', '')
 
-        # Обрабатываем результаты
-        for result in results:
-            if isinstance(result, Exception):
-                logging.error(f"Ошибка в параллельной генерации: {result}")
-                if send_text:
-                    await send_text(f"❌ Ошибка при генерации: {result}")
+        selected_model = state.get('image_gen_model', 'Ideogram')
+
+        style_suffix = ''
+
+        
+
+        if image_gen_style and selected_model != 'Ideogram':
+
+            # Для других моделей используем полные стили
+
+            if image_gen_style == 'Фотореализм':
+
+                style_suffix = ', photorealistic, ultra-realistic, high detail, 8k, professional photography, sharp focus, natural lighting, cinematic, award-winning photo'
+
+            elif image_gen_style == 'Иллюстрация':
+
+                style_suffix = ', illustration, digital art, high detail, artistic, creative, vibrant colors'
+
+            elif image_gen_style == 'Минимализм':
+
+                style_suffix = ', minimalism, clean, simple, high contrast, modern design, geometric shapes'
+
+            elif image_gen_style == 'Акварель':
+
+                style_suffix = ', watercolor, painting, soft colors, artistic, flowing, organic'
+
+            elif image_gen_style == 'Масляная живопись':
+
+                style_suffix = ', oil painting, canvas texture, brush strokes, artistic, traditional art'
+
+            elif image_gen_style == 'Пиксель-арт':
+
+                style_suffix = ', pixel art, 8-bit, retro style, digital art'
+
+        elif image_gen_style and selected_model == 'Ideogram':
+
+            # Для Ideogram используем минимальные стили
+
+            if image_gen_style == 'Фотореализм':
+
+                style_suffix = ', realistic'
+
+            elif image_gen_style == 'Иллюстрация':
+
+                style_suffix = ', illustration'
+
+            elif image_gen_style == 'Минимализм':
+
+                style_suffix = ', minimal'
+
+            elif image_gen_style == 'Акварель':
+
+                style_suffix = ', watercolor'
+
+            elif image_gen_style == 'Масляная живопись':
+
+                style_suffix = ', oil painting'
+
+            elif image_gen_style == 'Пиксель-арт':
+
+                style_suffix = ', pixel art'
+
+        
+
+        # Добавляем формат для разных типов контента (упрощенная версия для Ideogram)
+
+        format_suffix = ''
+
+        user_format = state.get('format', '').lower().replace(' ', '')
+
+        simple_orientation = state.get('simple_orientation', None)
+
+        
+
+        if selected_model == 'Ideogram':
+
+            # Для Ideogram используем минимальные форматные указания
+
+            if user_format == 'instagramstories':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'instagramreels':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'tiktok':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'youtubeshorts':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'instagrampost':
+
+                format_suffix = ', square'
+
+            elif user_format == 'изображения':
+
+                # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
+
+                if simple_orientation == 'vertical':
+
+                    format_suffix = ', vertical'
+
+                elif simple_orientation == 'square':
+
+                    format_suffix = ', square'
+
+                else:
+
+                    format_suffix = ', square'  # По умолчанию квадратный
+
+        else:
+
+            # Для других моделей используем полные форматные указания
+
+            if user_format == 'instagramstories':
+
+                format_suffix = ', vertical composition, Instagram Stories format, mobile optimized, space for text overlay'
+
+            elif user_format == 'instagramreels':
+
+                format_suffix = ', vertical composition, mobile video format, dynamic composition'
+
+            elif user_format == 'tiktok':
+
+                format_suffix = ', vertical composition, TikTok format, mobile optimized, trending style'
+
+            elif user_format == 'youtubeshorts':
+
+                format_suffix = ', vertical composition, YouTube Shorts format, mobile video optimized'
+
+            elif user_format == 'instagrampost':
+
+                format_suffix = ', square composition, Instagram Post format, social media optimized'
+
+            elif user_format == 'изображения':
+
+                # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
+
+                if simple_orientation == 'vertical':
+
+                    format_suffix = ', vertical composition, portrait orientation, tall vertical image'
+
+                elif simple_orientation == 'square':
+
+                    format_suffix = ', square composition, balanced layout'
+
+                else:
+
+                    format_suffix = ', square composition, balanced layout'  # По умолчанию квадратный
+
+        
+
+        prompt_with_style = prompt + style_suffix + format_suffix
+
+        
+
+        # Улучшаем промпт для Ideogram
+
+        if selected_model == 'Ideogram':
+
+            prompt_with_style = improve_prompt_for_ideogram(prompt_with_style)
+
+        
+
+        # Определяем размер изображения на основе формата и модели
+
+        image_size = get_image_size_for_format(user_format, simple_orientation)
+
+        selected_model = state.get('image_gen_model', 'Ideogram')
+
+        simple_orientation = state.get('simple_orientation', None)
+
+        replicate_params = get_replicate_params_for_model(selected_model, user_format, simple_orientation)
+
+        
+
+
+
+        
+
+        try:
+
+            if send_text:
+
+                caption = f'Сцена {idx}: {prompt}' if scenes else f'Вариант {idx}'
+
+                await send_text(f'Генерирую изображение {idx}...')
+
+            
+
+            # Определяем модель для генерации
+
+            selected_model = state.get('image_gen_model', 'Ideogram')
+
+            
+
+            # Генерация изображения в зависимости от выбранной модели
+
+            if selected_model == 'Ideogram':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"🎨 Генерирую через Ideogram...\n\n💡 Совет: Ideogram лучше работает с простыми, четкими описаниями")
+
+                    
+
+                    # Генерация через Ideogram на Replicate с таймаутом
+
+
+                    try:
+
+                        # Проверяем API токен
+
+                        if not os.environ.get('REPLICATE_API_TOKEN'):
+
+                            if send_text:
+
+                                keyboard = [
+
+                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                                ]
+
+                                reply_markup = InlineKeyboardMarkup(keyboard)
+
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
+
+                            continue
+
+                        
+
+                        # Запускаем генерацию с таймаутом
+
+                        loop = asyncio.get_event_loop()
+
+                        
+
+                        # Используем Ideogram v3 Turbo (более стабильная версия)
+
+                        try:
+                            output = await replicate_run_async(
+                                "ideogram-ai/ideogram-v3-turbo",
+                                {"prompt": prompt_with_style, **replicate_params},
+                                timeout=60
+                            )
+
+                        except Exception as e:
+
+                            # Если v3 не работает, пробуем v2
+
+                            logging.warning(f"Ideogram v3 Turbo недоступен: {e}, пробуем v2...")
+
+                            try:
+                                output = await replicate_run_async(
+                                        "ideogram-ai/ideogram-v2",
+                                    {"prompt": prompt_with_style, **replicate_params},
+                                    timeout=60
+                                )
+
+                            except Exception as e2:
+
+                                logging.error(f"Ideogram недоступен: {e2}")
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте выбрать другую модель или попробовать снова")
+
+                                continue
+
+                        
+
+                        # Обработка ответа от Replicate API
+
+                        image_url = None
+
+                        
+
+                        # Проверяем, является ли output объектом FileOutput
+
+                        if hasattr(output, 'url'):
+
+                            # Это объект FileOutput, используем его URL
+
+                            image_url = output.url()
+
+                        elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                            # Если это итератор (генератор)
+
+                            try:
+
+                                # Преобразуем в список и берем первый элемент
+
+                                output_list = list(output)
+
+                                if output_list:
+
+                                    image_url = output_list[0]
+
+                            except Exception as e:
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при обработке итератора: {e}")
+
+                                continue
+
+                        else:
+
+                            # Если это не итератор, используем как есть
+
+                            image_url = output
+
+                        
+
+                        # Проверяем, что получили URL
+
+                        if not image_url:
+
+                            if send_text:
+
+                                await send_text(f"❌ Не удалось получить изображение от Ideogram (пустой результат)")
+
+                            continue
+
+                        
+
+                        # Конвертация bytes в строку если необходимо (только для URL, не для бинарных данных)
+
+                        if isinstance(image_url, bytes):
+
+                            try:
+
+                                # Пробуем декодировать как UTF-8 (для URL)
+
+                                image_url = image_url.decode('utf-8')
+
+                            except UnicodeDecodeError:
+
+                                # Если не удается декодировать как UTF-8, это может быть бинарные данные
+
+                                if send_text:
+
+                                    await send_text(f"❌ Получены бинарные данные вместо URL от Ideogram")
+
+                                continue
+
+                        
+
+                        # Проверяем, что это строка и начинается с http
+
+                        if not isinstance(image_url, str):
+
+                            if send_text:
+
+                                await send_text(f"❌ Неверный тип URL от Ideogram")
+
+                            continue
+
+                        
+
+                        if not image_url.startswith(('http://', 'https://')):
+
+                            if send_text:
+
+                                await send_text(f"❌ Получен неверный URL от Ideogram")
+
+                            continue
+
+                            
+
+                    except asyncio.TimeoutError:
+
+                        logging.warning(f"Таймаут при генерации через Ideogram")
+
+                        if send_text:
+
+                            await send_text(f"⏰ Таймаут при генерации изображения\n💡 Попробуйте выбрать другую модель или попробовать снова")
+
+                        continue
+
+                        
+
+                except Exception as e:
+
+                    error_msg = str(e)
+
+                    logging.error(f"Ошибка при генерации изображения: {e}")
+
+                    if "insufficient_credit" in error_msg.lower() or "insufficient credit" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
+
+                    elif "api" in error_msg.lower() or "token" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
+
+                    else:
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка при генерации через Ideogram: {error_msg}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
+
+                    continue
+
+            elif selected_model == 'Bytedance (Seedream-3)':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 лидер по качеству с нативным 2K разрешением, может занять до 3 минут для максимального качества")
+
+                    
+
+                    # Генерация через Bytedance на Replicate с таймаутом
+
+
+                    try:
+
+                        # Проверяем API токен
+
+                        if not os.environ.get('REPLICATE_API_TOKEN'):
+
+                            if send_text:
+
+                                keyboard = [
+
+                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                                ]
+
+                                reply_markup = InlineKeyboardMarkup(keyboard)
+
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
+
+                            continue
+
+                        
+
+                        # Запускаем генерацию с увеличенным таймаутом для 2K качества
+
+                        loop = asyncio.get_event_loop()
+                        output = await replicate_run_async(
+                                "bytedance/seedream-3",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=180
+                        )
+                        
+
+                        
+                        # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Bytedance Seedream-3 (console logging)
+                        print(f"🔍 Bytedance Seedream-3 - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                        print(f"   Тип output: {type(output)}")
+                        print(f"   output: {output}")
+                        print(f"   repr(output): {repr(output)}")
+                        print(f"   dir(output): {dir(output)}")
+                        print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                        print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                        print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                        print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                        print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                        
+                        # Проверяем все возможные атрибуты
+                        if hasattr(output, 'url'):
+                            try:
+                                url_value = output.url()
+                                print(f"   output.url(): {url_value}")
+                            except Exception as e:
+                                print(f"   output.url() ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'id'):
+                            try:
+                                id_value = output.id
+                                print(f"   output.id: {id_value}")
+                            except Exception as e:
+                                print(f"   output.id ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'status'):
+                            try:
+                                status_value = output.status
+                                print(f"   output.status: {status_value}")
+                            except Exception as e:
+                                print(f"   output.status ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'output'):
+                            try:
+                                output_value = output.output
+                                print(f"   output.output: {output_value}")
+                            except Exception as e:
+                                print(f"   output.output ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'result'):
+                            try:
+                                result_value = output.result
+                                print(f"   output.result: {result_value}")
+                            except Exception as e:
+                                print(f"   output.result ОШИБКА: {e}")
+                        
+                        # Проверяем методы объекта
+                        print(f"   Методы объекта:")
+                        for attr in dir(output):
+                            if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                                try:
+                                    value = getattr(output, attr)
+                                    if callable(value):
+                                        try:
+                                            result = value()
+                                            print(f"     {attr}(): {result}")
+                                        except Exception as e:
+                                            print(f"     {attr}(): ОШИБКА - {e}")
+                                    else:
+                                        print(f"     {attr}: {value}")
+                                except Exception as e:
+                                    print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                        
+                        # Обработка ответа от Replicate API
+                        image_url = None
+
+                        # Проверяем, является ли output объектом FileOutput
+                        if hasattr(output, 'url'):
+
+                            # Это объект FileOutput, используем его URL
+
+                            image_url = output.url()
+
+                        elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                            # Если это итератор (генератор)
+
+                            try:
+
+                                # Преобразуем в список и берем первый элемент
+
+                                output_list = list(output)
+
+                                if output_list:
+
+                                    image_url = output_list[0]
+
+                            except Exception as e:
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при обработке итератора: {e}")
+
+                                continue
+
+                        elif hasattr(output, '__getitem__'):
+
+                            image_url = output[0] if output else None
+
+                        elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                            image_url = output[0]
+
+                        else:
+
+                            # Если это не итератор, используем как есть
+
+                            image_url = str(output) if output else None
+
+                        
+
+                        # Проверяем, что получили URL
+
+                        if not image_url:
+
+                            if send_text:
+
+                                await send_text(f"❌ Не удалось получить изображение от Bytedance (пустой результат)")
+
+                            continue
+
+                        
+
+                        # Конвертация bytes в строку если необходимо (только для URL, не для бинарных данных)
+
+                        if isinstance(image_url, bytes):
+
+                            try:
+
+                                # Пробуем декодировать как UTF-8 (для URL)
+
+                                image_url = image_url.decode('utf-8')
+
+                            except UnicodeDecodeError:
+
+                                # Если не удается декодировать как UTF-8, это может быть бинарные данные
+                                # Bytedance часто возвращает бинарные данные изображения
+
+                                print(f"🔍 Bytedance: получены бинарные данные, длина: {len(image_url)} байт")
+                                
+                                try:
+                                    # Создаем временный файл для отправки
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    if send_text:
+
+                                        await send_text(f"❌ Получены бинарные данные от Bytedance, но не удалось отправить")
+
+                                    continue
+
+                        
+
+                        # Проверяем, что это строка и начинается с http
+
+                        if not isinstance(image_url, str):
+
+                            if send_text:
+
+                                await send_text(f"❌ Неверный тип URL от Bytedance")
+
+                            continue
+
+                        
+
+                        if not image_url.startswith(('http://', 'https://')):
+
+                            # Bytedance может возвращать данные в другом формате
+                            # Попробуем альтернативные способы
+                            print(f"🔍 Bytedance: URL не начинается с http, пробуем альтернативы...")
+                            
+                            # Если это не URL, возможно это бинарные данные или другой формат
+                            if isinstance(image_url, bytes):
+                                print(f"🔍 Bytedance: получены bytes, длина: {len(image_url)}")
+                                # Попробуем отправить как бинарные данные
+                                try:
+                                    # Создаем временный файл
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                            
+                            # Если ничего не помогло, показываем ошибку
+                            if send_text:
+
+                                await send_text(f"❌ Получен неверный формат от Bytedance\n💡 Попробуйте другую модель или попробуйте снова")
+
+
+                            continue
+
+                            
+
+                    except asyncio.TimeoutError:
+
+                        logging.warning(f"Таймаут при генерации через Bytedance (180 сек)")
+
+                        if send_text:
+
+                            await send_text(f"⏰ Таймаут при генерации нативного 2K изображения\n💡 Seedream-3 требует до 3 минут для максимального качества. Попробуйте выбрать другую модель или попробовать снова")
+
+                        continue
+
+                        
+
+                except Exception as e:
+
+                    error_msg = str(e)
+
+                    logging.error(f"Ошибка при генерации изображения через Bytedance: {e}")
+
+                    if "insufficient_credit" in error_msg.lower() or "insufficient credit" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
+
+                    elif "api" in error_msg.lower() or "token" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
+
+                    else:
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка при генерации через Bytedance: {error_msg[:100]}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
+
+                    continue
+
+            elif selected_model == 'Google Imagen 4 Ultra':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Google Imagen 4 Ultra (максимальное качество, детали)...")
+
+                    
+
+                    # Генерация через Google Imagen 4 на Replicate (асинхронно)
+
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                        "google/imagen-4-ultra",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+                    
+                  
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Google Imagen 4 Ultra
+
+                    print(f"🔍 Google Imagen 4 Ultra - ДЕТАЛЬНАЯ ОТЛАДКА:")
+
+                    print(f"   Тип output: {type(output)}")
+
+                    print(f"   output: {output}")
+
+                    print(f"   repr(output): {repr(output)}")
+
+                    print(f"   dir(output): {dir(output)}")
+
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+
+                    
+
+                    # Проверяем все возможные атрибуты
+
+                    if hasattr(output, 'url'):
+
+                        try:
+
+                            url_value = output.url()
+
+                            print(f"   output.url(): {url_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.url() ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'id'):
+
+                        try:
+
+                            id_value = output.id
+
+                            print(f"   output.id: {id_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.id ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'status'):
+
+                        try:
+
+                            status_value = output.status
+
+                            print(f"   output.status: {status_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.status ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'output'):
+
+                        try:
+
+                            output_value = output.output
+
+                            print(f"   output.output: {output_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.output ОШИБКА: {e}")
+
+                    
+
+                    if hasattr(output, 'result'):
+
+                        try:
+
+                            result_value = output.result
+
+                            print(f"   output.result: {result_value}")
+
+                        except Exception as e:
+
+                            print(f"   output.result ОШИБКА: {e}")
+
+                    
+
+                    # Проверяем методы объекта
+
+                    print(f"   Методы объекта:")
+
+                    for attr in dir(output):
+
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+
+                            try:
+
+                                value = getattr(output, attr)
+
+                                if callable(value):
+
+                                    try:
+
+                                        result = value()
+
+                                        print(f"     {attr}(): {result}")
+
+                                    except Exception as e:
+
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+
+                                else:
+
+                                    print(f"     {attr}: {value}")
+
+                            except Exception as e:
+
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 0: Проверяем, не является ли output уже URL-ом
+
+                    image_url = None
+
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+
+                        image_url = output
+
+                        print(f"🔍 Google Imagen: output уже является URL: {image_url}")
+
+                        print(f"🔍 Google Imagen: пропускаем все остальные попытки")
+
+                    else:
+
+                        print(f"🔍 Google Imagen: output не является URL, продолжаем поиск...")
+
+                        
+
+                        # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+
+                    if not image_url and hasattr(output, 'url'):
+
+                        try:
+
+                            image_url = output.url()
+
+                            print(f"🔍 Google Imagen: получен URL через .url(): {image_url}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при вызове .url(): {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 2: Проверяем атрибут .output
+
+                    if not image_url and hasattr(output, 'output'):
+
+                        try:
+
+                            output_value = output.output
+
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+
+                                image_url = output_value
+
+                                print(f"🔍 Google Imagen: получен URL через .output: {image_url}")
+
+                            elif hasattr(output_value, '__iter__'):
+
+                                # Если output.output это список/итератор
+
+                                output_list = list(output_value)
+
+                                if output_list and isinstance(output_list[0], str) and output_list[0].startswith(('http://', 'https://')):
+
+                                    image_url = output_list[0]
+
+                                    print(f"🔍 Google Imagen: получен URL через .output[0]: {image_url}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке .output: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 3: Проверяем атрибут .result
+
+                    if not image_url and hasattr(output, 'result'):
+
+                        try:
+
+                            result_value = output.result
+
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+
+                                image_url = result_value
+
+                                print(f"🔍 Google Imagen: получен URL через .result: {image_url}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке .result: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 4: Проверяем, является ли output итератором
+
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+
+                        try:
+
+                            output_list = list(output)
+
+                            if output_list:
+
+                                first_item = output_list[0]
+
+                                print(f"🔍 Google Imagen: первый элемент итератора: {first_item} (тип: {type(first_item)})")
+
+                                
+
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                    image_url = first_item
+
+                                    print(f"🔍 Google Imagen: получен URL через итератор[0]: {image_url}")
+
+                                elif hasattr(first_item, 'url'):
+
+                                    try:
+
+                                        image_url = first_item.url()
+
+                                        print(f"🔍 Google Imagen: получен URL через итератор[0].url(): {image_url}")
+
+                                    except Exception as e:
+
+                                        print(f"🔍 Google Imagen: ошибка при вызове итератор[0].url(): {e}")
+
+                                else:
+
+                                    print(f"🔍 Google Imagen: итератор[0] не содержит URL")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке итератора: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 5: Проверяем индексацию
+
+                    if not image_url and hasattr(output, '__getitem__'):
+
+                        try:
+
+                            first_item = output[0]
+
+                            print(f"🔍 Google Imagen: первый элемент по индексу: {first_item} (тип: {type(first_item)})")
+
+                            
+
+                            if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                image_url = first_item
+
+                                print(f"🔍 Google Imagen: получен URL через [0]: {image_url}")
+
+                            elif hasattr(first_item, 'url'):
+
+                                try:
+
+                                    image_url = first_item.url()
+
+                                    print(f"🔍 Google Imagen: получен URL через [0].url(): {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Google Imagen: ошибка при вызове [0].url(): {e}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при индексации: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 6: Проверяем, является ли output списком/кортежем
+
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+
+                        try:
+
+                            first_item = output[0]
+
+                            print(f"🔍 Google Imagen: первый элемент списка: {first_item} (тип: {type(first_item)})")
+
+                            
+
+                            if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                image_url = first_item
+
+                                print(f"🔍 Google Imagen: получен URL через список[0]: {image_url}")
+
+                            elif hasattr(first_item, 'url'):
+
+                                try:
+
+                                    image_url = first_item.url()
+
+                                    print(f"🔍 Google Imagen: получен URL через список[0].url(): {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Google Imagen: ошибка при вызове список[0].url(): {e}")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при обработке списка: {e}")
+
+                    
+
+                    # 🔍 ПОПЫТКА 7: Последняя попытка - преобразование в строку
+
+                    if not image_url:
+
+                        try:
+
+                            str_output = str(output)
+
+                            print(f"🔍 Google Imagen: преобразование в строку: '{str_output}' (длина: {len(str_output)})")
+
+                            
+
+                            # Проверяем, не является ли это URL
+
+                            if str_output.startswith(('http://', 'https://')):
+
+                                image_url = str_output
+
+                                print(f"🔍 Google Imagen: получен URL через str(): {image_url}")
+
+                            else:
+
+                                print(f"🔍 Google Imagen: str() не дал URL")
+
+                        except Exception as e:
+
+                            print(f"🔍 Google Imagen: ошибка при преобразовании в строку: {e}")
+
+                    
+
+                    # 🔍 ФИНАЛЬНАЯ ПРОВЕРКА
+
+                    print(f"🔍 Google Imagen - ФИНАЛЬНЫЙ РЕЗУЛЬТАТ:")
+
+                    print(f"   image_url: {image_url}")
+
+                    print(f"   тип image_url: {type(image_url)}")
+
+                    if image_url:
+
+                        print(f"   длина image_url: {len(str(image_url))}")
+
+                        print(f"   начинается с http: {str(image_url).startswith(('http://', 'https://'))}")
+
+                    
+
+                    # Проверяем, что получили URL
+
+                    if not image_url:
+
+                        if send_text:
+
+                            await send_text(f"❌ Не удалось получить изображение от Google Imagen 4 Ultra (пустой результат)")
+
+                        continue
+
+                    
+
+                    # Проверяем, что это строка и начинается с http
+
+                    if not isinstance(image_url, str):
+
+                        if send_text:
+
+                            await send_text(f"❌ Неверный тип URL от Google Imagen 4 Ultra: {type(image_url)}")
+
+                        continue
+
+                    
+
+                    if not image_url.startswith(('http://', 'https://')):
+
+                        if send_text:
+
+                            await send_text(f"❌ Получен неверный формат от Google Imagen 4 Ultra: {image_url}")
+
+                        continue
+
+                    
+
+                    print(f"🔍 Google Imagen: получен валидный URL: {image_url[:50]}...")
+
+                except asyncio.TimeoutError:
+
+                    await send_text(update, context, "⏰ Превышено время ожидания генерации Google Imagen (60 сек)")
+
+                    return
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Google Imagen 4: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            elif selected_model == 'Luma Photon':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Luma Photon (креативные возможности, высокое качество)...")
+
+                    
+
+                    # Генерация через Luma на Replicate с увеличенным таймаутом и ретраями
+
+                    loop = asyncio.get_event_loop()
+                    max_retries = 2
+                    retry_delay = 5  # секунд
+                    
+                    for attempt in range(max_retries + 1):
+                        try:
+                            if attempt > 0:
+                                if send_text:
+                                    await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
+                                await asyncio.sleep(retry_delay)
+                            
+                            output = await replicate_run_async(
+                                "luma/photon",
+                                {"prompt": prompt_with_style, **replicate_params},
+                                timeout=180
+                            )
+                            break  # Успешно получили результат
+                            
+                        except asyncio.TimeoutError:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⏳ Генерация занимает больше времени... Попробую ещё раз...")
+                                continue
+                            else:
+                                if send_text:
+                                    await send_text(f"❌ Генерация Luma Photon занимает слишком много времени\n💡 Попробуйте другую модель или попробовать снова")
+                                continue
+                        except Exception as e:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⚠️ Ошибка при генерации: {str(e)[:100]}... Попробую ещё раз...")
+                                continue
+                            else:
+                                raise  # Пробрасываем ошибку в основной блок except
+                    
+                 
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
+                    print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # Проверяем методы объекта
+                    print(f"   Методы объекта:")
+                    for attr in dir(output):
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                            try:
+                                value = getattr(output, attr)
+                                if callable(value):
+                                    try:
+                                        result = value()
+                                        print(f"     {attr}(): {result}")
+                                    except Exception as e:
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+                                else:
+                                    print(f"     {attr}: {value}")
+                            except Exception as e:
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                    
+                    # 🔍 ПОПЫТКА 0 - проверяем, не является ли output уже URL строкой
+                    image_url = None
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        image_url = output
+                        print(f"🔍 Luma Photon: ПОПЫТКА 0 - output уже URL строка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 1 - проверяем, является ли output объектом FileOutput
+                    if not image_url and hasattr(output, 'url'):
+                        try:
+                            image_url = output.url()
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - получен URL через .url(): {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - ошибка при вызове .url(): {e}")
+                    
+                    # 🔍 ПОПЫТКА 2 - проверяем, является ли output итератором
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+                        try:
+                            output_list = list(output)
+                            if output_list:
+                                first_item = output_list[0]
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                                    image_url = first_item
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен URL из итератора: {image_url[:50]}...")
+                                else:
+                                    image_url = str(first_item)
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен результат из итератора: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 2 - ошибка при обработке итератора: {e}")
+                    
+                    # 🔍 ПОПЫТКА 3 - проверяем, является ли output списком или кортежем
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+                        first_item = output[0]
+                        if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                            image_url = first_item
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен URL из списка: {image_url[:50]}...")
+                        else:
+                            image_url = str(first_item)
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен результат из списка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 4 - проверяем, является ли output объектом с атрибутом output
+                    if not image_url and hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+                                image_url = output_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен URL через .output: {image_url[:50]}...")
+                            else:
+                                image_url = str(output_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен результат через .output: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 4 - ошибка при доступе к .output: {e}")
+                    
+                    # 🔍 ПОПЫТКА 5 - проверяем, является ли output объектом с атрибутом result
+                    if not image_url and hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+                                image_url = result_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен URL через .result: {image_url[:50]}...")
+                            else:
+                                image_url = str(result_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен результат через .result: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 5 - ошибка при доступе к .result: {e}")
+                    
+                    # 🔍 ПОПЫТКА 6 - проверяем, является ли output объектом с атрибутом id
+                    if not image_url and hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            if isinstance(id_value, str) and id_value.startswith(('http://', 'https://')):
+                                image_url = id_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен URL через .id: {image_url[:50]}...")
+                            else:
+                                image_url = str(id_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен результат через .id: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 6 - ошибка при доступе к .id: {e}")
+                    
+                    # 🔍 ПОПЫТКА 7 - последняя попытка, преобразуем в строку
+                    if not image_url:
+                        image_url = str(output)
+                        print(f"🔍 Luma Photon: ПОПЫТКА 7 - преобразован в строку: {image_url[:50]}...")
+                    
+                    # Проверяем, что получили URL
+                    if not image_url:
+                        if send_text:
+                            await send_text(f"❌ Не удалось получить изображение от Luma Photon (пустой результат)")
+                        continue
+
+                    # Проверяем, что это строка и начинается с http
+                    if not isinstance(image_url, str):
+                        if send_text:
+                            await send_text(f"❌ Неверный тип URL от Luma Photon")
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+                        if send_text:
+                            await send_text(f"❌ Получен неверный формат от Luma Photon")
+                        continue
+
+                    print(f"🔍 Luma Photon: получен URL: {image_url[:50]}...")
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Luma: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            elif selected_model == 'Bria 3.2':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Bria 3.2 (коммерческое использование, 4B параметров)...")
+
+                    
+
+                    # Генерация через Bria на Replicate
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                            "bria/image-3.2",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+
+                    
+
+                    # Обработка результата
+
+                    if hasattr(output, 'url'):
+
+                        image_url = output.url()
+
+                    elif hasattr(output, '__getitem__'):
+
+                        image_url = output[0] if output else None
+
+                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                        image_url = output[0]
+
+                    else:
+
+                        image_url = str(output) if output else None
+
+                    
+
+                    # Отладочная информация убрана для чистоты интерфейса
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Bria: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            elif selected_model == 'Recraft AI':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Recraft AI (дизайн, вектор, логотипы)...")
+
+                    
+
+                    # Генерация через Recraft AI на Replicate
+
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                        "recraft-ai/recraft-v3-svg",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+
+                    
+
+                 
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Recraft AI
+                    print(f"🔍 Recraft AI - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # Проверяем методы объекта
+                    print(f"   Методы объекта:")
+                    for attr in dir(output):
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                            try:
+                                value = getattr(output, attr)
+                                if callable(value):
+                                    try:
+                                        result = value()
+                                        print(f"     {attr}(): {result}")
+                                    except Exception as e:
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+                                else:
+                                    print(f"     {attr}: {value}")
+                            except Exception as e:
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                    
+                    # 🔍 ПОПЫТКА 0 - проверяем, не является ли output уже URL строкой
+                    image_url = None
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        image_url = output
+                        print(f"🔍 Recraft AI: ПОПЫТКА 0 - output уже URL строка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 1 - проверяем, является ли output объектом FileOutput
+                    if not image_url and hasattr(output, 'url'):
+                        try:
+                            image_url = output.url()
+                            print(f"🔍 Recraft AI: ПОПЫТКА 1 - получен URL через .url(): {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 1 - ошибка при вызове .url(): {e}")
+                    
+                    # 🔍 ПОПЫТКА 2 - проверяем, является ли output итератором
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+                        try:
+                            output_list = list(output)
+                            if output_list:
+                                first_item = output_list[0]
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                                    image_url = first_item
+                                    print(f"🔍 Recraft AI: ПОПЫТКА 2 - получен URL из итератора: {image_url[:50]}...")
+                                else:
+                                    image_url = str(first_item)
+                                    print(f"🔍 Recraft AI: ПОПЫТКА 2 - получен результат из итератора: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 2 - ошибка при обработке итератора: {e}")
+                    
+                    # 🔍 ПОПЫТКА 3 - проверяем, является ли output списком или кортежем
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+                        first_item = output[0]
+                        if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                            image_url = first_item
+                            print(f"🔍 Recraft AI: ПОПЫТКА 3 - получен URL из списка: {image_url[:50]}...")
+                        else:
+                            image_url = str(first_item)
+                            print(f"🔍 Recraft AI: ПОПЫТКА 3 - получен результат из списка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 4 - проверяем, является ли output объектом с атрибутом output
+                    if not image_url and hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+                                image_url = output_value
+                                print(f"🔍 Recraft AI: ПОПЫТКА 4 - получен URL через .output: {image_url[:50]}...")
+                            else:
+                                image_url = str(output_value)
+                                print(f"🔍 Recraft AI: ПОПЫТКА 4 - получен результат через .output: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 4 - ошибка при доступе к .output: {e}")
+                    
+                    # 🔍 ПОПЫТКА 5 - проверяем, является ли output объектом с атрибутом result
+                    if not image_url and hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+                                image_url = result_value
+                                print(f"🔍 Recraft AI: ПОПЫТКА 5 - получен URL через .result: {image_url[:50]}...")
+                            else:
+                                image_url = str(result_value)
+                                print(f"🔍 Recraft AI: ПОПЫТКА 5 - получен результат через .result: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 5 - ошибка при доступе к .result: {e}")
+                    
+                    # 🔍 ПОПЫТКА 6 - проверяем, является ли output объектом с атрибутом id
+                    if not image_url and hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            if isinstance(id_value, str) and id_value.startswith(('http://', 'https://')):
+                                image_url = id_value
+                                print(f"🔍 Recraft AI: ПОПЫТКА 6 - получен URL через .id: {image_url[:50]}...")
+                            else:
+                                image_url = str(id_value)
+                                print(f"🔍 Recraft AI: ПОПЫТКА 6 - получен результат через .id: {id_value}")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 6 - ошибка при доступе к .id: {e}")
+                    
+                    # 🔍 ПОПЫТКА 7 - последняя попытка, преобразуем в строку
+                    if not image_url:
+                        image_url = str(output)
+                        print(f"🔍 Recraft AI: ПОПЫТКА 7 - преобразован в строку: {image_url[:50]}...")
+                    
+                    # Проверяем, что получили URL
+                    if not image_url:
+                        if send_text:
+                            await send_text(f"❌ Не удалось получить изображение от Recraft AI (пустой результат)")
+                        continue
+
+                    # Проверяем, что это строка и начинается с http
+                    if not isinstance(image_url, str):
+                        if send_text:
+                            await send_text(f"❌ Неверный тип URL от Recraft AI")
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+                        if send_text:
+                            await send_text(f"❌ Получен неверный формат от Recraft AI")
+                        continue
+
+                    print(f"🔍 Recraft AI: получен URL: {image_url[:50]}...")
+
+                    
+
+                    # Проверяем, является ли файл SVG
+
+                    if image_url and image_url.endswith('.svg'):
+
+                        if send_text:
+
+                            await send_text("⚠️ Recraft AI сгенерировал SVG файл. Telegram не поддерживает SVG напрямую.")
+
+                            await send_text("🔗 Ссылка на изображение: " + image_url)
+
+                            await send_text("💡 Попробуйте другую модель или сохраните ссылку для просмотра в браузере.")
+
+                        
+
+                        # Увеличиваем счетчик обработанных изображений
+
+                        processed_count += 1
+
+                        
+
+                        # Пропускаем отправку SVG файла
+
+                        continue
+
+                        
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Recraft AI: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+
+
+            else:  # Fallback на Ideogram
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Ideogram (универсальная модель)...")
+
+                    
+
+                    # Fallback на Ideogram если модель не поддерживается
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                            "ideogram-ai/ideogram-v3-turbo",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+
+                    
+
+                    # Обработка результата
+
+                    if hasattr(output, 'url'):
+
+                        image_url = output.url()
+
+                    elif hasattr(output, '__getitem__'):
+
+                        image_url = output[0] if output else None
+
+                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                        image_url = output[0]
+
+                    else:
+
+                        image_url = str(output) if output else None
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при fallback генерации через Ideogram: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            
+
+            # Проверяем качество URL перед добавлением
+            if not image_url or not isinstance(image_url, str):
+                print(f"🔍 Пропускаем неверный URL: {image_url}")
                 continue
+                
+            if len(str(image_url)) < 10 or not str(image_url).startswith(('http://', 'https://')):
+                print(f"🔍 Пропускаем неверный URL: {image_url} (длина: {len(str(image_url))})")
+                continue
+                
+            # Отладочная информация ЭТАП 2: перед добавлением в список
+            print(f"🔍 ЭТАП 2: перед добавлением в images")
+            print(f"   image_url = {image_url}")
+            print(f"   тип image_url = {type(image_url)}")
+            print(f"   длина image_url = {len(str(image_url)) if image_url else 'None'}")
+            if image_url:
+                print(f"   image_url[:15] = {str(image_url)[:15]}")
+                print(f"   image_url[-15:] = {str(image_url)[-15:]}")
+            images.append(image_url)
 
-            idx, success, image_url, caption, error = result
+            media.append(InputMediaPhoto(media=image_url, caption=caption))
+            
+            # Отладочная информация для понимания проблемы с URL
+            print(f"🔍 После создания InputMediaPhoto:")
+            print(f"   image_url: {image_url}")
+            print(f"   длина image_url: {len(str(image_url)) if image_url else 'None'}")
+            print(f"   последний элемент media: {media[-1].media}")
+            print(f"   длина media[-1].media: {len(str(media[-1].media)) if media[-1].media else 'None'}")
 
-            if success and image_url:
-                # Успешно сгенерировано изображение
-                images.append(image_url)
-                media.append(InputMediaPhoto(media=image_url, caption=caption))
-                processed_count += 1
+            processed_count += 1
 
-                print(f"🔍 Добавлено изображение {idx}:")
-                print(f"   image_url: {image_url}")
-                print(f"   длина image_url: {len(str(image_url)) if image_url else 'None'}")
-                print(f"   последний элемент media: {media[-1].media}")
-                print(f"   длина media[-1].media: {len(str(media[-1].media)) if media[-1].media else 'None'}")
-            else:
-                # Ошибка при генерации
-                logging.error(f"Ошибка генерации изображения {idx}: {error}")
-                if send_text:
-                    await send_text(f"❌ Ошибка при генерации изображения {idx}: {error}")
+            
 
-    # Удаляем старый последовательный код - он заменен на параллельный выше
-    # Оставляем только обработку результатов
+            # Отладочная информация убрана для чистоты интерфейса
+
+        except Exception as e:
+
+            logging.error(f"Общая ошибка при генерации изображения {idx}: {e}")
+
+            if send_text:
+
+                await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте снова или выберите другую модель")
+
     if media and send_media:
         print(f"🔍 Попытка отправки media группы...")
         print(f"🔍 Количество изображений: {len(media)}")
@@ -18104,53 +19906,1936 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     media = []
 
-    # ПАРАЛЛЕЛЬНАЯ ГЕНЕРАЦИЯ ИЗОБРАЖЕНИЙ
-    # Создаем задачи для параллельной генерации всех изображений
-    tasks = []
     for idx, prompt in enumerate(safe_prompts, 1):
+
         if idx > max_scenes:
+
             break
-        # Создаем задачу для генерации одного изображения
-        task = generate_single_image_async(idx, prompt, state, send_text)
-        tasks.append(task)
 
-    # Запускаем все задачи параллельно
-    if tasks:
-        if send_text:
-            await send_text(f"🚀 Запускаю параллельную генерацию {len(tasks)} изображений...")
+        # Добавляем стиль генерации к промпту (упрощенная версия для Ideogram)
 
-        # Ждем завершения всех задач
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        image_gen_style = state.get('image_gen_style', '')
 
-        # Обрабатываем результаты
-        for result in results:
-            if isinstance(result, Exception):
-                logging.error(f"Ошибка в параллельной генерации: {result}")
-                if send_text:
-                    await send_text(f"❌ Ошибка при генерации: {result}")
-                continue
+        selected_model = state.get('image_gen_model', 'Ideogram')
 
-            idx, success, image_url, caption, error = result
+        style_suffix = ''
 
-            if success and image_url:
-                # Успешно сгенерировано изображение
-                images.append(image_url)
-                media.append(InputMediaPhoto(media=image_url, caption=caption))
-                processed_count += 1
+        
 
-                print(f"🔍 Добавлено изображение {idx}:")
-                print(f"   image_url: {image_url}")
-                print(f"   длина image_url: {len(str(image_url)) if image_url else 'None'}")
-                print(f"   последний элемент media: {media[-1].media}")
-                print(f"   длина media[-1].media: {len(str(media[-1].media)) if media[-1].media else 'None'}")
-            else:
-                # Ошибка при генерации
-                logging.error(f"Ошибка генерации изображения {idx}: {error}")
-                if send_text:
-                    await send_text(f"❌ Ошибка при генерации изображения {idx}: {error}")
+        if image_gen_style and selected_model != 'Ideogram':
 
-    # Удаляем старый последовательный код - он заменен на параллельный выше
-    # Оставляем только обработку результатов
+            # Для других моделей используем полные стили
+
+            if image_gen_style == 'Фотореализм':
+
+                style_suffix = ', photorealistic, ultra-realistic, high detail, 8k, professional photography, sharp focus, natural lighting, cinematic, award-winning photo'
+
+            elif image_gen_style == 'Иллюстрация':
+
+                style_suffix = ', illustration, digital art, high detail, artistic, creative, vibrant colors'
+
+            elif image_gen_style == 'Минимализм':
+
+                style_suffix = ', minimalism, clean, simple, high contrast, modern design, geometric shapes'
+
+            elif image_gen_style == 'Акварель':
+
+                style_suffix = ', watercolor, painting, soft colors, artistic, flowing, organic'
+
+            elif image_gen_style == 'Масляная живопись':
+
+                style_suffix = ', oil painting, canvas texture, brush strokes, artistic, traditional art'
+
+            elif image_gen_style == 'Пиксель-арт':
+
+                style_suffix = ', pixel art, 8-bit, retro style, digital art'
+
+        elif image_gen_style and selected_model == 'Ideogram':
+
+            # Для Ideogram используем минимальные стили
+
+            if image_gen_style == 'Фотореализм':
+
+                style_suffix = ', realistic'
+
+            elif image_gen_style == 'Иллюстрация':
+
+                style_suffix = ', illustration'
+
+            elif image_gen_style == 'Минимализм':
+
+                style_suffix = ', minimal'
+
+            elif image_gen_style == 'Акварель':
+
+                style_suffix = ', watercolor'
+
+            elif image_gen_style == 'Масляная живопись':
+
+                style_suffix = ', oil painting'
+
+            elif image_gen_style == 'Пиксель-арт':
+
+                style_suffix = ', pixel art'
+
+        
+
+        # Добавляем формат для разных типов контента (упрощенная версия для Ideogram)
+
+        format_suffix = ''
+
+        user_format = state.get('format', '').lower().replace(' ', '')
+
+        simple_orientation = state.get('simple_orientation', None)
+
+        
+
+        if selected_model == 'Ideogram':
+
+            # Для Ideogram используем минимальные форматные указания
+
+            if user_format == 'instagramstories':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'instagramreels':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'tiktok':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'youtubeshorts':
+
+                format_suffix = ', vertical'
+
+            elif user_format == 'instagrampost':
+
+                format_suffix = ', square'
+
+            elif user_format == 'изображения':
+
+                # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
+
+                if simple_orientation == 'vertical':
+
+                    format_suffix = ', vertical'
+
+                elif simple_orientation == 'square':
+
+                    format_suffix = ', square'
+
+                else:
+
+                    format_suffix = ', square'  # По умолчанию квадратный
+
+        else:
+
+            # Для других моделей используем полные форматные указания
+
+            if user_format == 'instagramstories':
+
+                format_suffix = ', vertical composition, Instagram Stories format, mobile optimized, space for text overlay'
+
+            elif user_format == 'instagramreels':
+
+                format_suffix = ', vertical composition, mobile video format, dynamic composition'
+
+            elif user_format == 'tiktok':
+
+                format_suffix = ', vertical composition, TikTok format, mobile optimized, trending style'
+
+            elif user_format == 'youtubeshorts':
+
+                format_suffix = ', vertical composition, YouTube Shorts format, mobile video optimized'
+
+            elif user_format == 'instagrampost':
+
+                format_suffix = ', square composition, Instagram Post format, social media optimized'
+
+            elif user_format == 'изображения':
+
+                # Для "Изображения" добавляем указания в зависимости от выбранной ориентации
+
+                if simple_orientation == 'vertical':
+
+                    format_suffix = ', vertical composition, portrait orientation, tall vertical image'
+
+                elif simple_orientation == 'square':
+
+                    format_suffix = ', square composition, balanced layout'
+
+                else:
+
+                    format_suffix = ', square composition, balanced layout'  # По умолчанию квадратный
+
+        
+
+        prompt_with_style = prompt + style_suffix + format_suffix
+
+        
+
+        # Улучшаем промпт для Ideogram
+
+        if selected_model == 'Ideogram':
+
+            prompt_with_style = improve_prompt_for_ideogram(prompt_with_style)
+
+        
+
+        # Определяем размер изображения на основе формата и модели
+
+        image_size = get_image_size_for_format(user_format, simple_orientation)
+
+        selected_model = state.get('image_gen_model', 'Ideogram')
+
+        simple_orientation = state.get('simple_orientation', None)
+
+        replicate_params = get_replicate_params_for_model(selected_model, user_format, simple_orientation)
+
+        
+
+
+
+        
+
+        try:
+
+            if send_text:
+
+                caption = f'Сцена {idx}: {prompt}' if scenes else f'Вариант {idx}'
+
+                await send_text(f'Генерирую изображение {idx}...')
+
+            
+
+            # Определяем модель для генерации
+
+            selected_model = state.get('image_gen_model', 'Ideogram')
+
+            
+
+            # Генерация изображения в зависимости от выбранной модели
+
+            if selected_model == 'Ideogram':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"🎨 Генерирую через Ideogram...\n\n💡 Совет: Ideogram лучше работает с простыми, четкими описаниями")
+
+                    
+
+                    # Генерация через Ideogram на Replicate с таймаутом
+
+
+                    try:
+
+                        # Проверяем API токен
+
+                        if not os.environ.get('REPLICATE_API_TOKEN'):
+
+                            if send_text:
+
+                                keyboard = [
+
+                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                                ]
+
+                                reply_markup = InlineKeyboardMarkup(keyboard)
+
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
+
+                            continue
+
+                        
+
+                        # Запускаем генерацию с таймаутом
+
+                        loop = asyncio.get_event_loop()
+
+                        
+
+                        # Используем Ideogram v3 Turbo (более стабильная версия)
+
+                        try:
+                            output = await replicate_run_async(
+                                    "ideogram-ai/ideogram-v3-turbo",
+                                {"prompt": prompt_with_style, **replicate_params},
+                                timeout=60
+                            )
+
+                        except Exception as e:
+
+                            # Если v3 не работает, пробуем v2
+
+                            logging.warning(f"Ideogram v3 Turbo недоступен: {e}, пробуем v2...")
+
+                            try:
+                                output = await replicate_run_async(
+                                        "ideogram-ai/ideogram-v2",
+                                    {"prompt": prompt_with_style, **replicate_params},
+                                    timeout=60
+                                )
+
+                            except Exception as e2:
+
+                                logging.error(f"Ideogram недоступен: {e2}")
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте выбрать другую модель или попробовать снова")
+
+                                continue
+
+                        
+
+                        # Обработка ответа от Replicate API
+
+                        image_url = None
+
+                        
+
+                        # Проверяем, является ли output объектом FileOutput
+
+                        if hasattr(output, 'url'):
+
+                            # Это объект FileOutput, используем его URL
+
+                            image_url = output.url()
+
+                        elif hasattr(output, '__iter__') and not isinstance(output, str):
+
+                            # Если это итератор (генератор)
+
+                            try:
+
+                                # Преобразуем в список и берем первый элемент
+
+                                output_list = list(output)
+
+                                if output_list:
+
+                                    image_url = output_list[0]
+
+                            except Exception as e:
+
+                                if send_text:
+
+                                    await send_text(f"❌ Ошибка при обработке итератора: {e}")
+
+                                continue
+
+                        else:
+
+                            # Если это не итератор, используем как есть
+
+                            image_url = output
+
+                        
+
+                        # Проверяем, что получили URL
+
+                        if not image_url:
+
+                            if send_text:
+
+                                await send_text(f"❌ Не удалось получить изображение от Ideogram (пустой результат)")
+
+                            continue
+
+                        
+
+                        # Конвертация bytes в строку если необходимо (только для URL, не для бинарных данных)
+
+                        if isinstance(image_url, bytes):
+
+                            try:
+
+                                # Пробуем декодировать как UTF-8 (для URL)
+
+                                image_url = image_url.decode('utf-8')
+
+                            except UnicodeDecodeError:
+
+                                # Если не удается декодировать как UTF-8, это может быть бинарные данные
+
+                                if send_text:
+
+                                    await send_text(f"❌ Получены бинарные данные вместо URL от Ideogram")
+
+                                continue
+
+                        
+
+                        # Проверяем, что это строка и начинается с http
+
+                        if not isinstance(image_url, str):
+
+                            if send_text:
+
+                                await send_text(f"❌ Неверный тип URL от Ideogram")
+
+                            continue
+
+                        
+
+                        if not image_url.startswith(('http://', 'https://')):
+
+                            if send_text:
+
+                                await send_text(f"❌ Получен неверный URL от Ideogram")
+
+                            continue
+
+                            
+
+                    except asyncio.TimeoutError:
+
+                        logging.warning(f"Таймаут при генерации через Ideogram")
+
+                        if send_text:
+
+                            await send_text(f"⏰ Таймаут при генерации изображения\n💡 Попробуйте выбрать другую модель или попробовать снова")
+
+                        continue
+
+                        
+
+                except Exception as e:
+
+                    error_msg = str(e)
+
+                    logging.error(f"Ошибка при генерации изображения: {e}")
+
+                    if "insufficient_credit" in error_msg.lower() or "insufficient credit" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
+
+                    elif "api" in error_msg.lower() or "token" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
+
+                    else:
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка при генерации через Ideogram: {error_msg}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
+
+                    continue
+
+            elif selected_model == 'Bytedance (Seedream-3)':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"🎨 Генерирую через Bytedance Seedream-3 (нативная 2K генерация)...\n\n💡 Совет: Seedream-3 лидер по качеству с нативным 2K разрешением, может занять до 3 минут для максимального качества")
+
+                    
+
+                    # Генерация через Bytedance на Replicate с таймаутом
+
+
+                    try:
+
+                        # Проверяем API токен
+
+                        if not os.environ.get('REPLICATE_API_TOKEN'):
+
+                            if send_text:
+
+                                keyboard = [
+
+                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                                ]
+
+                                reply_markup = InlineKeyboardMarkup(keyboard)
+
+                                await send_text(f"❌ Ошибка: API токен Replicate не найден", reply_markup=reply_markup)
+
+                            continue
+
+                        
+
+                        # Запускаем генерацию с увеличенным таймаутом для 2K качества
+
+                        loop = asyncio.get_event_loop()
+                        output = await replicate_run_async(
+                                "bytedance/seedream-3",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=180
+                        )
+                        
+                      
+                        
+                        # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Bytedance Seedream-3 (console logging)
+                        print(f"🔍 Bytedance Seedream-3 - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                        print(f"   Тип output: {type(output)}")
+                        print(f"   output: {output}")
+                        print(f"   repr(output): {repr(output)}")
+                        print(f"   dir(output): {dir(output)}")
+                        print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                        print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                        print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                        print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                        print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                        
+                        # Проверяем все возможные атрибуты
+                        if hasattr(output, 'url'):
+                            try:
+                                url_value = output.url()
+                                print(f"   output.url(): {url_value}")
+                            except Exception as e:
+                                print(f"   output.url() ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'id'):
+                            try:
+                                id_value = output.id
+                                print(f"   output.id: {id_value}")
+                            except Exception as e:
+                                print(f"   output.id ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'status'):
+                            try:
+                                status_value = output.status
+                                print(f"   output.status: {status_value}")
+                            except Exception as e:
+                                print(f"   output.status ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'output'):
+                            try:
+                                output_value = output.output
+                                print(f"   output.output: {output_value}")
+                            except Exception as e:
+                                print(f"   output.output ОШИБКА: {e}")
+                        
+                        if hasattr(output, 'result'):
+                            try:
+                                result_value = output.result
+                                print(f"   output.result: {result_value}")
+                            except Exception as e:
+                                print(f"   output.result ОШИБКА: {e}")
+                        
+                        # Проверяем методы объекта
+                        print(f"   Методы объекта:")
+                        for attr in dir(output):
+                            if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                                try:
+                                    value = getattr(output, attr)
+                                    if callable(value):
+                                        try:
+                                            result = value()
+                                            print(f"     {attr}(): {result}")
+                                        except Exception as e:
+                                            print(f"     {attr}(): ОШИБКА - {e}")
+                                    else:
+                                        print(f"     {attr}: {value}")
+                                except Exception as e:
+                                    print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                        
+                        # Обработка ответа от Replicate API
+
+                        # 🔍 ПОПЫТКА 0: Проверяем, не является ли output уже URL-ом
+
+                        image_url = None
+
+                        if isinstance(output, str) and output.startswith(('http://', 'https://')):
+
+                            image_url = output
+
+                            print(f"🔍 Bytedance: output уже является URL: {image_url}")
+
+                            print(f"🔍 Bytedance: пропускаем все остальные попытки")
+
+                        else:
+
+                            print(f"🔍 Bytedance: output не является URL, продолжаем поиск...")
+
+                            
+
+                            # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+
+                            if not image_url and hasattr(output, 'url'):
+
+                                # Это объект FileOutput, используем его URL
+
+                                image_url = output.url()
+
+                                print(f"🔍 Bytedance: получен URL через .url(): {image_url}")
+
+                            # 🔍 ПОПЫТКА 2: Проверяем атрибут .output
+
+                            elif not image_url and hasattr(output, 'output'):
+
+                                try:
+
+                                    output_value = output.output
+
+                                    if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+
+                                        image_url = output_value
+
+                                        print(f"🔍 Bytedance: получен URL через .output: {image_url}")
+
+                                    elif hasattr(output_value, '__iter__'):
+
+                                        # Если output.output это список/итератор
+
+                                        output_list = list(output_value)
+
+                                        if output_list and isinstance(output_list[0], str) and output_list[0].startswith(('http://', 'https://')):
+
+                                            image_url = output_list[0]
+
+                                            print(f"🔍 Bytedance: получен URL через .output[0]: {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке .output: {e}")
+
+                            # 🔍 ПОПЫТКА 3: Проверяем атрибут .result
+
+                            elif not image_url and hasattr(output, 'result'):
+
+                                try:
+
+                                    result_value = output.result
+
+                                    if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+
+                                        image_url = result_value
+
+                                        print(f"🔍 Bytedance: получен URL через .result: {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке .result: {e}")
+
+                            # 🔍 ПОПЫТКА 4: Проверяем, является ли output итератором
+
+                            elif not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+
+                                # Если это итератор (генератор)
+
+                                try:
+
+                                    # Преобразуем в список и берем первый элемент
+
+                                    output_list = list(output)
+
+                                    if output_list:
+
+                                        image_url = output_list[0]
+
+                                        print(f"🔍 Bytedance: получен URL через итератор[0]: {image_url}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке итератора: {e}")
+
+                            # 🔍 ПОПЫТКА 5: Проверяем индексацию
+
+                            elif not image_url and hasattr(output, '__getitem__'):
+
+                                try:
+
+                                    first_item = output[0]
+
+                                    print(f"🔍 Bytedance: первый элемент по индексу: {first_item} (тип: {type(first_item)})")
+
+                                    
+
+                                    if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                        image_url = first_item
+
+                                        print(f"🔍 Bytedance: получен URL через [0]: {image_url}")
+
+                                    elif hasattr(first_item, 'url'):
+
+                                        try:
+
+                                            image_url = first_item.url()
+
+                                            print(f"🔍 Bytedance: получен URL через [0].url(): {image_url}")
+
+                                        except Exception as e:
+
+                                            print(f"🔍 Bytedance: ошибка при вызове [0].url(): {e}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при индексации: {e}")
+
+                            # 🔍 ПОПЫТКА 6: Проверяем, является ли output списком/кортежем
+
+                            elif not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+
+                                try:
+
+                                    first_item = output[0]
+
+                                    print(f"🔍 Bytedance: первый элемент списка: {first_item} (тип: {type(first_item)})")
+
+                                    
+
+                                    if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                        image_url = first_item
+
+                                        print(f"🔍 Bytedance: получен URL через список[0]: {image_url}")
+
+                                    elif hasattr(first_item, 'url'):
+
+                                        try:
+
+                                            image_url = first_item.url()
+
+                                            print(f"🔍 Bytedance: получен URL через список[0].url(): {image_url}")
+
+                                        except Exception as e:
+
+                                            print(f"🔍 Bytedance: ошибка при вызове список[0].url(): {e}")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при обработке списка: {e}")
+
+                            # 🔍 ПОПЫТКА 7: Последняя попытка - преобразование в строку
+
+                            if not image_url:
+
+                                try:
+
+                                    str_output = str(output)
+
+                                    print(f"🔍 Bytedance: преобразование в строку: '{str_output}' (длина: {len(str_output)})")
+
+                                    
+
+                                    # Проверяем, не является ли это URL
+
+                                    if str_output.startswith(('http://', 'https://')):
+
+                                        image_url = str_output
+
+                                        print(f"🔍 Bytedance: получен URL через str(): {image_url}")
+
+                                    else:
+
+                                        print(f"🔍 Bytedance: str() не дал URL")
+
+                                except Exception as e:
+
+                                    print(f"🔍 Bytedance: ошибка при преобразовании в строку: {e}")
+
+                            # Если ничего не помогло, используем как есть
+
+                            if not image_url:
+
+                                image_url = str(output) if output else None
+
+                                print(f"🔍 Bytedance: используем output как есть: {image_url}")
+
+                        
+
+                        # Проверяем, что получили URL
+
+                        if not image_url:
+
+                            if send_text:
+
+                                await send_text(f"❌ Не удалось получить изображение от Bytedance (пустой результат)")
+
+                            continue
+
+                        
+
+                        # Конвертация bytes в строку если необходимо (только для URL, не для бинарных данных)
+
+                        if isinstance(image_url, bytes):
+
+                            try:
+
+                                # Пробуем декодировать как UTF-8 (для URL)
+
+                                image_url = image_url.decode('utf-8')
+
+                            except UnicodeDecodeError:
+
+                                # Если не удается декодировать как UTF-8, это может быть бинарные данные
+                                # Bytedance часто возвращает бинарные данные изображения
+
+                                print(f"🔍 Bytedance: получены бинарные данные, длина: {len(image_url)} байт")
+                                
+                                try:
+                                    # Создаем временный файл для отправки
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    if send_text:
+
+                                        await send_text(f"❌ Получены бинарные данные от Bytedance, но не удалось отправить")
+
+                                    continue
+
+                        
+
+                        # Проверяем, что это строка и начинается с http
+
+                        if not isinstance(image_url, str):
+
+                            if send_text:
+
+                                await send_text(f"❌ Неверный тип URL от Bytedance")
+
+                            continue
+
+                        
+
+                        if not image_url.startswith(('http://', 'https://')):
+
+                            # Bytedance может возвращать данные в другом формате
+                            # Попробуем альтернативные способы
+                            print(f"🔍 Bytedance: URL не начинается с http, пробуем альтернативы...")
+                            
+                            # Если это не URL, возможно это бинарные данные или другой формат
+                            if isinstance(image_url, bytes):
+                                print(f"🔍 Bytedance: получены bytes, длина: {len(image_url)}")
+                                # Попробуем отправить как бинарные данные
+                                try:
+                                    # Создаем временный файл
+                                    import tempfile
+                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                                        temp_file.write(image_url)
+                                        temp_path = temp_file.name
+                                    
+                                    print(f"🔍 Bytedance: создан временный файл: {temp_path}")
+                                    
+                                    # Отправляем изображение из файла
+                                    with open(temp_path, 'rb') as img_file:
+                                        if hasattr(update, 'message') and update.message:
+                                            await update.message.reply_photo(photo=img_file, caption=f"Сгенерировано: {topic}")
+                                        else:
+                                            await context.bot.send_photo(chat_id=chat_id, photo=img_file, caption=f"Сгенерировано: {topic}")
+                                    
+                                    # Удаляем временный файл
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                                    
+                                    print(f"🔍 Bytedance: изображение отправлено через временный файл")
+                                    
+                                    # Пропускаем дальнейшую обработку
+                                    continue
+                                    
+                                except Exception as file_error:
+                                    print(f"🔍 Bytedance: ошибка при отправке через файл: {file_error}")
+                                    # Удаляем временный файл при ошибке
+                                    try:
+                                        os.unlink(temp_path)
+                                    except:
+                                        pass
+                            
+                            # Если ничего не помогло, показываем ошибку
+                            if send_text:
+
+                                await send_text(f"❌ Получен неверный формат от Bytedance\n💡 Попробуйте другую модель или попробуйте снова")
+
+
+                            continue
+
+                            
+
+                    except asyncio.TimeoutError:
+
+                        logging.warning(f"Таймаут при генерации через Bytedance (180 сек)")
+
+                        if send_text:
+
+                            await send_text(f"⏰ Таймаут при генерации нативного 2K изображения\n💡 Seedream-3 требует до 3 минут для максимального качества. Попробуйте выбрать другую модель или попробовать снова")
+
+                        continue
+
+                        
+
+                except Exception as e:
+
+                    error_msg = str(e)
+
+                    logging.error(f"Ошибка при генерации изображения через Bytedance: {e}")
+
+                    if "insufficient_credit" in error_msg.lower() or "insufficient credit" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Недостаточно кредитов на Replicate\n💡 Пополните баланс или выберите другую модель", reply_markup=reply_markup)
+
+                    elif "api" in error_msg.lower() or "token" in error_msg.lower():
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка API Replicate\n\nПроверьте настройки API токена или выберите другую модель.", reply_markup=reply_markup)
+
+                    else:
+
+                        if send_text:
+
+                            keyboard = [
+
+                                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")]
+
+                            ]
+
+                            reply_markup = InlineKeyboardMarkup(keyboard)
+
+                            await send_text(f"❌ Ошибка при генерации через Bytedance: {error_msg[:100]}\n\nПопробуйте выбрать другую модель или выберите действие ниже:", reply_markup=reply_markup)
+
+                    continue
+
+            elif selected_model == 'Google Imagen 4 Ultra':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Google Imagen 4 Ultra (максимальное качество, детали)...")
+
+                    
+
+                    # Генерация через Google Imagen 4 на Replicate
+
+                    loop = asyncio.get_event_loop()
+
+
+                    output = await asyncio.wait_for(
+
+
+                        loop.run_in_executor(THREAD_POOL, lambda: replicate.run(
+
+
+                            "google/imagen-4-ultra",
+
+
+                            input={"prompt": prompt_with_style, **replicate_params}
+
+
+                        )),
+
+
+                        timeout=60.0
+
+
+                    )
+
+                    
+
+                    # Обработка результата
+
+                    # 🔍 ПОПЫТКА 0: Проверяем, не является ли output уже URL-ом
+
+                    image_url = None
+
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+
+                        image_url = output
+
+                        print(f"🔍 Google Imagen: output уже является URL: {image_url}")
+
+                        print(f"🔍 Google Imagen: пропускаем все остальные попытки")
+
+                    else:
+
+                        print(f"🔍 Google Imagen: output не является URL, продолжаем поиск...")
+
+                        
+
+                        # 🔍 ПОПЫТКА 1: Проверяем, является ли output объектом FileOutput
+
+                        if not image_url and hasattr(output, 'url'):
+
+                            try:
+
+                                image_url = output.url()
+
+                                print(f"🔍 Google Imagen: получен URL через .url(): {image_url}")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при вызове .url(): {e}")
+
+                        
+
+                        # 🔍 ПОПЫТКА 2: Проверяем атрибут .output
+
+                        if not image_url and hasattr(output, 'output'):
+
+                            try:
+
+                                output_value = output.output
+
+                                if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+
+                                    image_url = output_value
+
+                                    print(f"🔍 Google Imagen: получен URL через .output: {image_url}")
+
+                                elif hasattr(output_value, '__iter__'):
+
+                                    # Если output.output это список/итератор
+
+                                    output_list = list(output_value)
+
+                                    if output_list and isinstance(output_list[0], str) and output_list[0].startswith(('http://', 'https://')):
+
+                                        image_url = output_list[0]
+
+                                        print(f"🔍 Google Imagen: получен URL через .output[0]: {image_url}")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при обработке .output: {e}")
+
+                        
+
+                        # 🔍 ПОПЫТКА 3: Проверяем атрибут .result
+
+                        if not image_url and hasattr(output, 'result'):
+
+                            try:
+
+                                result_value = output.result
+
+                                if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+
+                                    image_url = result_value
+
+                                    print(f"🔍 Google Imagen: получен URL через .result: {image_url}")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при обработке .result: {e}")
+
+                        
+
+                        # 🔍 ПОПЫТКА 4: Проверяем, является ли output итератором
+
+                        if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+
+                            try:
+
+                                output_list = list(output)
+
+                                if output_list:
+
+                                    first_item = output_list[0]
+
+                                    print(f"🔍 Google Imagen: первый элемент итератора: {first_item} (тип: {type(first_item)})")
+
+                                    
+
+                                    if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                        image_url = first_item
+
+                                        print(f"🔍 Google Imagen: получен URL через итератор[0]: {image_url}")
+
+                                    elif hasattr(first_item, 'url'):
+
+                                        try:
+
+                                            image_url = first_item.url()
+
+                                            print(f"🔍 Google Imagen: получен URL через итератор[0].url(): {image_url}")
+
+                                        except Exception as e:
+
+                                            print(f"🔍 Google Imagen: ошибка при вызове итератор[0].url(): {e}")
+
+                                    else:
+
+                                        print(f"🔍 Google Imagen: итератор[0] не содержит URL")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при обработке итератора: {e}")
+
+                        
+
+                        # 🔍 ПОПЫТКА 5: Проверяем индексацию
+
+                        if not image_url and hasattr(output, '__getitem__'):
+
+                            try:
+
+                                first_item = output[0]
+
+                                print(f"🔍 Google Imagen: первый элемент по индексу: {first_item} (тип: {type(first_item)})")
+
+                                
+
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                    image_url = first_item
+
+                                    print(f"🔍 Google Imagen: получен URL через [0]: {image_url}")
+
+                                elif hasattr(first_item, 'url'):
+
+                                    try:
+
+                                        image_url = first_item.url()
+
+                                        print(f"🔍 Google Imagen: получен URL через [0].url(): {image_url}")
+
+                                    except Exception as e:
+
+                                        print(f"🔍 Google Imagen: ошибка при вызове [0].url(): {e}")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при индексации: {e}")
+
+                        
+
+                        # 🔍 ПОПЫТКА 6: Проверяем, является ли output списком/кортежем
+
+                        if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+
+                            try:
+
+                                first_item = output[0]
+
+                                print(f"🔍 Google Imagen: первый элемент списка: {first_item} (тип: {type(first_item)})")
+
+                                
+
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+
+                                    image_url = first_item
+
+                                    print(f"🔍 Google Imagen: получен URL через список[0]: {image_url}")
+
+                                elif hasattr(first_item, 'url'):
+
+                                    try:
+
+                                        image_url = first_item.url()
+
+                                        print(f"🔍 Google Imagen: получен URL через список[0].url(): {image_url}")
+
+                                    except Exception as e:
+
+                                        print(f"🔍 Google Imagen: ошибка при вызове список[0].url(): {e}")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при обработке списка: {e}")
+
+                        
+
+                        # 🔍 ПОПЫТКА 7: Последняя попытка - преобразование в строку
+
+                        if not image_url:
+
+                            try:
+
+                                str_output = str(output)
+
+                                print(f"🔍 Google Imagen: преобразование в строку: '{str_output}' (длина: {len(str_output)})")
+
+                                
+
+                                # Проверяем, не является ли это URL
+
+                                if str_output.startswith(('http://', 'https://')):
+
+                                    image_url = str_output
+
+                                    print(f"🔍 Google Imagen: получен URL через str(): {image_url}")
+
+                                else:
+
+                                    print(f"🔍 Google Imagen: str() не дал URL")
+
+                            except Exception as e:
+
+                                print(f"🔍 Google Imagen: ошибка при преобразовании в строку: {e}")
+
+                    
+
+                    
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Google Imagen 4 Ultra
+                    print(f"🔍 Google Imagen 4 Ultra - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # 🔍 ФИНАЛЬНАЯ ПРОВЕРКА
+
+                    print(f"🔍 Google Imagen - ФИНАЛЬНЫЙ РЕЗУЛЬТАТ:")
+
+                    print(f"   image_url: {image_url}")
+
+                    print(f"   тип image_url: {type(image_url)}")
+
+                    if image_url:
+
+                        print(f"   длина image_url: {len(str(image_url))}")
+
+                        print(f"   начинается с http: {str(image_url).startswith(('http://', 'https://'))}")
+
+                    
+
+                    # Проверяем, что получили URL
+
+                    if not image_url:
+
+                        if send_text:
+
+                            await send_text(f"❌ Не удалось получить изображение от Google Imagen 4 Ultra (пустой результат)")
+
+                        continue
+
+                    
+
+                    # Проверяем, что это строка и начинается с http
+
+                    if not isinstance(image_url, str):
+
+                        if send_text:
+
+                            await send_text(f"❌ Неверный тип URL от Google Imagen 4 Ultra: {type(image_url)}")
+
+                        continue
+
+                    
+
+                    if not image_url.startswith(('http://', 'https://')):
+
+                        if send_text:
+
+                            await send_text(f"❌ Получен неверный формат от Google Imagen 4 Ultra: {image_url}")
+
+                        continue
+
+                    
+
+                    print(f"🔍 Google Imagen: получен валидный URL: {image_url[:50]}...")
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Google Imagen 4: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            elif selected_model == 'Luma Photon':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Luma Photon (креативные возможности, высокое качество)...")
+
+                    
+
+                    # Генерация через Luma на Replicate с увеличенным таймаутом и ретраями
+
+                    loop = asyncio.get_event_loop()
+                    max_retries = 2
+                    retry_delay = 5  # секунд
+                    
+                    for attempt in range(max_retries + 1):
+                        try:
+                            if attempt > 0:
+                                if send_text:
+                                    await send_text(f"🔄 Повторная попытка {attempt}/{max_retries}...")
+                                await asyncio.sleep(retry_delay)
+                            
+                            output = await replicate_run_async(
+                                "luma/photon",
+                                {"prompt": prompt_with_style, **replicate_params},
+                                timeout=180
+                            )
+                            break  # Успешно получили результат
+                            
+                        except asyncio.TimeoutError:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⏳ Генерация занимает больше времени... Попробую ещё раз...")
+                                continue
+                            else:
+                                if send_text:
+                                    await send_text(f"❌ Генерация Luma Photon занимает слишком много времени\n💡 Попробуйте другую модель или попробовать снова")
+                                continue
+                        except Exception as e:
+                            if attempt < max_retries:
+                                if send_text:
+                                    await send_text(f"⚠️ Ошибка при генерации: {str(e)[:100]}... Попробую ещё раз...")
+                                continue
+                            else:
+                                raise  # Пробрасываем ошибку в основной блок except
+
+                    
+
+                
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Luma Photon
+                    print(f"🔍 Luma Photon - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # Проверяем методы объекта
+                    print(f"   Методы объекта:")
+                    for attr in dir(output):
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                            try:
+                                value = getattr(output, attr)
+                                if callable(value):
+                                    try:
+                                        result = value()
+                                        print(f"     {attr}(): {result}")
+                                    except Exception as e:
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+                                else:
+                                    print(f"     {attr}: {value}")
+                            except Exception as e:
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                    
+                    # 🔍 ПОПЫТКА 0 - проверяем, не является ли output уже URL строкой
+                    image_url = None
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        image_url = output
+                        print(f"🔍 Luma Photon: ПОПЫТКА 0 - output уже URL строка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 1 - проверяем, является ли output объектом FileOutput
+                    if not image_url and hasattr(output, 'url'):
+                        try:
+                            image_url = output.url()
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - получен URL через .url(): {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 1 - ошибка при вызове .url(): {e}")
+                    
+                    # 🔍 ПОПЫТКА 2 - проверяем, является ли output итератором
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+                        try:
+                            output_list = list(output)
+                            if output_list:
+                                first_item = output_list[0]
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                                    image_url = first_item
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен URL из итератора: {image_url[:50]}...")
+                                else:
+                                    image_url = str(first_item)
+                                    print(f"🔍 Luma Photon: ПОПЫТКА 2 - получен результат из итератора: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 2 - ошибка при обработке итератора: {e}")
+                    
+                    # 🔍 ПОПЫТКА 3 - проверяем, является ли output списком или кортежем
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+                        first_item = output[0]
+                        if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                            image_url = first_item
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен URL из списка: {image_url[:50]}...")
+                        else:
+                            image_url = str(first_item)
+                            print(f"🔍 Luma Photon: ПОПЫТКА 3 - получен результат из списка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 4 - проверяем, является ли output объектом с атрибутом output
+                    if not image_url and hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+                                image_url = output_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен URL через .output: {image_url[:50]}...")
+                            else:
+                                image_url = str(output_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 4 - получен результат через .output: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 4 - ошибка при доступе к .output: {e}")
+                    
+                    # 🔍 ПОПЫТКА 5 - проверяем, является ли output объектом с атрибутом result
+                    if not image_url and hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+                                image_url = result_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен URL через .result: {image_url[:50]}...")
+                            else:
+                                image_url = str(result_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 5 - получен результат через .result: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 5 - ошибка при доступе к .result: {e}")
+                    
+                    # 🔍 ПОПЫТКА 6 - проверяем, является ли output объектом с атрибутом id
+                    if not image_url and hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            if isinstance(id_value, str) and id_value.startswith(('http://', 'https://')):
+                                image_url = id_value
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен URL через .id: {image_url[:50]}...")
+                            else:
+                                image_url = str(id_value)
+                                print(f"🔍 Luma Photon: ПОПЫТКА 6 - получен результат через .id: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Luma Photon: ПОПЫТКА 6 - ошибка при доступе к .id: {e}")
+                    
+                    # 🔍 ПОПЫТКА 7 - последняя попытка, преобразуем в строку
+                    if not image_url:
+                        image_url = str(output)
+                        print(f"🔍 Luma Photon: ПОПЫТКА 7 - преобразован в строку: {image_url[:50]}...")
+                    
+                    # Проверяем, что получили URL
+                    if not image_url:
+                        if send_text:
+                            await send_text(f"❌ Не удалось получить изображение от Luma Photon (пустой результат)")
+                        continue
+
+                    # Проверяем, что это строка и начинается с http
+                    if not isinstance(image_url, str):
+                        if send_text:
+                            await send_text(f"❌ Неверный тип URL от Luma Photon")
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+                        if send_text:
+                            await send_text(f"❌ Получен неверный формат от Luma Photon")
+                        continue
+
+                    print(f"🔍 Luma Photon: получен URL: {image_url[:50]}...")
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Luma: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            elif selected_model == 'Bria 3.2':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Bria 3.2 (коммерческое использование, 4B параметров)...")
+
+                    
+
+                    # Генерация через Bria на Replicate
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                            "bria/image-3.2",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+
+                    
+
+                    # Обработка результата
+
+                    if hasattr(output, 'url'):
+
+                        image_url = output.url()
+
+                    elif hasattr(output, '__getitem__'):
+
+                        image_url = output[0] if output else None
+
+                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                        image_url = output[0]
+
+                    else:
+
+                        image_url = str(output) if output else None
+
+                    
+
+                    # Отладочная информация убрана для чистоты интерфейса
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Bria: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            elif selected_model == 'Recraft AI':
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Recraft AI (дизайн, вектор, логотипы)...")
+
+                    
+
+                    # Генерация через Recraft AI на Replicate
+
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                            "recraft-ai/recraft-v3-svg",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+
+                    
+
+                  
+                    
+                    # 🔍 ДЕТАЛЬНАЯ ОТЛАДКА Recraft AI
+                    print(f"🔍 Recraft AI - ДЕТАЛЬНАЯ ОТЛАДКА:")
+                    print(f"   Тип output: {type(output)}")
+                    print(f"   output: {output}")
+                    print(f"   repr(output): {repr(output)}")
+                    print(f"   dir(output): {dir(output)}")
+                    print(f"   hasattr(output, 'url'): {hasattr(output, 'url')}")
+                    print(f"   hasattr(output, 'id'): {hasattr(output, 'id')}")
+                    print(f"   hasattr(output, 'status'): {hasattr(output, 'status')}")
+                    print(f"   hasattr(output, 'output'): {hasattr(output, 'output')}")
+                    print(f"   hasattr(output, 'result'): {hasattr(output, 'result')}")
+                    
+                    # Проверяем все возможные атрибуты
+                    if hasattr(output, 'url'):
+                        try:
+                            url_value = output.url()
+                            print(f"   output.url(): {url_value}")
+                        except Exception as e:
+                            print(f"   output.url() ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            print(f"   output.id: {id_value}")
+                        except Exception as e:
+                            print(f"   output.id ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'status'):
+                        try:
+                            status_value = output.status
+                            print(f"   output.status: {status_value}")
+                        except Exception as e:
+                            print(f"   output.status ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            print(f"   output.output: {output_value}")
+                        except Exception as e:
+                            print(f"   output.output ОШИБКА: {e}")
+                    
+                    if hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            print(f"   output.result: {result_value}")
+                        except Exception as e:
+                            print(f"   output.result ОШИБКА: {e}")
+                    
+                    # Проверяем методы объекта
+                    print(f"   Методы объекта:")
+                    for attr in dir(output):
+                        if not attr.startswith('_') and attr not in ['url', 'id', 'status', 'output', 'result']:
+                            try:
+                                value = getattr(output, attr)
+                                if callable(value):
+                                    try:
+                                        result = value()
+                                        print(f"     {attr}(): {result}")
+                                    except Exception as e:
+                                        print(f"     {attr}(): ОШИБКА - {e}")
+                                else:
+                                    print(f"     {attr}: {value}")
+                            except Exception as e:
+                                print(f"     {attr}: ОШИБКА ДОСТУПА - {e}")
+                    
+                    # 🔍 ПОПЫТКА 0 - проверяем, не является ли output уже URL строкой
+                    image_url = None
+                    if isinstance(output, str) and output.startswith(('http://', 'https://')):
+                        image_url = output
+                        print(f"🔍 Recraft AI: ПОПЫТКА 0 - output уже URL строка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 1 - проверяем, является ли output объектом FileOutput
+                    if not image_url and hasattr(output, 'url'):
+                        try:
+                            image_url = output.url()
+                            print(f"🔍 Recraft AI: ПОПЫТКА 1 - получен URL через .url(): {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 1 - ошибка при вызове .url(): {e}")
+                    
+                    # 🔍 ПОПЫТКА 2 - проверяем, является ли output итератором
+                    if not image_url and hasattr(output, '__iter__') and not isinstance(output, str):
+                        try:
+                            output_list = list(output)
+                            if output_list:
+                                first_item = output_list[0]
+                                if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                                    image_url = first_item
+                                    print(f"🔍 Recraft AI: ПОПЫТКА 2 - получен URL из итератора: {image_url[:50]}...")
+                                else:
+                                    image_url = str(first_item)
+                                    print(f"🔍 Recraft AI: ПОПЫТКА 2 - получен результат из итератора: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 2 - ошибка при обработке итератора: {e}")
+                    
+                    # 🔍 ПОПЫТКА 3 - проверяем, является ли output списком или кортежем
+                    if not image_url and isinstance(output, (list, tuple)) and len(output) > 0:
+                        first_item = output[0]
+                        if isinstance(first_item, str) and first_item.startswith(('http://', 'https://')):
+                            image_url = first_item
+                            print(f"🔍 Recraft AI: ПОПЫТКА 3 - получен URL из списка: {image_url[:50]}...")
+                        else:
+                            image_url = str(first_item)
+                            print(f"🔍 Recraft AI: ПОПЫТКА 3 - получен результат из списка: {image_url[:50]}...")
+                    
+                    # 🔍 ПОПЫТКА 4 - проверяем, является ли output объектом с атрибутом output
+                    if not image_url and hasattr(output, 'output'):
+                        try:
+                            output_value = output.output
+                            if isinstance(output_value, str) and output_value.startswith(('http://', 'https://')):
+                                image_url = output_value
+                                print(f"🔍 Recraft AI: ПОПЫТКА 4 - получен URL через .output: {image_url[:50]}...")
+                            else:
+                                image_url = str(output_value)
+                                print(f"🔍 Recraft AI: ПОПЫТКА 4 - получен результат через .output: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 4 - ошибка при доступе к .output: {e}")
+                    
+                    # 🔍 ПОПЫТКА 5 - проверяем, является ли output объектом с атрибутом result
+                    if not image_url and hasattr(output, 'result'):
+                        try:
+                            result_value = output.result
+                            if isinstance(result_value, str) and result_value.startswith(('http://', 'https://')):
+                                image_url = result_value
+                                print(f"🔍 Recraft AI: ПОПЫТКА 5 - получен URL через .result: {image_url[:50]}...")
+                            else:
+                                image_url = str(result_value)
+                                print(f"🔍 Recraft AI: ПОПЫТКА 5 - получен результат через .result: {image_url[:50]}...")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 5 - ошибка при доступе к .result: {e}")
+                    
+                    # 🔍 ПОПЫТКА 6 - проверяем, является ли output объектом с атрибутом id
+                    if not image_url and hasattr(output, 'id'):
+                        try:
+                            id_value = output.id
+                            if isinstance(id_value, str) and id_value.startswith(('http://', 'https://')):
+                                image_url = id_value
+                                print(f"🔍 Recraft AI: ПОПЫТКА 6 - получен URL через .id: {image_url[:50]}...")
+                            else:
+                                image_url = str(id_value)
+                                print(f"🔍 Recraft AI: ПОПЫТКА 6 - получен результат через .id: {id_value}")
+                        except Exception as e:
+                            print(f"🔍 Recraft AI: ПОПЫТКА 6 - ошибка при доступе к .id: {e}")
+                    
+                    # 🔍 ПОПЫТКА 7 - последняя попытка, преобразуем в строку
+                    if not image_url:
+                        image_url = str(output)
+                        print(f"🔍 Recraft AI: ПОПЫТКА 7 - преобразован в строку: {image_url[:50]}...")
+                    
+                    # Проверяем, что получили URL
+                    if not image_url:
+                        if send_text:
+                            await send_text(f"❌ Не удалось получить изображение от Recraft AI (пустой результат)")
+                        continue
+
+                    # Проверяем, что это строка и начинается с http
+                    if not isinstance(image_url, str):
+                        if send_text:
+                            await send_text(f"❌ Неверный тип URL от Recraft AI")
+                        continue
+
+                    if not image_url.startswith(('http://', 'https://')):
+                        if send_text:
+                            await send_text(f"❌ Получен неверный формат от Recraft AI")
+                        continue
+
+                    print(f"🔍 Recraft AI: получен URL: {image_url[:50]}...")
+
+                    
+
+                    # Проверяем, является ли файл SVG
+
+                    if image_url and image_url.endswith('.svg'):
+
+                        if send_text:
+
+                            await send_text("⚠️ Recraft AI сгенерировал SVG файл. Telegram не поддерживает SVG напрямую.")
+
+                            await send_text("🔗 Ссылка на изображение: " + image_url)
+
+                            await send_text("💡 Попробуйте другую модель или сохраните ссылку для просмотра в браузере.")
+
+                        
+
+                        # Увеличиваем счетчик обработанных изображений
+
+                        processed_count += 1
+
+                        
+
+                        # Пропускаем отправку SVG файла
+
+                        continue
+
+                        
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при генерации через Recraft AI: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+
+
+            else:  # Fallback на Ideogram
+
+                try:
+
+                    if send_text:
+
+                        await send_text(f"Генерирую через Ideogram (универсальная модель)...")
+
+                    
+
+                    # Fallback на Ideogram если модель не поддерживается
+                    # Используем асинхронный вызов для предотвращения блокировки
+                    loop = asyncio.get_event_loop()
+                    output = await replicate_run_async(
+                            "ideogram-ai/ideogram-v3-turbo",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+
+                    
+
+                    # Обработка результата
+
+                    if hasattr(output, 'url'):
+
+                        image_url = output.url()
+
+                    elif hasattr(output, '__getitem__'):
+
+                        image_url = output[0] if output else None
+
+                    elif isinstance(output, (list, tuple)) and len(output) > 0:
+
+                        image_url = output[0]
+
+                    else:
+
+                        image_url = str(output) if output else None
+
+                except Exception as e:
+
+                    logging.error(f"Ошибка при fallback генерации через Ideogram: {e}")
+
+                    if send_text:
+
+                        await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте другую модель или попробовать снова")
+
+                    continue
+
+            
+
+            images.append(image_url)
+
+            media.append(InputMediaPhoto(media=image_url, caption=caption))
+
+            processed_count += 1
+
+            
+
+            # Отладочная информация убрана для чистоты интерфейса
+
+        except Exception as e:
+
+            logging.error(f"Общая ошибка при генерации изображения {idx}: {e}")
+
+            if send_text:
+
+                await send_text(f"❌ Ошибка при генерации изображения\n💡 Попробуйте снова или выберите другую модель")
+
     if media and send_media:
         print(f"🔍 Попытка отправки media группы...")
         print(f"🔍 Количество изображений: {len(media)}")

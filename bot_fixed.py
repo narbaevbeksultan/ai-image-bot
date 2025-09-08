@@ -84,17 +84,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
         # Определяем параметры для Replicate
         user_format = state.get('format', '')
         simple_orientation = state.get('simple_orientation', None)
-        
-        # Простые параметры для Ideogram
-        replicate_params = {}
-        if user_format == '1:1':
-            replicate_params['aspect_ratio'] = '1:1'
-        elif user_format == '16:9':
-            replicate_params['aspect_ratio'] = '16:9'
-        elif user_format == '9:16':
-            replicate_params['aspect_ratio'] = '9:16'
-        else:
-            replicate_params['aspect_ratio'] = '1:1'
+        replicate_params = get_replicate_params_for_model(selected_model, user_format, simple_orientation)
         
         if send_text:
             await send_text(f'Генерирую изображение {idx}...')
@@ -134,10 +124,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 
                 # Проверяем, является ли output объектом FileOutput
                 if hasattr(output, 'url'):
-                    if callable(output.url):
-                        image_url = output.url()
-                    else:
-                        image_url = output.url
+                    image_url = output.url()
                 elif hasattr(output, '__iter__') and not isinstance(output, str):
                     try:
                         output_list = list(output)
