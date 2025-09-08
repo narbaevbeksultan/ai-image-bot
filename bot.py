@@ -677,12 +677,7 @@ async def send_telegram_notification(user_id: int, message: str):
                 logging.error(f"Ошибка отправки уведомления: {response.status} - {response_text}")
                 return False
         
-        if response.status_code == 200:
-            logging.info(f"Уведомление отправлено пользователю {user_id}")
-            return True
-        else:
-            logging.error(f"Ошибка отправки уведомления: {response.status_code} - {response.text}")
-            return False
+        
             
     except Exception as e:
         logging.error(f"Ошибка отправки уведомления пользователю {user_id}: {e}")
