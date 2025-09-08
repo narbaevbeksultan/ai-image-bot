@@ -5547,11 +5547,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-
-                temp_file.write(response.content)
-
-                temp_file_path = temp_file.name
+            # Создаем временный файл асинхронно
+            loop = asyncio.get_event_loop()
+            temp_file_path = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
+            )
+            
+            # Записываем данные в файл асинхронно
+            await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: open(temp_file_path, 'wb').write(response.content)
+            )
 
             
 
@@ -5820,11 +5827,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             logging.info("Пытаемся отправить изображение из файла...")
 
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_edited:
-
-                                temp_edited.write(edited_response.content)
-
-                                temp_edited_path = temp_edited.name
+                            # Создаем временный файл асинхронно
+                            loop = asyncio.get_event_loop()
+                            temp_edited_path = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
+                            )
+                            
+                            # Записываем данные в файл асинхронно
+                            await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'wb').write(edited_response.content)
+                            )
 
                             
 
@@ -8505,11 +8519,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-
-                temp_file.write(response.content)
-
-                temp_file_path = temp_file.name
+            # Создаем временный файл асинхронно
+            loop = asyncio.get_event_loop()
+            temp_file_path = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
+            )
+            
+            # Записываем данные в файл асинхронно
+            await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: open(temp_file_path, 'wb').write(response.content)
+            )
 
             
 
@@ -8776,11 +8797,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             logging.info("Пытаемся отправить изображение из файла...")
 
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_edited:
-
-                                temp_edited.write(edited_response.content)
-
-                                temp_edited_path = temp_edited.name
+                            # Создаем временный файл асинхронно
+                            loop = asyncio.get_event_loop()
+                            temp_edited_path = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
+                            )
+                            
+                            # Записываем данные в файл асинхронно
+                            await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'wb').write(edited_response.content)
+                            )
 
                             
 
@@ -14208,11 +14236,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-
-                temp_file.write(response.content)
-
-                temp_file_path = temp_file.name
+            # Создаем временный файл асинхронно
+            loop = asyncio.get_event_loop()
+            temp_file_path = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
+            )
+            
+            # Записываем данные в файл асинхронно
+            await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: open(temp_file_path, 'wb').write(response.content)
+            )
 
             
 
@@ -14479,11 +14514,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             logging.info("Пытаемся отправить изображение из файла...")
 
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_edited:
-
-                                temp_edited.write(edited_response.content)
-
-                                temp_edited_path = temp_edited.name
+                            # Создаем временный файл асинхронно
+                            loop = asyncio.get_event_loop()
+                            temp_edited_path = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
+                            )
+                            
+                            # Записываем данные в файл асинхронно
+                            await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'wb').write(edited_response.content)
+                            )
 
                             
 
@@ -17164,11 +17206,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         try:
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-
-                temp_file.write(response.content)
-
-                temp_file_path = temp_file.name
+            # Создаем временный файл асинхронно
+            loop = asyncio.get_event_loop()
+            temp_file_path = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
+            )
+            
+            # Записываем данные в файл асинхронно
+            await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: open(temp_file_path, 'wb').write(response.content)
+            )
 
             
 
@@ -17435,11 +17484,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             logging.info("Пытаемся отправить изображение из файла...")
 
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_edited:
-
-                                temp_edited.write(edited_response.content)
-
-                                temp_edited_path = temp_edited.name
+                            # Создаем временный файл асинхронно
+                            loop = asyncio.get_event_loop()
+                            temp_edited_path = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
+                            )
+                            
+                            # Записываем данные в файл асинхронно
+                            await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'wb').write(edited_response.content)
+                            )
 
                             
 
@@ -24097,21 +24153,30 @@ async def generate_video(update, context, state):
                         async with session.get(video_url, timeout=aiohttp.ClientTimeout(total=60)) as response:
                             if response.status == 200:
 
-                                with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
-                                    total_size = 0
-                                    
-                                    # Загружаем файл по частям
-                                    async for chunk in response.content.iter_chunked(8192):
+                                # Создаем временный файл асинхронно
+                                loop = asyncio.get_event_loop()
+                                temp_file_path = await loop.run_in_executor(
+                                    THREAD_POOL,
+                                    lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.mp4').name
+                                )
+                                
+                                total_size = 0
+                                
+                                # Загружаем файл по частям
+                                async for chunk in response.content.iter_chunked(8192):
 
                                         if chunk:
-                                            temp_file.write(chunk)
+                                            # Записываем chunk в файл асинхронно
+                                            await loop.run_in_executor(
+                                                THREAD_POOL,
+                                                lambda: open(temp_file_path, 'ab').write(chunk)
+                                            )
                                             total_size += len(chunk)
                                             
                                             # Проверяем размер во время загрузки
                                             if total_size > 50 * 1024 * 1024:  # 50 МБ
                                                 raise Exception("Файл превышает лимит Telegram (50 МБ)")
                                     
-                                    temp_file_path = temp_file.name
                                     logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
 
                                 
