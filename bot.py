@@ -8614,7 +8614,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Редактируем изображение с переведенным промптом
 
-        await edit_image_with_flux(update, context, state, selected_image_url, english_prompt)
+        asyncio.create_task(edit_image_with_flux_async(update, context, state, selected_image_url, english_prompt))
 
         
 
@@ -9109,6 +9109,25 @@ async def generate_content_async(update, context, state):
         await context.bot.send_message(
             chat_id=chat_id,
             text="❌ **Ошибка при генерации контента**\n\nПопробуйте еще раз или обратитесь в поддержку."
+        )
+
+async def edit_image_with_flux_async(update, context, state, original_image_url, edit_prompt):
+    """Асинхронная обертка для редактирования изображений"""
+    try:
+        await edit_image_with_flux(update, context, state, original_image_url, edit_prompt)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронном редактировании изображений: {e}")
+        # Отправляем сообщение об ошибке пользователю
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="❌ **Ошибка при редактировании изображения**\n\nПопробуйте еще раз или обратитесь в поддержку."
         )
 
 async def send_images_async(update, context, state, prompt_type='auto', user_prompt=None, scenes=None):
