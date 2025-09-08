@@ -6044,7 +6044,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await update.callback_query.edit_message_text('Генерирую новые изображения по тем же сценам...')
 
-            await send_images(update, context, state, prompt_type='auto', scenes=state['last_scenes'])
+            asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=state['last_scenes']))
 
         elif user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_script' in state:
 
@@ -6054,11 +6054,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             state['last_scenes'] = scenes
 
-            await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+            asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes))
 
         else:
 
-            await send_images(update, context, state, prompt_type=state.get('last_prompt_type', 'auto'), user_prompt=state.get('last_user_prompt'))
+            asyncio.create_task(send_images_async(update, context, state, prompt_type=state.get('last_prompt_type', 'auto'), user_prompt=state.get('last_user_prompt')))
 
     elif data == "more_images_same_settings":
 
@@ -6070,13 +6070,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await update.callback_query.edit_message_text('Генерирую новые изображения с теми же настройками...')
 
-            await send_images(update, context, state, prompt_type=state.get('last_prompt_type', 'user'), user_prompt=state.get('last_user_prompt'))
+            asyncio.create_task(send_images_async(update, context, state, prompt_type=state.get('last_prompt_type', 'user'), user_prompt=state.get('last_user_prompt')))
 
         else:
 
             # Fallback для других форматов
 
-            await send_images(update, context, state, prompt_type=state.get('last_prompt_type', 'auto'), user_prompt=state.get('last_user_prompt'))
+            asyncio.create_task(send_images_async(update, context, state, prompt_type=state.get('last_prompt_type', 'auto'), user_prompt=state.get('last_user_prompt')))
 
     elif data == "change_settings":
 
@@ -6158,7 +6158,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_scenes' in state:
 
-                await send_images(update, context, state, prompt_type='auto', scenes=state['last_scenes'])
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=state['last_scenes']))
 
             elif user_format in ['instagram reels', 'tiktok', 'youtube shorts'] and 'last_script' in state:
 
@@ -6166,11 +6166,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 state['last_scenes'] = scenes
 
-                await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes))
 
             else:
 
-                await send_images(update, context, state, prompt_type='auto')
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto'))
 
         except Exception as e:
 
@@ -6214,11 +6214,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 scenes = state['last_scenes'][:count]
 
-                await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes))
 
             else:
 
-                await send_images(update, context, state, prompt_type='auto')
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto'))
 
         except Exception as e:
 
@@ -6474,7 +6474,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await query.edit_message_text(f'Генерирую изображения для оставшихся {len(remaining_scenes)} сцен...')
 
-                await send_images(update, context, state, prompt_type='auto', scenes=remaining_scenes)
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=remaining_scenes))
 
             else:
 
@@ -6522,7 +6522,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await query.edit_message_text(f'Генерирую изображения для всех {len(all_scenes)} сцен...')
 
-                await send_images(update, context, state, prompt_type='auto', scenes=all_scenes)
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=all_scenes))
 
             else:
 
@@ -6680,7 +6680,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await query.edit_message_text(f'Генерирую изображения для {len(scenes_to_generate)} сцен...')
 
-                await send_images(update, context, state, prompt_type='auto', scenes=scenes_to_generate)
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes_to_generate))
 
             else:
 
@@ -7762,7 +7762,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         USER_STATE[user_id]['step'] = STEP_DONE
 
-        await send_images(update, context, state, prompt_type='user', user_prompt=user_prompt)
+        asyncio.create_task(send_images_async(update, context, state, prompt_type='user', user_prompt=user_prompt))
 
     elif step == 'simple_image_count_selection':
 
@@ -8136,7 +8136,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text('Спасибо! Генерирую изображения...')
 
-        await send_images(update, context, state, prompt_type='user', user_prompt=user_prompt)
+        asyncio.create_task(send_images_async(update, context, state, prompt_type='user', user_prompt=user_prompt))
 
     
 
@@ -8430,13 +8430,13 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     await update.message.reply_text(f'Генерирую {count} изображений...')
 
-                    await send_images(update, context, state, prompt_type='auto', scenes=scenes)
+                    asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes))
 
                 else:
 
                     await update.message.reply_text(f'Генерирую {count} изображений...')
 
-                    await send_images(update, context, state, prompt_type='auto')
+                    asyncio.create_task(send_images_async(update, context, state, prompt_type='auto'))
 
             else:
 
@@ -8486,7 +8486,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await update.message.reply_text(f'Генерирую изображения для {count} сцен...')
 
-                await send_images(update, context, state, prompt_type='auto', scenes=scenes_to_generate)
+                asyncio.create_task(send_images_async(update, context, state, prompt_type='auto', scenes=scenes_to_generate))
 
             else:
 
@@ -9032,6 +9032,25 @@ async def show_enhanced_prompt(update, context, state):
         )
 
 
+
+async def send_images_async(update, context, state, prompt_type='auto', user_prompt=None, scenes=None):
+    """Асинхронная обертка для генерации изображений"""
+    try:
+        await send_images(update, context, state, prompt_type, user_prompt, scenes)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной генерации изображений: {e}")
+        # Отправляем сообщение об ошибке пользователю
+        if hasattr(update, 'callback_query') and update.callback_query:
+            chat_id = update.callback_query.message.chat_id
+        elif hasattr(update, 'message') and update.message:
+            chat_id = update.message.chat_id
+        else:
+            return
+            
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="❌ **Ошибка при генерации изображений**\n\nПопробуйте еще раз или обратитесь в поддержку."
+        )
 
 async def generate_video_async(update, context, state):
     """Асинхронная обертка для генерации видео"""
@@ -12258,4 +12277,4 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 if __name__ == '__main__':
 
-    main() 
+    main()
