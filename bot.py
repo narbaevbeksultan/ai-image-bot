@@ -24177,7 +24177,7 @@ async def generate_video(update, context, state):
                                             if total_size > 50 * 1024 * 1024:  # 50 МБ
                                                 raise Exception("Файл превышает лимит Telegram (50 МБ)")
                                     
-                                    logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
+                                logging.info(f"Файл загружен локально: {temp_file_path}, размер: {total_size / (1024*1024):.1f} МБ")
 
                                 
                                 # Проверяем, что файл действительно создался и имеет размер
