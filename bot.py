@@ -923,31 +923,7 @@ VIDEO_MODEL_DESCRIPTIONS = {
 
 
 
-def get_replicate_size_for_format(format_type):
 
-    """Определяет размер для Replicate моделей на основе формата"""
-
-    format_type = format_type.lower().replace(' ', '')
-
-    
-
-    if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
-
-        # Вертикальные форматы для мобильных устройств
-
-        return "1024x1792"  # 9:16 соотношение сторон
-
-    elif format_type == 'instagrampost':
-
-        # Квадратный формат для постов
-
-        return "1024x1024"  # 1:1 соотношение сторон
-
-    else:
-
-        # По умолчанию квадратный формат
-
-        return "1024x1024"
 
 
 
@@ -3148,31 +3124,7 @@ VIDEO_MODEL_DESCRIPTIONS = {
 
 
 
-def get_replicate_size_for_format(format_type):
 
-    """Определяет размер для Replicate моделей на основе формата"""
-
-    format_type = format_type.lower().replace(' ', '')
-
-    
-
-    if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
-
-        # Вертикальные форматы для мобильных устройств
-
-        return "1024x1792"  # 9:16 соотношение сторон
-
-    elif format_type == 'instagrampost':
-
-        # Квадратный формат для постов
-
-        return "1024x1024"  # 1:1 соотношение сторон
-
-    else:
-
-        # По умолчанию квадратный формат
-
-        return "1024x1024"
 
 
 
@@ -6174,31 +6126,7 @@ VIDEO_MODEL_DESCRIPTIONS = {
 
 
 
-def get_replicate_size_for_format(format_type):
 
-    """Определяет размер для Replicate моделей на основе формата"""
-
-    format_type = format_type.lower().replace(' ', '')
-
-    
-
-    if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
-
-        # Вертикальные форматы для мобильных устройств
-
-        return "1024x1792"  # 9:16 соотношение сторон
-
-    elif format_type == 'instagrampost':
-
-        # Квадратный формат для постов
-
-        return "1024x1024"  # 1:1 соотношение сторон
-
-    else:
-
-        # По умолчанию квадратный формат
-
-        return "1024x1024"
 
 
 
@@ -11749,31 +11677,7 @@ VIDEO_MODEL_DESCRIPTIONS = {
 
 
 
-def get_replicate_size_for_format(format_type):
 
-    """Определяет размер для Replicate моделей на основе формата"""
-
-    format_type = format_type.lower().replace(' ', '')
-
-    
-
-    if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
-
-        # Вертикальные форматы для мобильных устройств
-
-        return "1024x1792"  # 9:16 соотношение сторон
-
-    elif format_type == 'instagrampost':
-
-        # Квадратный формат для постов
-
-        return "1024x1024"  # 1:1 соотношение сторон
-
-    else:
-
-        # По умолчанию квадратный формат
-
-        return "1024x1024"
 
 
 
