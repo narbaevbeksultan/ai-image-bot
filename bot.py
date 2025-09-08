@@ -5555,11 +5555,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             
 
-            # Открываем изображение с помощью PIL для получения размеров
-
-            with Image.open(temp_file_path) as img:
-
-                width, height = img.size
+            # Открываем изображение с помощью PIL для получения размеров (асинхронно)
+            loop = asyncio.get_event_loop()
+            width, height = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: Image.open(temp_file_path).size
+            )
 
             
 
@@ -5569,13 +5570,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-                    # Используем асинхронный вызов для предотвращения блокировки
-                    loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
-                            "black-forest-labs/flux-kontext-pro",
-                        {
-                                "input_image": image_file,
+                # Читаем файл асинхронно
+                loop = asyncio.get_event_loop()
+                image_data = await loop.run_in_executor(
+                    THREAD_POOL,
+                    lambda: open(temp_file_path, "rb").read()
+                )
+                
+                # Используем асинхронный вызов для предотвращения блокировки
+                output = await replicate_run_async(
+                        "black-forest-labs/flux-kontext-pro",
+                    {
+                            "input_image": image_data,
                                 "prompt": edit_prompt,
                                 "aspect_ratio": "match_input_image",
                                 "output_format": "jpg",
@@ -5826,15 +5832,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             
 
-                            # Отправляем отредактированное изображение из файла
+                            # Отправляем отредактированное изображение из файла (асинхронно)
+                            loop = asyncio.get_event_loop()
+                            edited_data = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'rb').read()
+                            )
 
-                            with open(temp_edited_path, 'rb') as edited_file:
-
-                                await context.bot.send_photo(
+                            await context.bot.send_photo(
 
                                     chat_id=chat_id,
 
-                                    photo=edited_file,
+                                    photo=edited_data,
 
                                     caption=f"Отредактировано: {edit_prompt}"
 
@@ -8504,11 +8513,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             
 
-            # Открываем изображение с помощью PIL для получения размеров
-
-            with Image.open(temp_file_path) as img:
-
-                width, height = img.size
+            # Открываем изображение с помощью PIL для получения размеров (асинхронно)
+            loop = asyncio.get_event_loop()
+            width, height = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: Image.open(temp_file_path).size
+            )
 
             
 
@@ -8518,13 +8528,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-                    # Используем асинхронный вызов для предотвращения блокировки
-                    loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
-                            "black-forest-labs/flux-kontext-pro",
-                        {
-                                "input_image": image_file,
+                # Читаем файл асинхронно
+                loop = asyncio.get_event_loop()
+                image_data = await loop.run_in_executor(
+                    THREAD_POOL,
+                    lambda: open(temp_file_path, "rb").read()
+                )
+                
+                # Используем асинхронный вызов для предотвращения блокировки
+                output = await replicate_run_async(
+                        "black-forest-labs/flux-kontext-pro",
+                    {
+                            "input_image": image_data,
                                 "prompt": edit_prompt,
                                 "aspect_ratio": "match_input_image",
                                 "output_format": "jpg",
@@ -8773,15 +8788,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             
 
-                            # Отправляем отредактированное изображение из файла
+                            # Отправляем отредактированное изображение из файла (асинхронно)
+                            loop = asyncio.get_event_loop()
+                            edited_data = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'rb').read()
+                            )
 
-                            with open(temp_edited_path, 'rb') as edited_file:
-
-                                await context.bot.send_photo(
+                            await context.bot.send_photo(
 
                                     chat_id=chat_id,
 
-                                    photo=edited_file,
+                                    photo=edited_data,
 
                                     caption=f"Отредактировано: {edit_prompt}"
 
@@ -14198,11 +14216,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             
 
-            # Открываем изображение с помощью PIL для получения размеров
-
-            with Image.open(temp_file_path) as img:
-
-                width, height = img.size
+            # Открываем изображение с помощью PIL для получения размеров (асинхронно)
+            loop = asyncio.get_event_loop()
+            width, height = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: Image.open(temp_file_path).size
+            )
 
             
 
@@ -14212,13 +14231,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-                    # Используем асинхронный вызов для предотвращения блокировки
-                    loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
-                            "black-forest-labs/flux-kontext-pro",
-                        {
-                                "input_image": image_file,
+                # Читаем файл асинхронно
+                loop = asyncio.get_event_loop()
+                image_data = await loop.run_in_executor(
+                    THREAD_POOL,
+                    lambda: open(temp_file_path, "rb").read()
+                )
+                
+                # Используем асинхронный вызов для предотвращения блокировки
+                output = await replicate_run_async(
+                        "black-forest-labs/flux-kontext-pro",
+                    {
+                            "input_image": image_data,
                                 "prompt": edit_prompt,
                                 "aspect_ratio": "match_input_image",
                                 "output_format": "jpg",
@@ -14467,15 +14491,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             
 
-                            # Отправляем отредактированное изображение из файла
+                            # Отправляем отредактированное изображение из файла (асинхронно)
+                            loop = asyncio.get_event_loop()
+                            edited_data = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'rb').read()
+                            )
 
-                            with open(temp_edited_path, 'rb') as edited_file:
-
-                                await context.bot.send_photo(
+                            await context.bot.send_photo(
 
                                     chat_id=chat_id,
 
-                                    photo=edited_file,
+                                    photo=edited_data,
 
                                     caption=f"Отредактировано: {edit_prompt}"
 
@@ -17145,11 +17172,12 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             
 
-            # Открываем изображение с помощью PIL для получения размеров
-
-            with Image.open(temp_file_path) as img:
-
-                width, height = img.size
+            # Открываем изображение с помощью PIL для получения размеров (асинхронно)
+            loop = asyncio.get_event_loop()
+            width, height = await loop.run_in_executor(
+                THREAD_POOL,
+                lambda: Image.open(temp_file_path).size
+            )
 
             
 
@@ -17159,13 +17187,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             try:
 
-                with open(temp_file_path, "rb") as image_file:
-                    # Используем асинхронный вызов для предотвращения блокировки
-                    loop = asyncio.get_event_loop()
-                    output = await replicate_run_async(
-                            "black-forest-labs/flux-kontext-pro",
-                        {
-                                "input_image": image_file,
+                # Читаем файл асинхронно
+                loop = asyncio.get_event_loop()
+                image_data = await loop.run_in_executor(
+                    THREAD_POOL,
+                    lambda: open(temp_file_path, "rb").read()
+                )
+                
+                # Используем асинхронный вызов для предотвращения блокировки
+                output = await replicate_run_async(
+                        "black-forest-labs/flux-kontext-pro",
+                    {
+                            "input_image": image_data,
                                 "prompt": edit_prompt,
                                 "aspect_ratio": "match_input_image",
                                 "output_format": "jpg",
@@ -17414,15 +17447,18 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                             
 
-                            # Отправляем отредактированное изображение из файла
+                            # Отправляем отредактированное изображение из файла (асинхронно)
+                            loop = asyncio.get_event_loop()
+                            edited_data = await loop.run_in_executor(
+                                THREAD_POOL,
+                                lambda: open(temp_edited_path, 'rb').read()
+                            )
 
-                            with open(temp_edited_path, 'rb') as edited_file:
-
-                                await context.bot.send_photo(
+                            await context.bot.send_photo(
 
                                     chat_id=chat_id,
 
-                                    photo=edited_file,
+                                    photo=edited_data,
 
                                     caption=f"Отредактировано: {edit_prompt}"
 
@@ -24085,12 +24121,17 @@ async def generate_video(update, context, state):
                                 
                                 # Отправляем локальный файл
                                 try:
-                                    with open(temp_file_path, 'rb') as video_file:
-
-                                        await context.bot.send_video(
+                                    # Читаем видео файл асинхронно
+                                    loop = asyncio.get_event_loop()
+                                    video_data = await loop.run_in_executor(
+                                        THREAD_POOL,
+                                        lambda: open(temp_file_path, 'rb').read()
+                                    )
+                                    
+                                    await context.bot.send_video(
                                             chat_id=chat_id,
 
-                                            video=video_file,
+                                            video=video_data,
                                             caption=f"🎬 **Видео готово!**\n\n"
 
                                             f"{prompt_caption}\n"
@@ -24121,12 +24162,17 @@ async def generate_video(update, context, state):
                                     
                                     # Попробуем отправить как документ
                                     try:
-                                        with open(temp_file_path, 'rb') as video_file:
-
-                                            await context.bot.send_document(
+                                        # Читаем видео файл асинхронно
+                                        loop = asyncio.get_event_loop()
+                                        video_data = await loop.run_in_executor(
+                                            THREAD_POOL,
+                                            lambda: open(temp_file_path, 'rb').read()
+                                        )
+                                        
+                                        await context.bot.send_document(
                                                 chat_id=chat_id,
 
-                                                document=video_file,
+                                                document=video_data,
                                                 caption=f"🎬 **Видео готово!**\n\n"
 
                                                 f"{prompt_caption}\n"
@@ -24136,17 +24182,17 @@ async def generate_video(update, context, state):
                                                 filename=f"video_{video_quality}_{video_duration}s.mp4"
                                             )
 
-                                            video_sent = True
-                                            logging.info("Видео успешно отправлено как документ из локального файла")
+                                        video_sent = True
+                                        logging.info("Видео успешно отправлено как документ из локального файла")
                                             
-                                            # Очищаем состояние после успешной генерации
-                                            state['step'] = None
-                                            state.pop('video_type', None)
-                                            state.pop('video_quality', None)
-                                            state.pop('video_duration', None)
-                                            state.pop('video_prompt', None)
-                                            state.pop('english_prompt', None)
-                                            state.pop('enhanced_prompt', None)
+                                        # Очищаем состояние после успешной генерации
+                                        state['step'] = None
+                                        state.pop('video_type', None)
+                                        state.pop('video_quality', None)
+                                        state.pop('video_duration', None)
+                                        state.pop('video_prompt', None)
+                                        state.pop('english_prompt', None)
+                                        state.pop('enhanced_prompt', None)
                                             
                                     except Exception as doc_error:
                                         logging.error(f"Ошибка при отправке как документ: {doc_error}")
