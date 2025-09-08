@@ -570,8 +570,12 @@ async def check_pending_payments():
                 continue
             
             try:
-                # Проверяем статус платежа через Betatransfer API
-                status_result = betatransfer_api.get_payment_status(payment_id)
+                # Проверяем статус платежа через Betatransfer API асинхронно
+                loop = asyncio.get_event_loop()
+                status_result = await loop.run_in_executor(
+                    THREAD_POOL,
+                    lambda: betatransfer_api.get_payment_status(payment_id)
+                )
                 
                 if 'error' in status_result:
                     logging.error(f"Ошибка проверки статуса платежа {payment_id}: {status_result['error']}")
@@ -697,8 +701,12 @@ async def payment_callback():
             logging.error("Пустые данные callback")
             return jsonify({"error": "Empty callback data"}), 400
         
-        # Обрабатываем callback через API
-        result = betatransfer_api.process_callback(callback_data)
+        # Обрабатываем callback через API асинхронно
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: betatransfer_api.process_callback(callback_data)
+        )
         
         if result.get("status") == "error":
             logging.error(f"Ошибка обработки callback: {result.get('error')}")
@@ -5261,11 +5269,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.startswith("buy_credits:"):
 
-        await handle_credit_purchase(update, context)
+        asyncio.create_task(handle_credit_purchase_async(update, context))
 
     elif data.startswith("check_payment:"):
 
-        await check_payment_status(update, context)
+        asyncio.create_task(check_payment_status_async(update, context))
 
     elif data.startswith('format:'):
 
@@ -9149,6 +9157,55 @@ async def send_images_async(update, context, state, prompt_type='auto', user_pro
             text="❌ **Ошибка при генерации изображений**\n\nПопробуйте еще раз или обратитесь в поддержку."
         )
 
+async def check_payment_status_async(update, context):
+    """Асинхронная обертка для проверки статуса платежа"""
+    try:
+        asyncio.create_task(check_payment_status_async(update, context))
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной проверке статуса платежа: {e}")
+        if hasattr(update, 'callback_query') and update.callback_query:
+            await update.callback_query.answer("❌ Ошибка при проверке статуса платежа")
+        elif hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при проверке статуса платежа")
+
+async def handle_credit_purchase_async(update, context):
+    """Асинхронная обертка для покупки кредитов"""
+    try:
+        asyncio.create_task(handle_credit_purchase_async(update, context))
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной покупке кредитов: {e}")
+        if hasattr(update, 'callback_query') and update.callback_query:
+            await update.callback_query.answer("❌ Ошибка при покупке кредитов")
+        elif hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при покупке кредитов")
+
+async def add_credits_command_async(update, context):
+    """Асинхронная обертка для добавления кредитов (админ)"""
+    try:
+        await add_credits_command(update, context)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронном добавлении кредитов: {e}")
+        if hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при добавлении кредитов")
+
+async def set_credits_command_async(update, context):
+    """Асинхронная обертка для установки кредитов (админ)"""
+    try:
+        await set_credits_command(update, context)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной установке кредитов: {e}")
+        if hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при установке кредитов")
+
+async def check_credits_command_async(update, context):
+    """Асинхронная обертка для проверки кредитов (админ)"""
+    try:
+        await check_credits_command(update, context)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной проверке кредитов: {e}")
+        if hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при проверке кредитов")
+
 async def generate_video_async(update, context, state):
     """Асинхронная обертка для генерации видео"""
     try:
@@ -11493,20 +11550,19 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         
 
-        # Создаем платеж
+        # Создаем платеж асинхронно
 
         print(f"🔍 Создаем платеж для пакета: {package}")
 
-        payment_result = betatransfer_api.create_payment(
-
-            amount=package['price'],
-
-            currency=package['currency'],
-
-            description=f"Пакет кредитов: {package['name']} ({package['credits']} кредитов)",
-
-            payer_id=str(user_id)
-
+        loop = asyncio.get_event_loop()
+        payment_result = await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: betatransfer_api.create_payment(
+                amount=package['price'],
+                currency=package['currency'],
+                description=f"Пакет кредитов: {package['name']} ({package['credits']} кредитов)",
+                payer_id=str(user_id)
+            )
         )
 
         print(f"🔍 Результат создания платежа: {payment_result}")
@@ -11633,8 +11689,12 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
         from betatransfer_api import BetatransferAPI
         betatransfer_api = BetatransferAPI()
         
-        # Получаем статус платежа
-        payment_status = betatransfer_api.get_payment_status(payment_id)
+        # Получаем статус платежа асинхронно
+        loop = asyncio.get_event_loop()
+        payment_status = await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: betatransfer_api.get_payment_status(payment_id)
+        )
 
         
 
@@ -11923,9 +11983,9 @@ def main():
     app.add_handler(CommandHandler('edit_image', edit_image_command))
     
     # Админ-команды для управления кредитами
-    app.add_handler(CommandHandler('add_credits', add_credits_command))
-    app.add_handler(CommandHandler('check_credits', check_credits_command))
-    app.add_handler(CommandHandler('set_credits', set_credits_command))
+    app.add_handler(CommandHandler('add_credits', add_credits_command_async))
+    app.add_handler(CommandHandler('check_credits', check_credits_command_async))
+    app.add_handler(CommandHandler('set_credits', set_credits_command_async))
 
     app.add_handler(CallbackQueryHandler(button_handler))
 
