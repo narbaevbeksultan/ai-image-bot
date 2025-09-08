@@ -2261,17 +2261,6 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
-def is_prompt_safe(prompt):
-
-    prompt_lower = prompt.lower()
-
-    for word in BANNED_WORDS:
-
-        if word in prompt_lower:
-
-            return False
-
-    return True
 
 
 
@@ -4196,17 +4185,6 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
-def is_prompt_safe(prompt):
-
-    prompt_lower = prompt.lower()
-
-    for word in BANNED_WORDS:
-
-        if word in prompt_lower:
-
-            return False
-
-    return True
 
 
 
@@ -6853,17 +6831,6 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
-def is_prompt_safe(prompt):
-
-    prompt_lower = prompt.lower()
-
-    for word in BANNED_WORDS:
-
-        if word in prompt_lower:
-
-            return False
-
-    return True
 
 
 
@@ -10319,20 +10286,6 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
-def is_prompt_safe(prompt):
-
-    prompt_lower = prompt.lower()
-
-    for word in BANNED_WORDS:
-
-        if word in prompt_lower:
-
-            return False
-
-    return True
-
-
-
 def improve_prompt_for_ideogram(prompt):
 
     """
@@ -12253,20 +12206,6 @@ async def edit_image_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "🔙 Для отмены напишите /start"
 
     )
-
-
-
-def is_prompt_safe(prompt):
-
-    prompt_lower = prompt.lower()
-
-    for word in BANNED_WORDS:
-
-        if word in prompt_lower:
-
-            return False
-
-    return True
 
 
 
