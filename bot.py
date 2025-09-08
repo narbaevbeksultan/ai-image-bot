@@ -170,10 +170,123 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 logging.error(f"Ошибка при генерации изображения {idx} через Ideogram: {e}")
                 return (idx, False, None, None, f"Ошибка Ideogram: {e}")
         
-        # Добавим поддержку других моделей по аналогии...
-        # (Bytedance, Google Imagen и т.д.)
+        elif selected_model == 'Bytedance (Seedream-3)':
+            try:
+                if send_text:
+                    await send_text(f"⚡ Генерирую через Bytedance Seedream-3...\n\n💡 Совет: Bytedance отлично подходит для фотореалистичных изображений")
+                
+                # Проверяем API токен
+                if not os.environ.get('REPLICATE_API_TOKEN'):
+                    return (idx, False, None, None, "API токен Replicate не найден")
+                
+                # Запускаем генерацию через Bytedance
+                try:
+                    output = await replicate_run_async(
+                        "bytedance/seedream-3",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=180
+                    )
+                except Exception as e:
+                    logging.error(f"Bytedance Seedream-3 недоступен: {e}")
+                    return (idx, False, None, None, f"Ошибка Bytedance: {e}")
+                
+                # Обработка ответа от Replicate API
+                image_url = None
+                
+                if hasattr(output, 'url'):
+                    if callable(output.url):
+                        image_url = output.url()
+                    else:
+                        image_url = output.url
+                elif hasattr(output, '__iter__') and not isinstance(output, str):
+                    try:
+                        output_list = list(output)
+                        if output_list:
+                            image_url = output_list[0]
+                    except Exception as e:
+                        return (idx, False, None, None, f"Ошибка обработки итератора: {e}")
+                else:
+                    image_url = output
+                
+                if not image_url:
+                    return (idx, False, None, None, "Не удалось получить изображение от Bytedance")
+                
+                if isinstance(image_url, bytes):
+                    try:
+                        image_url = image_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        return (idx, False, None, None, "Получены бинарные данные вместо URL от Bytedance")
+                
+                if not isinstance(image_url, str) or not image_url.startswith('http'):
+                    return (idx, False, None, None, "Неверный тип URL от Bytedance")
+                
+                caption = f'Вариант {idx}'
+                return (idx, True, image_url, caption, None)
+                
+            except Exception as e:
+                logging.error(f"Ошибка при генерации изображения {idx} через Bytedance: {e}")
+                return (idx, False, None, None, f"Ошибка Bytedance: {e}")
         
-        return (idx, False, None, None, f"Модель {selected_model} пока не поддерживается в параллельном режиме")
+        elif selected_model == 'Google Imagen 4 Ultra':
+            try:
+                if send_text:
+                    await send_text(f"🔬 Генерирую через Google Imagen 4 Ultra...\n\n💡 Совет: Google Imagen отлично подходит для детализированных изображений")
+                
+                # Проверяем API токен
+                if not os.environ.get('REPLICATE_API_TOKEN'):
+                    return (idx, False, None, None, "API токен Replicate не найден")
+                
+                # Запускаем генерацию через Google Imagen
+                try:
+                    output = await replicate_run_async(
+                        "google/imagen-4-ultra",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=60
+                    )
+                except Exception as e:
+                    logging.error(f"Google Imagen 4 Ultra недоступен: {e}")
+                    return (idx, False, None, None, f"Ошибка Google Imagen: {e}")
+                
+                # Обработка ответа от Replicate API
+                image_url = None
+                
+                if hasattr(output, 'url'):
+                    if callable(output.url):
+                        image_url = output.url()
+                    else:
+                        image_url = output.url
+                elif hasattr(output, '__iter__') and not isinstance(output, str):
+                    try:
+                        output_list = list(output)
+                        if output_list:
+                            image_url = output_list[0]
+                    except Exception as e:
+                        return (idx, False, None, None, f"Ошибка обработки итератора: {e}")
+                else:
+                    image_url = output
+                
+                if not image_url:
+                    return (idx, False, None, None, "Не удалось получить изображение от Google Imagen")
+                
+                if isinstance(image_url, bytes):
+                    try:
+                        image_url = image_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        return (idx, False, None, None, "Получены бинарные данные вместо URL от Google Imagen")
+                
+                if not isinstance(image_url, str) or not image_url.startswith('http'):
+                    return (idx, False, None, None, "Неверный тип URL от Google Imagen")
+                
+                caption = f'Вариант {idx}'
+                return (idx, True, image_url, caption, None)
+                
+            except Exception as e:
+                logging.error(f"Ошибка при генерации изображения {idx} через Google Imagen: {e}")
+                return (idx, False, None, None, f"Ошибка Google Imagen: {e}")
+        
+        else:
+            # Для остальных моделей пока возвращаем ошибку
+            return (idx, False, None, None, f"Модель {selected_model} пока не поддерживается в параллельном режиме")
         
     except Exception as e:
         logging.error(f"Общая ошибка при генерации изображения {idx}: {e}")
