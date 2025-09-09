@@ -284,6 +284,137 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 logging.error(f"Ошибка при генерации изображения {idx} через Google Imagen: {e}")
                 return (idx, False, None, None, f"Ошибка Google Imagen: {e}")
         
+        elif selected_model == 'Luma Photon':
+            try:
+                if send_text:
+                    await send_text(f"🏗️ Генерирую через Luma Photon...\n\n💡 Совет: Luma Photon отлично подходит для креативных и кинематографичных изображений")
+                
+                # Проверяем API токен
+                if not os.environ.get('REPLICATE_API_TOKEN'):
+                    return (idx, False, None, None, "API токен Replicate не найден")
+                
+                # Подготавливаем параметры для Luma Photon
+                luma_params = {
+                    "prompt": prompt_with_style,
+                    "aspect_ratio": replicate_params.get('aspect_ratio', '1:1')
+                }
+                
+                # Запускаем генерацию через Luma Photon
+                try:
+                    output = await replicate_run_async(
+                        "luma/photon",
+                        luma_params,
+                        timeout=120
+                    )
+                except Exception as e:
+                    logging.error(f"Luma Photon недоступен: {e}")
+                    return (idx, False, None, None, f"Ошибка Luma Photon: {e}")
+                
+                # Обработка ответа от Replicate API
+                image_url = None
+                
+                if hasattr(output, 'url'):
+                    if callable(output.url):
+                        image_url = output.url()
+                    else:
+                        image_url = output.url
+                elif hasattr(output, '__iter__') and not isinstance(output, str):
+                    try:
+                        output_list = list(output)
+                        if output_list:
+                            image_url = output_list[0]
+                    except Exception as e:
+                        return (idx, False, None, None, f"Ошибка обработки итератора: {e}")
+                else:
+                    image_url = output
+                
+                if not image_url:
+                    return (idx, False, None, None, "Не удалось получить изображение от Luma Photon")
+                
+                if isinstance(image_url, bytes):
+                    try:
+                        image_url = image_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        return (idx, False, None, None, "Получены бинарные данные вместо URL от Luma Photon")
+                
+                if not isinstance(image_url, str) or not image_url.startswith('http'):
+                    return (idx, False, None, None, "Неверный тип URL от Luma Photon")
+                
+                caption = f'Вариант {idx}'
+                return (idx, True, image_url, caption, None)
+                
+            except Exception as e:
+                logging.error(f"Ошибка при генерации изображения {idx} через Luma Photon: {e}")
+                return (idx, False, None, None, f"Ошибка Luma Photon: {e}")
+        
+        elif selected_model == 'Recraft AI':
+            try:
+                if send_text:
+                    await send_text(f"🎨 Генерирую через Recraft AI...\n\n💡 Совет: Recraft AI отлично подходит для дизайна, логотипов и векторной графики")
+                
+                # Проверяем API токен
+                if not os.environ.get('REPLICATE_API_TOKEN'):
+                    return (idx, False, None, None, "API токен Replicate не найден")
+                
+                # Подготавливаем параметры для Recraft AI
+                # Получаем размер из формата
+                format_type = state.get('format', 'instagrampost')
+                size = get_replicate_size_for_model('Recraft AI', format_type)
+                
+                recraft_params = {
+                    "prompt": prompt_with_style,
+                    "size": size,
+                    "style": "seamless"  # По умолчанию используем seamless стиль
+                }
+                
+                # Запускаем генерацию через Recraft AI
+                try:
+                    output = await replicate_run_async(
+                        "recraft-ai/recraft-v3-svg",
+                        recraft_params,
+                        timeout=120
+                    )
+                except Exception as e:
+                    logging.error(f"Recraft AI недоступен: {e}")
+                    return (idx, False, None, None, f"Ошибка Recraft AI: {e}")
+                
+                # Обработка ответа от Replicate API
+                image_url = None
+                
+                if hasattr(output, 'url'):
+                    if callable(output.url):
+                        image_url = output.url()
+                    else:
+                        image_url = output.url
+                elif hasattr(output, '__iter__') and not isinstance(output, str):
+                    try:
+                        output_list = list(output)
+                        if output_list:
+                            image_url = output_list[0]
+                    except Exception as e:
+                        return (idx, False, None, None, f"Ошибка обработки итератора: {e}")
+                else:
+                    image_url = output
+                
+                if not image_url:
+                    return (idx, False, None, None, "Не удалось получить изображение от Recraft AI")
+                
+                if isinstance(image_url, bytes):
+                    try:
+                        image_url = image_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        return (idx, False, None, None, "Получены бинарные данные вместо URL от Recraft AI")
+                
+                if not isinstance(image_url, str) or not image_url.startswith('http'):
+                    return (idx, False, None, None, "Неверный тип URL от Recraft AI")
+                
+                caption = f'Вариант {idx}'
+                return (idx, True, image_url, caption, None)
+                
+            except Exception as e:
+                logging.error(f"Ошибка при генерации изображения {idx} через Recraft AI: {e}")
+                return (idx, False, None, None, f"Ошибка Recraft AI: {e}")
+        
         else:
             # Для остальных моделей пока возвращаем ошибку
             return (idx, False, None, None, f"Модель {selected_model} пока не поддерживается в параллельном режиме")
