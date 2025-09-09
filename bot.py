@@ -3339,706 +3339,354 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         
 
-        # Проверяем валидность URL изображения
-        if not original_image_url.startswith(('http://', 'https://')):
-            logging.error(f"Неверный URL изображения: {original_image_url}")
+        # Определяем тип изображения и подготавливаем input_image для Replicate API
+        input_image = None
+        
+        if original_image_url.startswith(('http://', 'https://')):
+            # Это URL - используем напрямую
+            logging.info(f"Используем URL изображения: {original_image_url}")
+            input_image = original_image_url
+        else:
+            # Это локальный путь - создаем data URI
+            logging.info(f"Создаем data URI для локального файла: {original_image_url}")
+            try:
+                # Читаем файл
+                loop = asyncio.get_event_loop()
+                image_data = await loop.run_in_executor(
+                    THREAD_POOL,
+                    lambda: open(original_image_url, 'rb').read()
+                )
+                
+                # Определяем MIME тип
+                if original_image_url.lower().endswith('.png'):
+                    mime_type = 'image/png'
+                elif original_image_url.lower().endswith('.jpg') or original_image_url.lower().endswith('.jpeg'):
+                    mime_type = 'image/jpeg'
+                else:
+                    mime_type = 'image/jpeg'  # По умолчанию
+                
+                # Создаем data URI
+                import base64
+                encoded = base64.b64encode(image_data).decode()
+                input_image = f"data:{mime_type};base64,{encoded}"
+                
+                logging.info(f"Создан data URI, размер: {len(image_data)} байт")
+                
+            except Exception as e:
+                logging.error(f"Ошибка при создании data URI: {e}")
+                if send_text:
+                    keyboard = [
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                    ]
+                    await context.bot.send_message(
+                        chat_id=chat_id,
+                        text=f"❌ Ошибка при обработке изображения: {str(e)[:100]}...",
+                        reply_markup=InlineKeyboardMarkup(keyboard)
+                    )
+                return None
+
+        # Генерируем отредактированное изображение через FLUX.1 Kontext Pro
+        logging.info(f"Отправляем запрос в FLUX с промптом: {edit_prompt}")
+
+        try:
+            # Используем асинхронный вызов для предотвращения блокировки
+            output = await replicate_run_async(
+                "black-forest-labs/flux-kontext-pro",
+                {
+                    "input_image": input_image,
+                    "prompt": edit_prompt,
+                    "output_format": "jpg"
+                },
+                timeout=60
+            )
+
+            logging.info(f"Получен ответ от FLUX: {output}")
+            logging.info(f"Тип ответа: {type(output)}")
+
+        except Exception as replicate_error:
+            logging.error(f"Ошибка при вызове Replicate FLUX: {replicate_error}")
+            logging.error(f"Тип ошибки Replicate: {type(replicate_error).__name__}")
+
             if send_text:
                 keyboard = [
                     [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
                 ]
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="❌ Неверный URL изображения",
+                    text=f"❌ Ошибка при обработке изображения в FLUX: {str(replicate_error)}",
                     reply_markup=InlineKeyboardMarkup(keyboard)
                 )
+
             return None
 
-        # Загружаем изображение
+        # Обработка результата
+        edited_image_url = None
 
-        logging.info(f"Загружаем изображение с URL: {original_image_url}")
+        if hasattr(output, 'url'):
+            if callable(output.url):
+                edited_image_url = output.url()
+            else:
+                edited_image_url = output.url()
+        elif isinstance(output, list) and len(output) > 0:
+            edited_image_url = output[0]
+        elif isinstance(output, str):
+            edited_image_url = output
+        elif hasattr(output, '__getitem__'):
+            edited_image_url = output[0] if output else None
 
+        logging.info(f"Извлеченный URL: {edited_image_url}")
+
+        if not edited_image_url:
+            logging.error("Не удалось извлечь URL из ответа FLUX")
+
+            if send_text:
+                keyboard = [
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ]
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="❌ Не удалось получить отредактированное изображение от FLUX",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+
+            return None
+
+        # Проверяем, что URL валидный
+        if not edited_image_url.startswith('http'):
+            logging.error(f"Некорректный URL отредактированного изображения: {edited_image_url}")
+
+            if send_text:
+                keyboard = [
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ]
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="❌ Получен некорректный URL отредактированного изображения",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+
+            return None
+
+        # Отправляем результат
         try:
+            # Загружаем отредактированное изображение
+            logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
+
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             # Используем асинхронный HTTP клиент
             session = await init_http_session()
-            async with session.get(original_image_url) as response:
-                if response.status != 200:
-                    logging.error(f"Ошибка загрузки изображения: {response.status}")
+            async with session.get(edited_image_url) as edited_response:
+                if edited_response.status != 200:
+                    logging.error(f"Ошибка загрузки отредактированного изображения: {edited_response.status}")
                     if send_text:
                         keyboard = [
                             [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
                         ]
                         reply_markup = InlineKeyboardMarkup(keyboard)
-                        await send_text(f"❌ Ошибка загрузки изображения: {response.status}", reply_markup=reply_markup)
+                        await send_text(f"❌ Ошибка загрузки отредактированного изображения: {edited_response.status}", reply_markup=reply_markup)
                     return
                 
-                image_data = await response.read()
-
-            # Проверяем, что данные изображения не пустые
-            if not image_data:
-                logging.error("Получены пустые данные изображения")
-                if send_text:
-                    keyboard = [
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-                    ]
-                    await context.bot.send_message(
-                        chat_id=chat_id,
-                        text="❌ Получены пустые данные изображения",
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-                    )
-                return None
-
-            if response.status_code != 200:
-
-                logging.error(f"Ошибка загрузки изображения: {response.status_code}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text=f"❌ Не удалось загрузить исходное изображение (статус: {response.status_code})",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            logging.info(f"Изображение успешно загружено, размер: {len(image_data)} байт")
-
-        except requests.exceptions.Timeout:
-
-            logging.error("Таймаут при загрузке исходного изображения")
-
-            if send_text:
-
-                keyboard = [
-
-                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                ]
-
-                await context.bot.send_message(
-
-                    chat_id=chat_id,
-
-                    text="❌ Таймаут при загрузке исходного изображения",
-
-                    reply_markup=InlineKeyboardMarkup(keyboard)
-
-                )
-
-            return None
-
-        except aiohttp.ClientError as e:
-
-            logging.error(f"Ошибка HTTP клиента при загрузке изображения: {e}")
-
-            if send_text:
-
-                keyboard = [
-
-                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                ]
-
-                await context.bot.send_message(
-
-                    chat_id=chat_id,
-
-                    text=f"❌ Ошибка сети при загрузке изображения: {str(e)[:100]}...",
-
-                    reply_markup=InlineKeyboardMarkup(keyboard)
-
-                )
-
-            return None
-
-        except Exception as e:
-
-            logging.error(f"Неожиданная ошибка при загрузке изображения: {e}")
-
-            if send_text:
-
-                keyboard = [
-
-                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                ]
-
-                await context.bot.send_message(
-
-                    chat_id=chat_id,
-
-                    text=f"❌ Ошибка при загрузке исходного изображения: {str(e)[:100]}...",
-
-                    reply_markup=InlineKeyboardMarkup(keyboard)
-
-                )
-
-            return None
-
-        
-
-        # Сохраняем изображение во временный файл
-
-        temp_file_path = None
-
-        try:
-
-            # Создаем временный файл асинхронно
-            loop = asyncio.get_event_loop()
-            temp_file_path = await loop.run_in_executor(
-                THREAD_POOL,
-                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
-            )
-            
-            # Записываем данные в файл асинхронно
-            await loop.run_in_executor(
-                THREAD_POOL,
-                lambda: open(temp_file_path, 'wb').write(image_data)
-            )
-
-            
-
-            # Открываем изображение с помощью PIL для получения размеров (асинхронно)
-            loop = asyncio.get_event_loop()
-            width, height = await loop.run_in_executor(
-                THREAD_POOL,
-                lambda: Image.open(temp_file_path).size
-            )
-
-            
-
-            # Генерируем отредактированное изображение через FLUX.1 Kontext Pro
-
-            logging.info(f"Отправляем запрос в FLUX с промптом: {edit_prompt}")
-
-            try:
-
-                # Читаем файл асинхронно
-                loop = asyncio.get_event_loop()
-                image_data = await loop.run_in_executor(
-                    THREAD_POOL,
-                    lambda: open(temp_file_path, "rb").read()
-                )
-                
-                # Используем асинхронный вызов для предотвращения блокировки
-                output = await replicate_run_async(
-                        "black-forest-labs/flux-kontext-pro",
-                    {
-                            "input_image": image_data,
-                                "prompt": edit_prompt,
-                                "aspect_ratio": "match_input_image",
-                                "output_format": "jpg",
-                                "safety_tolerance": 2,
-                                "prompt_upsampling": False
-                        },
-                        timeout=60
-                    )
-
-                logging.info(f"Получен ответ от FLUX: {output}")
-
-                logging.info(f"Тип ответа: {type(output)}")
-
-            except Exception as replicate_error:
-
-                logging.error(f"Ошибка при вызове Replicate FLUX: {replicate_error}")
-
-                logging.error(f"Тип ошибки Replicate: {type(replicate_error).__name__}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text=f"❌ Ошибка при обработке изображения в FLUX: {str(replicate_error)}",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            
-
-            # Обработка результата
-
-            edited_image_url = None
-
-            if hasattr(output, 'url'):
-
-                if callable(output.url):
-
-                    edited_image_url = output.url()
-
+                edited_image_data = await edited_response.read()
+
+            logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
+
+            if edited_response.status_code == 200:
+                logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_image_data)} байт")
+
+                # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
+                logging.info(f"DEBUG: user_id={user_id}, generation_type={generation_type}")
+                if user_id and generation_type:
+                    if generation_type == "free":
+                        # Списываем бесплатную генерацию
+                        logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
+                        if await analytics_db_increment_free_generations_async(user_id):
+                            logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
+                        else:
+                            logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
+                    elif generation_type == "credits":
+                        # Списываем кредиты
+                        logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
+                        if await analytics_db_use_credits_async(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
+                            logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
+                        else:
+                            logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
                 else:
-
-                    edited_image_url = output.url()
-
-            elif isinstance(output, list) and len(output) > 0:
-
-                edited_image_url = output[0]
-
-            elif isinstance(output, str):
-
-                edited_image_url = output
-
-            elif hasattr(output, '__getitem__'):
-
-                edited_image_url = output[0] if output else None
-
-            
-
-            logging.info(f"Извлеченный URL: {edited_image_url}")
-
-            
-
-            if not edited_image_url:
-
-                logging.error("Не удалось извлечь URL из ответа FLUX")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text="❌ Не удалось получить отредактированное изображение от FLUX",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            
-
-            # Проверяем, что URL валидный
-
-            if not edited_image_url.startswith('http'):
-
-                logging.error(f"Некорректный URL отредактированного изображения: {edited_image_url}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text="❌ Получен некорректный URL отредактированного изображения",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-                return None
-
-            
-
-            # Отправляем результат
-
-            try:
-
-                # Загружаем отредактированное изображение
-
-                logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
-
-                # Используем асинхронный вызов для предотвращения блокировки
-                loop = asyncio.get_event_loop()
-                # Используем асинхронный HTTP клиент
-                session = await init_http_session()
-                async with session.get(edited_image_url) as edited_response:
-                    if edited_response.status != 200:
-                        logging.error(f"Ошибка загрузки отредактированного изображения: {edited_response.status}")
-                        if send_text:
-                            keyboard = [
-                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-                            ]
-                            reply_markup = InlineKeyboardMarkup(keyboard)
-                            await send_text(f"❌ Ошибка загрузки отредактированного изображения: {edited_response.status}", reply_markup=reply_markup)
-                        return
-                    
-                    edited_image_data = await edited_response.read()
-
-                logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
-
-                
-
-                if edited_response.status_code == 200:
-
-                    logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_image_data)} байт")
-
-                    # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
-                    logging.info(f"DEBUG: user_id={user_id}, generation_type={generation_type}")
-                    if user_id and generation_type:
-                        if generation_type == "free":
-                            # Списываем бесплатную генерацию
-                            logging.info(f"DEBUG: Списываем бесплатную генерацию для пользователя {user_id}")
-                            if await analytics_db_increment_free_generations_async(user_id):
-                                logging.info(f"Пользователь {user_id} использовал бесплатную генерацию для редактирования")
-                            else:
-                                logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
-                        elif generation_type == "credits":
-                            # Списываем кредиты
-                            logging.info(f"DEBUG: Списываем кредиты для пользователя {user_id}")
-                            if await analytics_db_use_credits_async(user_id, 12, "Редактирование изображения через FLUX.1 Kontext Pro"):
-                                logging.info(f"Пользователь {user_id} использовал 12 кредитов для редактирования")
-                            else:
-                                logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
-                    else:
-                        logging.warning(f"DEBUG: Не удалось списать - user_id={user_id}, generation_type={generation_type}")
-
-                    try:
-
-                        # Отправляем отредактированное изображение напрямую по URL
-
-                        logging.info("Пытаемся отправить изображение по URL...")
-
-                        await context.bot.send_photo(
-
-                            chat_id=chat_id,
-
-                            photo=edited_image_url,
-
-                            caption=f"Отредактировано: {edit_prompt}"
-
-                        )
-
-                        logging.info("Изображение успешно отправлено по URL")
-
-                        
-
-                        # Отправляем сообщение об успехе с кнопкой главного меню
-
-                        if send_text:
-
-                            keyboard = [
-
-                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                            ]
-
-                            await context.bot.send_message(
-
-                                chat_id=chat_id,
-
-                                text="✅ Изображение успешно отредактировано!",
-
-                                reply_markup=InlineKeyboardMarkup(keyboard)
-
-                            )
-
-                            
-
-                    except Exception as send_error:
-
-                        logging.error(f"Ошибка отправки по URL: {send_error}")
-
-                        logging.error(f"Тип ошибки отправки: {type(send_error).__name__}")
-
-                        
-
-                        # Попробуем альтернативный способ - сохранить во временный файл
-
-                        try:
-
-                            logging.info("Пытаемся отправить изображение из файла...")
-
-                            # Создаем временный файл асинхронно
-                            loop = asyncio.get_event_loop()
-                            temp_edited_path = await loop.run_in_executor(
-                                THREAD_POOL,
-                                lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
-                            )
-                            
-                            # Записываем данные в файл асинхронно
-                            await loop.run_in_executor(
-                                THREAD_POOL,
-                                lambda: open(temp_edited_path, 'wb').write(edited_image_data)
-                            )
-
-                            
-
-                            logging.info(f"Временный файл создан: {temp_edited_path}")
-
-                            
-
-                            # Отправляем отредактированное изображение из файла (асинхронно)
-                            loop = asyncio.get_event_loop()
-                            edited_data = await loop.run_in_executor(
-                                THREAD_POOL,
-                                lambda: open(temp_edited_path, 'rb').read()
-                            )
-
-                            await context.bot.send_photo(
-
-                                    chat_id=chat_id,
-
-                                    photo=edited_data,
-
-                                    caption=f"Отредактировано: {edit_prompt}"
-
-                                )
-
-                            
-
-                            logging.info("Изображение успешно отправлено из файла")
-
-                            
-
-                            # Удаляем временный файл
-
-                            try:
-
-                                os.unlink(temp_edited_path)
-
-                                logging.info("Временный файл удален")
-
-                            except Exception as cleanup_error:
-
-                                logging.warning(f"Не удалось удалить временный файл: {cleanup_error}")
-
-                            
-
-                            # Отправляем сообщение об успехе с кнопкой главного меню
-
-                            if send_text:
-
-                                keyboard = [
-
-                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                                ]
-
-                                await context.bot.send_message(
-
-                                    chat_id=chat_id,
-
-                                    text="✅ Изображение успешно отредактировано!",
-
-                                    reply_markup=InlineKeyboardMarkup(keyboard)
-
-                                )
-
-                                
-
-                        except Exception as file_send_error:
-
-                            logging.error(f"Ошибка отправки из файла: {file_send_error}")
-
-                            logging.error(f"Тип ошибки файла: {type(file_send_error).__name__}")
-
-                            if send_text:
-
-                                keyboard = [
-
-                                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                                ]
-
-                                await context.bot.send_message(
-
-                                    chat_id=chat_id,
-
-                                    text="❌ Ошибка при отправке отредактированного изображения",
-
-                                    reply_markup=InlineKeyboardMarkup(keyboard)
-
-                                )
-
-                        
-
-                else:
-
-                    logging.error(f"Ошибка загрузки отредактированного изображения: {edited_response.status_code}")
-
-                    if send_text:
-
-                        keyboard = [
-
-                            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                        ]
-
-                        await context.bot.send_message(
-
-                            chat_id=chat_id,
-
-                            text=f"❌ Не удалось загрузить отредактированное изображение (статус: {edited_response.status_code})",
-
-                            reply_markup=InlineKeyboardMarkup(keyboard)
-
-                        )
-
-                        
-
-            except requests.exceptions.Timeout:
-
-                logging.error("Таймаут при загрузке отредактированного изображения")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text="❌ Таймаут при загрузке отредактированного изображения",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-            except Exception as e:
-
-                logging.error(f"Общая ошибка отправки изображения: {e}")
-
-                logging.error(f"Тип ошибки: {type(e).__name__}")
-
-                logging.error(f"Детали ошибки: {str(e)}")
-
-                if send_text:
-
-                    keyboard = [
-
-                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-                    ]
-
-                    await context.bot.send_message(
-
-                        chat_id=chat_id,
-
-                        text="❌ Ошибка при отправке отредактированного изображения",
-
-                        reply_markup=InlineKeyboardMarkup(keyboard)
-
-                    )
-
-        finally:
-
-            # Удаляем временный файл
-
-            if temp_file_path and os.path.exists(temp_file_path):
+                    logging.warning(f"DEBUG: Не удалось списать - user_id={user_id}, generation_type={generation_type}")
 
                 try:
+                    # Отправляем отредактированное изображение напрямую по URL
+                    logging.info("Пытаемся отправить изображение по URL...")
 
-                    os.unlink(temp_file_path)
+                    await context.bot.send_photo(
+                        chat_id=chat_id,
+                        photo=edited_image_url,
+                        caption=f"Отредактировано: {edit_prompt}"
+                    )
 
-                except:
+                    logging.info("Изображение успешно отправлено по URL")
 
-                    pass
+                    # Отправляем сообщение об успехе с кнопкой главного меню
+                    if send_text:
+                        keyboard = [
+                            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                        ]
+                        await context.bot.send_message(
+                            chat_id=chat_id,
+                            text="✅ Изображение успешно отредактировано!",
+                            reply_markup=InlineKeyboardMarkup(keyboard)
+                        )
 
-        
+                except Exception as send_error:
+                    logging.error(f"Ошибка отправки по URL: {send_error}")
+                    logging.error(f"Тип ошибки отправки: {type(send_error).__name__}")
+
+                    # Попробуем альтернативный способ - сохранить во временный файл
+                    try:
+                        logging.info("Пытаемся отправить изображение из файла...")
+
+                        # Создаем временный файл асинхронно
+                        loop = asyncio.get_event_loop()
+                        temp_edited_path = await loop.run_in_executor(
+                            THREAD_POOL,
+                            lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
+                        )
+                        
+                        # Записываем данные в файл асинхронно
+                        await loop.run_in_executor(
+                            THREAD_POOL,
+                            lambda: open(temp_edited_path, 'wb').write(edited_image_data)
+                        )
+
+                        logging.info(f"Временный файл создан: {temp_edited_path}")
+
+                        # Отправляем отредактированное изображение из файла (асинхронно)
+                        loop = asyncio.get_event_loop()
+                        edited_data = await loop.run_in_executor(
+                            THREAD_POOL,
+                            lambda: open(temp_edited_path, 'rb').read()
+                        )
+
+                        await context.bot.send_photo(
+                            chat_id=chat_id,
+                            photo=edited_data,
+                            caption=f"Отредактировано: {edit_prompt}"
+                        )
+
+                        logging.info("Изображение успешно отправлено из файла")
+
+                        # Удаляем временный файл
+                        try:
+                            os.unlink(temp_edited_path)
+                            logging.info("Временный файл удален")
+                        except Exception as cleanup_error:
+                            logging.warning(f"Не удалось удалить временный файл: {cleanup_error}")
+
+                        # Отправляем сообщение об успехе с кнопкой главного меню
+                        if send_text:
+                            keyboard = [
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                            ]
+                            await context.bot.send_message(
+                                chat_id=chat_id,
+                                text="✅ Изображение успешно отредактировано!",
+                                reply_markup=InlineKeyboardMarkup(keyboard)
+                            )
+
+                    except Exception as file_send_error:
+                        logging.error(f"Ошибка отправки из файла: {file_send_error}")
+                        logging.error(f"Тип ошибки файла: {type(file_send_error).__name__}")
+                        if send_text:
+                            keyboard = [
+                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                            ]
+                            await context.bot.send_message(
+                                chat_id=chat_id,
+                                text="❌ Ошибка при отправке отредактированного изображения",
+                                reply_markup=InlineKeyboardMarkup(keyboard)
+                            )
+
+            else:
+                logging.error(f"Ошибка загрузки отредактированного изображения: {edited_response.status_code}")
+
+                if send_text:
+                    keyboard = [
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                    ]
+                    await context.bot.send_message(
+                        chat_id=chat_id,
+                        text=f"❌ Не удалось загрузить отредактированное изображение (статус: {edited_response.status_code})",
+                        reply_markup=InlineKeyboardMarkup(keyboard)
+                    )
+
+        except requests.exceptions.Timeout:
+            logging.error("Таймаут при загрузке отредактированного изображения")
+
+            if send_text:
+                keyboard = [
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ]
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="❌ Таймаут при загрузке отредактированного изображения",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+
+        except Exception as e:
+            logging.error(f"Общая ошибка отправки изображения: {e}")
+            logging.error(f"Тип ошибки: {type(e).__name__}")
+            logging.error(f"Детали ошибки: {str(e)}")
+
+            if send_text:
+                keyboard = [
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ]
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="❌ Ошибка при отправке отредактированного изображения",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
 
         return edited_image_url
 
-                
-
     except Exception as e:
-
         error_msg = str(e)
 
         logging.error(f"Общая ошибка в edit_image_with_flux: {e}")
-
         logging.error(f"Тип ошибки: {type(e).__name__}")
-
         logging.error(f"Детали ошибки: {str(e)}")
 
-        
-
         if "insufficient_credit" in error_msg.lower():
-
             if send_text:
-
                 keyboard = [
-
                     [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
                 ]
-
                 await context.bot.send_message(
-
                     chat_id=chat_id,
-
                     text="❌ Недостаточно кредитов на Replicate для FLUX.1 Kontext Pro\n\nПополните баланс на https://replicate.com/account/billing",
-
                     reply_markup=InlineKeyboardMarkup(keyboard)
-
                 )
 
         elif "api" in error_msg.lower() or "token" in error_msg.lower():
-
             if send_text:
-
                 keyboard = [
-
                     [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
                 ]
-
                 await context.bot.send_message(
-
                     chat_id=chat_id,
-
                     text="❌ Ошибка API Replicate\n\nПроверьте настройки API токена",
-
                     reply_markup=InlineKeyboardMarkup(keyboard)
-
                 )
 
         else:
-
             if send_text:
-
                 keyboard = [
-
                     [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
                 ]
-
                 await context.bot.send_message(
-
                     chat_id=chat_id,
-
                     text=f"❌ Ошибка при редактировании изображения: {error_msg}",
-
                     reply_markup=InlineKeyboardMarkup(keyboard)
-
                 )
 
         return None
