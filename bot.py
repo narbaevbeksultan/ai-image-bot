@@ -50,7 +50,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
         selected_model = state.get('image_gen_model', 'Ideogram')
         style_suffix = ''
         
-        if image_gen_style and image_gen_style != '✨ БЕЗ СТИЛЯ (чистый промпт)' and selected_model != 'Ideogram':
+        if image_gen_style and selected_model != 'Ideogram':
             # Для других моделей используем полные стили
             if image_gen_style == 'Фотореализм':
                 style_suffix = ', photorealistic, ultra-realistic, high detail, 8k, professional photography, sharp focus, natural lighting, cinematic, award-winning photo'
@@ -64,7 +64,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 style_suffix = ', oil painting, canvas texture, brush strokes, artistic, traditional art'
             elif image_gen_style == 'Пиксель-арт':
                 style_suffix = ', pixel art, 8-bit, retro style, digital art'
-        elif image_gen_style and image_gen_style != '✨ БЕЗ СТИЛЯ (чистый промпт)' and selected_model == 'Ideogram':
+        elif image_gen_style and selected_model == 'Ideogram':
             # Для Ideogram используем упрощенные стили
             if image_gen_style == 'Фотореализм':
                 style_suffix = ', photorealistic'
@@ -989,9 +989,7 @@ IMAGE_GEN_STYLES = [
 
     'Масляная живопись',
 
-    'Пиксель-арт',
-
-    '✨ БЕЗ СТИЛЯ (чистый промпт)'
+    'Пиксель-арт'
 
 ]
 
