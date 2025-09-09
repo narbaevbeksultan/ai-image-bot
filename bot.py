@@ -9046,7 +9046,7 @@ async def check_payment_status_async(update, context):
 async def handle_credit_purchase_async(update, context):
     """Асинхронная обертка для покупки кредитов"""
     try:
-        asyncio.create_task(handle_credit_purchase_async(update, context))
+        asyncio.create_task(handle_credit_purchase(update, context))
     except Exception as e:
         logging.error(f"Ошибка в асинхронной покупке кредитов: {e}")
         if hasattr(update, 'callback_query') and update.callback_query:
@@ -11561,8 +11561,7 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
     try:
 
-        from betatransfer_api import BetatransferAPI
-        betatransfer_api = BetatransferAPI()
+        from betatransfer_api import betatransfer_api
         
         # Получаем статус платежа асинхронно
         loop = asyncio.get_event_loop()
