@@ -8250,7 +8250,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             file = await context.bot.get_file(photo.file_id)
 
-            image_url = file.file_path
+            # Строим полный URL изображения
+            image_url = f"https://api.telegram.org/file/bot{context.bot.token}/{file.file_path}"
 
             
 
@@ -8594,22 +8595,30 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
 
                 # Проверяем, что файл получен успешно
-                if not file or not file.file_url:
+                if not file or not file.file_path:
                     await update.message.reply_text(
                         "❌ Ошибка при получении изображения. Попробуйте отправить изображение еще раз."
                     )
                     return
 
+                # Строим полный URL изображения
+                image_url = f"https://api.telegram.org/file/bot{context.bot.token}/{file.file_path}"
+                
+                logging.info(f"Получен файл изображения: file_path={file.file_path}")
+                logging.info(f"Построен URL изображения: {image_url}")
+                
                 # Сохраняем URL изображения
-
-                USER_STATE[user_id]['selected_image_url'] = file.file_url
+                USER_STATE[user_id]['selected_image_url'] = image_url
 
                 USER_STATE[user_id]['step'] = 'enter_edit_prompt'
 
             except Exception as e:
                 logging.error(f"Ошибка при получении файла изображения: {e}")
+                logging.error(f"Тип ошибки: {type(e).__name__}")
+                import traceback
+                logging.error(f"Traceback: {traceback.format_exc()}")
                 await update.message.reply_text(
-                    "❌ Ошибка при обработке изображения. Попробуйте отправить изображение еще раз."
+                    f"❌ Ошибка при обработке изображения: {str(e)[:100]}...\n\nПопробуйте отправить изображение еще раз."
                 )
                 return
 
