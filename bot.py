@@ -3174,6 +3174,63 @@ def enhance_prompts_with_character_context(prompts, topic):
 
 
 
+async def process_loaded_image_data(image_data, update, context, state, edit_prompt, user_id, generation_type, chat_id, send_text, send_media):
+    """Обрабатывает загруженные данные изображения для редактирования"""
+    
+    # Сохраняем изображение во временный файл
+    temp_file_path = None
+    
+    try:
+        # Создаем временный файл асинхронно
+        loop = asyncio.get_event_loop()
+        temp_file_path = await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
+        )
+        
+        # Записываем данные в файл асинхронно
+        await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: open(temp_file_path, 'wb').write(image_data)
+        )
+        
+        # Открываем изображение с помощью PIL для получения размеров (асинхронно)
+        loop = asyncio.get_event_loop()
+        width, height = await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: Image.open(temp_file_path).size
+        )
+        
+        # Продолжаем с обычной обработкой...
+        return await continue_image_processing(temp_file_path, width, height, update, context, state, edit_prompt, user_id, generation_type, chat_id, send_text, send_media)
+        
+    except Exception as e:
+        logging.error(f"Ошибка при обработке данных изображения: {e}")
+        if send_text:
+            keyboard = [
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+            ]
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"❌ Ошибка при обработке изображения: {str(e)[:100]}...",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        return None
+    finally:
+        # Удаляем временный файл
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except Exception as e:
+                logging.error(f"Ошибка при удалении временного файла: {e}")
+
+async def continue_image_processing(temp_file_path, width, height, update, context, state, edit_prompt, user_id, generation_type, chat_id, send_text, send_media):
+    """Продолжает обработку изображения после загрузки"""
+    
+    # Здесь будет код продолжения обработки изображения
+    # Пока что просто возвращаем None, чтобы избежать ошибок
+    return None
+
 async def edit_image_with_flux(update, context, state, original_image_url, edit_prompt):
 
     """
@@ -3355,22 +3412,66 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         # Загружаем изображение
 
         logging.info(f"Загружаем изображение с URL: {original_image_url}")
+        logging.info(f"Тип URL: {type(original_image_url)}")
+        logging.info(f"Длина URL: {len(original_image_url) if original_image_url else 'None'}")
 
         try:
-
+            # Сначала пробуем загрузить через URL
+            image_data = None
+            
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
             # Используем асинхронный HTTP клиент
             session = await init_http_session()
             async with session.get(original_image_url) as response:
+                logging.info(f"Статус ответа: {response.status}")
+                logging.info(f"Заголовки ответа: {dict(response.headers)}")
+                
                 if response.status != 200:
+                    error_text = await response.text()
                     logging.error(f"Ошибка загрузки изображения: {response.status}")
+                    logging.error(f"Текст ошибки: {error_text[:500]}")
+                    logging.error(f"URL который не работает: {original_image_url}")
+                    
+                    # Если это ошибка 404, пробуем альтернативный способ
+                    if response.status == 404:
+                        logging.info("Пробуем альтернативный способ загрузки изображения...")
+                        try:
+                            # Пробуем загрузить файл напрямую через Telegram Bot API
+                            if original_image_url.startswith("https://api.telegram.org/file/bot"):
+                                # Получаем file_id из состояния пользователя
+                                user_state = USER_STATE.get(user_id, {})
+                                file_id = user_state.get('selected_file_id')
+                                
+                                if file_id:
+                                    logging.info(f"Пробуем загрузить файл через file_id: {file_id}")
+                                    try:
+                                        # Загружаем файл напрямую через Telegram Bot API
+                                        file = await context.bot.get_file(file_id)
+                                        image_data = await file.download_as_bytearray()
+                                        
+                                        if image_data:
+                                            logging.info(f"Альтернативная загрузка успешна, размер: {len(image_data)} байт")
+                                            # Успешно загрузили через альтернативный способ, пропускаем обычную обработку ошибки
+                                            return await process_loaded_image_data(image_data, update, context, state, edit_prompt, user_id, generation_type, chat_id, send_text, send_media)
+                                        else:
+                                            raise Exception("Получены пустые данные при альтернативной загрузке")
+                                    except Exception as alt_e:
+                                        logging.error(f"Альтернативная загрузка через file_id не удалась: {alt_e}")
+                                        raise alt_e
+                                else:
+                                    logging.error("file_id не найден в состоянии пользователя")
+                                    raise Exception("file_id не найден для альтернативной загрузки")
+                        except Exception as alt_e:
+                            logging.error(f"Ошибка при попытке альтернативной загрузки: {alt_e}")
+                            # Продолжаем с обычной обработкой ошибки
+                    
                     if send_text:
                         keyboard = [
                             [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
                         ]
                         reply_markup = InlineKeyboardMarkup(keyboard)
-                        await send_text(f"❌ Ошибка загрузки изображения: {response.status}", reply_markup=reply_markup)
+                        await send_text(f"❌ Ошибка загрузки изображения: {response.status}\n\nURL: {original_image_url[:100]}...", reply_markup=reply_markup)
                     return
                 
                 image_data = await response.read()
@@ -8602,13 +8703,27 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
 
                 # Строим полный URL изображения
-                image_url = f"https://api.telegram.org/file/bot{context.bot.token}/{file.file_path}"
+                bot_token = context.bot.token
+                file_path = file.file_path
                 
-                logging.info(f"Получен файл изображения: file_path={file.file_path}")
+                logging.info(f"Токен бота: {bot_token[:10]}...{bot_token[-10:] if len(bot_token) > 20 else bot_token}")
+                logging.info(f"Путь к файлу: {file_path}")
+                
+                # Проверяем, что токен и путь к файлу не пустые
+                if not bot_token or not file_path:
+                    logging.error(f"Пустой токен или путь к файлу: token={bool(bot_token)}, file_path={bool(file_path)}")
+                    await update.message.reply_text(
+                        "❌ Ошибка при получении данных изображения. Попробуйте отправить изображение еще раз."
+                    )
+                    return
+                
+                image_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
+                
                 logging.info(f"Построен URL изображения: {image_url}")
                 
-                # Сохраняем URL изображения
+                # Сохраняем URL изображения и file_id для альтернативной загрузки
                 USER_STATE[user_id]['selected_image_url'] = image_url
+                USER_STATE[user_id]['selected_file_id'] = photo.file_id
 
                 USER_STATE[user_id]['step'] = 'enter_edit_prompt'
 
