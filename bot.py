@@ -3490,9 +3490,9 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 
                 edited_image_data = await edited_response.read()
 
-            logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status_code}")
+            logging.info(f"Статус загрузки отредактированного изображения: {edited_response.status}")
 
-            if edited_response.status_code == 200:
+            if edited_response.status == 200:
                 logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_image_data)} байт")
 
                 # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
@@ -3628,7 +3628,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                             )
 
             else:
-                logging.error(f"Ошибка загрузки отредактированного изображения: {edited_response.status_code}")
+                logging.error(f"Ошибка загрузки отредактированного изображения: {edited_response.status}")
 
                 if send_text:
                     keyboard = [
@@ -3636,7 +3636,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     ]
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text=f"❌ Не удалось загрузить отредактированное изображение (статус: {edited_response.status_code})",
+                        text=f"❌ Не удалось загрузить отредактированное изображение (статус: {edited_response.status})",
                         reply_markup=InlineKeyboardMarkup(keyboard)
                     )
 
