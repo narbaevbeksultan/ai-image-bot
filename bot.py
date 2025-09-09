@@ -3471,6 +3471,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
         try:
             # Загружаем отредактированное изображение
             logging.info(f"Загружаем отредактированное изображение с URL: {edited_image_url}")
+            logging.info(f"Тип URL: {type(edited_image_url)}")
 
             # Используем асинхронный вызов для предотвращения блокировки
             loop = asyncio.get_event_loop()
@@ -3517,6 +3518,8 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                 try:
                     # Отправляем отредактированное изображение напрямую по URL
                     logging.info("Пытаемся отправить изображение по URL...")
+                    logging.info(f"URL для отправки: {edited_image_url}")
+                    logging.info(f"Chat ID: {chat_id}")
 
                     await context.bot.send_photo(
                         chat_id=chat_id,
@@ -3541,57 +3544,75 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     logging.error(f"Ошибка отправки по URL: {send_error}")
                     logging.error(f"Тип ошибки отправки: {type(send_error).__name__}")
 
-                    # Попробуем альтернативный способ - сохранить во временный файл
+                    # Попробуем альтернативный способ - загрузить изображение и отправить как файл
                     try:
-                        logging.info("Пытаемся отправить изображение из файла...")
+                        logging.info("Пытаемся загрузить изображение и отправить как файл...")
 
-                        # Создаем временный файл асинхронно
+                        # Загружаем изображение по URL
                         loop = asyncio.get_event_loop()
-                        temp_edited_path = await loop.run_in_executor(
-                            THREAD_POOL,
-                            lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
-                        )
-                        
-                        # Записываем данные в файл асинхронно
-                        await loop.run_in_executor(
-                            THREAD_POOL,
-                            lambda: open(temp_edited_path, 'wb').write(edited_image_data)
-                        )
+                        session = await init_http_session()
+                        async with session.get(edited_image_url) as response:
+                            if response.status == 200:
+                                edited_image_data = await response.read()
+                                logging.info(f"Загружено изображение, размер: {len(edited_image_data)} байт")
+                                
+                                # Создаем временный файл асинхронно
+                                temp_edited_path = await loop.run_in_executor(
+                                    THREAD_POOL,
+                                    lambda: tempfile.NamedTemporaryFile(delete=False, suffix='.jpg').name
+                                )
+                                
+                                # Записываем данные в файл асинхронно
+                                await loop.run_in_executor(
+                                    THREAD_POOL,
+                                    lambda: open(temp_edited_path, 'wb').write(edited_image_data)
+                                )
 
-                        logging.info(f"Временный файл создан: {temp_edited_path}")
+                                logging.info(f"Временный файл создан: {temp_edited_path}")
 
-                        # Отправляем отредактированное изображение из файла (асинхронно)
-                        loop = asyncio.get_event_loop()
-                        edited_data = await loop.run_in_executor(
-                            THREAD_POOL,
-                            lambda: open(temp_edited_path, 'rb').read()
-                        )
+                                # Отправляем отредактированное изображение из файла (асинхронно)
+                                loop = asyncio.get_event_loop()
+                                edited_data = await loop.run_in_executor(
+                                    THREAD_POOL,
+                                    lambda: open(temp_edited_path, 'rb').read()
+                                )
 
-                        await context.bot.send_photo(
-                            chat_id=chat_id,
-                            photo=edited_data,
-                            caption=f"Отредактировано: {edit_prompt}"
-                        )
+                                await context.bot.send_photo(
+                                    chat_id=chat_id,
+                                    photo=edited_data,
+                                    caption=f"Отредактировано: {edit_prompt}"
+                                )
 
-                        logging.info("Изображение успешно отправлено из файла")
+                                logging.info("Изображение успешно отправлено из файла")
 
-                        # Удаляем временный файл
-                        try:
-                            os.unlink(temp_edited_path)
-                            logging.info("Временный файл удален")
-                        except Exception as cleanup_error:
-                            logging.warning(f"Не удалось удалить временный файл: {cleanup_error}")
+                                # Удаляем временный файл
+                                try:
+                                    os.unlink(temp_edited_path)
+                                    logging.info("Временный файл удален")
+                                except Exception as cleanup_error:
+                                    logging.warning(f"Не удалось удалить временный файл: {cleanup_error}")
 
-                        # Отправляем сообщение об успехе с кнопкой главного меню
-                        if send_text:
-                            keyboard = [
-                                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-                            ]
-                            await context.bot.send_message(
-                                chat_id=chat_id,
-                                text="✅ Изображение успешно отредактировано!",
-                                reply_markup=InlineKeyboardMarkup(keyboard)
-                            )
+                                # Отправляем сообщение об успехе с кнопкой главного меню
+                                if send_text:
+                                    keyboard = [
+                                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                                    ]
+                                    await context.bot.send_message(
+                                        chat_id=chat_id,
+                                        text="✅ Изображение успешно отредактировано!",
+                                        reply_markup=InlineKeyboardMarkup(keyboard)
+                                    )
+                            else:
+                                logging.error(f"Ошибка загрузки изображения: {response.status}")
+                                if send_text:
+                                    keyboard = [
+                                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                                    ]
+                                    await context.bot.send_message(
+                                        chat_id=chat_id,
+                                        text=f"❌ Ошибка загрузки изображения: {response.status}",
+                                        reply_markup=InlineKeyboardMarkup(keyboard)
+                                    )
 
                     except Exception as file_send_error:
                         logging.error(f"Ошибка отправки из файла: {file_send_error}")
