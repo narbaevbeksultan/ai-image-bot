@@ -7385,40 +7385,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Запускаем генерацию контента в фоне
         asyncio.create_task(generate_content_async(update, context, state))
 
-            # Для "Изображения" - старые кнопки
-
-            keyboard = [
-
-                [InlineKeyboardButton("Сгенерировать изображения", callback_data="generate_images")],
-
-                [InlineKeyboardButton("🎭 Создать видео по сценарию", callback_data="create_video_from_script")],
-
-                [InlineKeyboardButton("Уточнить, что должно быть на картинке", callback_data="custom_image_prompt")],
-
-                [InlineKeyboardButton("Сбросить и начать заново", callback_data="reset")]
-
-            ]
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            await update.message.reply_text(
-
-                "Хотите сгенерировать изображения по сценарию или уточнить, что должно быть на картинке?",
-
-                reply_markup=reply_markup
-
-            )
-
-        state['last_script'] = gpt_reply
-
-        if user_format in ['instagram reels', 'tiktok', 'youtube shorts']:
-
-            scenes = await extract_scenes_from_script(gpt_reply, user_format)
-
-            state['last_scenes'] = scenes
-
-        # Убираем автоматическую генерацию изображений - теперь пользователь сам выбирает
-
     elif step == 'custom_image_count':
 
         try:
