@@ -96,6 +96,12 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
             replicate_params['aspect_ratio'] = '16:9'
         elif user_format == '9:16':
             replicate_params['aspect_ratio'] = '9:16'
+        elif simple_orientation == 'horizontal':
+            replicate_params['aspect_ratio'] = '16:9'
+        elif simple_orientation == 'vertical':
+            replicate_params['aspect_ratio'] = '9:16'
+        elif simple_orientation == 'square':
+            replicate_params['aspect_ratio'] = '1:1'
         else:
             replicate_params['aspect_ratio'] = '1:1'
         
@@ -1202,6 +1208,10 @@ def get_image_size_for_format(format_type, simple_orientation=None):
 
             return "1024x1792"  # 9:16 соотношение сторон
 
+        elif simple_orientation == 'horizontal':
+
+            return "1792x1024"  # 16:9 соотношение сторон
+
         elif simple_orientation == 'square':
 
             return "1024x1024"  # 1:1 соотношение сторон
@@ -1382,6 +1392,10 @@ def get_replicate_params_for_model(model_name, format_type, simple_orientation=N
         if simple_orientation == 'vertical':
 
             return {"aspect_ratio": "9:16"}
+
+        elif simple_orientation == 'horizontal':
+
+            return {"aspect_ratio": "16:9"}
 
         elif simple_orientation == 'square':
 
@@ -4963,6 +4977,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
         keyboard = [
             [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+            [InlineKeyboardButton("🖥️ Горизонтальное (16:9)", callback_data="simple_orientation:horizontal")],
             [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
         ]
         keyboard.extend([
@@ -5111,6 +5126,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = [
 
                 [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+
+                [InlineKeyboardButton("🖥️ Горизонтальное (16:9)", callback_data="simple_orientation:horizontal")],
 
                 [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
 
@@ -5414,7 +5431,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         
 
-        orientation_text = "Вертикальное (9:16)" if orientation == "vertical" else "Квадратное (1:1)"
+        if orientation == "vertical":
+            orientation_text = "Вертикальное (9:16)"
+        elif orientation == "horizontal":
+            orientation_text = "Горизонтальное (16:9)"
+        else:
+            orientation_text = "Квадратное (1:1)"
 
         await query.edit_message_text(
 
@@ -5431,6 +5453,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
 
             [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+
+            [InlineKeyboardButton("🖥️ Горизонтальное (16:9)", callback_data="simple_orientation:horizontal")],
 
             [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
 
@@ -5458,7 +5482,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.startswith('simple_orientation:'):
         orientation = data.split(':', 1)[1]
-        USER_STATE[user_id]['orientation'] = orientation
+        USER_STATE[user_id]['simple_orientation'] = orientation
         USER_STATE[user_id]['step'] = 'image_gen_model'
         await show_model_selection(update, context)
         return
@@ -5560,6 +5584,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = [
 
                 [InlineKeyboardButton("📱 Вертикальное (9:16)", callback_data="simple_orientation:vertical")],
+
+                [InlineKeyboardButton("🖥️ Горизонтальное (16:9)", callback_data="simple_orientation:horizontal")],
 
                 [InlineKeyboardButton("⬜ Квадратное (1:1)", callback_data="simple_orientation:square")]
 
