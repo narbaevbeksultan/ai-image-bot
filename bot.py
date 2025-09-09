@@ -1010,8 +1010,6 @@ IMAGE_GEN_MODELS = [
 
     'Luma Photon',
 
-    'Bria 3.2',
-
     'Recraft AI'
 
 ]
@@ -1039,8 +1037,6 @@ MODEL_DESCRIPTIONS = {
     'Google Imagen 4 Ultra': 'детализация',
 
     'Luma Photon': 'кинематографичность',
-
-    'Bria 3.2': 'коммерческое',
 
     'Recraft AI': 'дизайн и векторы'
 
@@ -1328,23 +1324,6 @@ def get_replicate_size_for_model(model_name, format_type):
 
     
 
-    elif model_name == 'Bria 3.2':
-
-        # Bria принимает точные размеры
-
-        if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
-
-            return "1024x1792"  # 9:16 соотношение сторон
-
-        elif format_type == 'instagrampost':
-
-            return "1024x1024"  # 1:1 соотношение сторон
-
-        else:
-
-            return "1024x1024"
-
-    
 
     elif model_name == 'Recraft AI':
 
@@ -1650,8 +1629,6 @@ async def show_how_to_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
    🏗️ Luma Photon (кинематографичность и атмосфера)
 
-   💼 Bria 3.2 (коммерческое использование, безопасность)
-
    🎨 Recraft AI (дизайн, векторы, UI)
 
 
@@ -1754,7 +1731,6 @@ async def show_about_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Luma Photon (кинематографичность и атмосфера)
 
-• Bria 3.2 (коммерческое использование, безопасность)
 
 • Recraft AI (дизайн, векторы, UI)
 
@@ -1863,7 +1839,6 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
         [InlineKeyboardButton("🏗️ Luma Photon (креативные возможности, высокое качество)", callback_data="image_gen_model:Luma Photon")],
 
-        [InlineKeyboardButton("💼 Bria 3.2 (коммерческое использование, 4B параметров)", callback_data="image_gen_model:Bria 3.2")],
 
         [InlineKeyboardButton("🎨 Recraft AI (дизайн, вектор, логотипы, бренд-дизайн, SVG)", callback_data="image_gen_model:Recraft AI")],
 
@@ -1930,8 +1905,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
    🔬 Google Imagen 4 Ultra (детализация и сложные сцены)
 
    🏗️ Luma Photon (кинематографичность и атмосфера)
-
-   💼 Bria 3.2 (коммерческое использование, безопасность)
 
    🎨 Recraft AI (дизайн, векторы, UI)
 
@@ -4075,19 +4048,6 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                 ][:max_scenes]
 
-            elif selected_model == 'Bria 3.2':
-
-                # Для Bria 3.2 - коммерческое использование, 4B параметров
-
-                prompts = [
-
-                    f"{topic}, professional quality, high resolution, clean composition, commercial grade, safe content",
-
-                    f"{topic}, excellent quality, professional result, clear details, commercial use, premium quality",
-
-                    f"{topic}, high quality, professional photography, detailed composition, commercial standard, clean result"
-
-                ][:max_scenes]
 
             elif selected_model == 'Recraft AI':
 
@@ -11178,7 +11138,6 @@ async def show_credit_packages(update: Update, context: ContextTypes.DEFAULT_TYP
 
     text += "• Ideogram, Bytedance, Luma: 10 кредитов\n"
 
-    text += "• Bria 3.2: 12 кредитов\n"
 
     text += "• Google Imagen 4 Ultra: 16 кредитов\n"
 
