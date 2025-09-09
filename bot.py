@@ -9840,7 +9840,7 @@ async def generate_video(update, context, state):
 
         
 
-        # Метод 1: Пробуем отправить как видео с поддержкой стриминга
+        # Метод 1: Отправляем как документ для гарантированной работы
 
         logging.info(f"📤 Отправляем видео в Telegram:")
 
@@ -9852,17 +9852,17 @@ async def generate_video(update, context, state):
 
         logging.info(f"   Размер: {file_size_mb if 'file_size_mb' in locals() else 'не определен'} МБ")
 
-        logging.info(f"   Метод: send_video")
+        logging.info(f"   Метод: send_document")
 
         
 
         try:
 
-            await context.bot.send_video(
+            await context.bot.send_document(
 
                 chat_id=chat_id,
 
-                video=video_url,
+                document=video_url,
 
                 caption=f"🎬 **Видео готово!**\n\n"
 
@@ -9872,9 +9872,6 @@ async def generate_video(update, context, state):
 
                         f"✨ Bytedance Seedance 1.0 Pro",
 
-                supports_streaming=True,
-
-                has_spoiler=False,
 
                 filename=f"video_{video_quality}_{video_duration}s.mp4",
 
@@ -9886,7 +9883,7 @@ async def generate_video(update, context, state):
 
             video_sent = True
 
-            logging.info("✅ Видео успешно отправлено как видео с поддержкой стриминга")
+            logging.info("✅ Видео успешно отправлено как документ")
             
             # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
             if user_id:
@@ -10166,17 +10163,16 @@ async def generate_video(update, context, state):
                                         lambda: open(temp_file_path, 'rb').read()
                                     )
                                     
-                                    await context.bot.send_video(
+                                    await context.bot.send_document(
                                             chat_id=chat_id,
 
-                                            video=video_data,
+                                            document=video_data,
                                             caption=f"🎬 **Видео готово!**\n\n"
 
                                             f"{prompt_caption}\n"
                                             f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
                                             f"✨ Bytedance Seedance 1.0 Pro",
 
-                                            supports_streaming=True,
                                             has_spoiler=False,
 
                                             filename=f"video_{video_quality}_{video_duration}s.mp4",
@@ -10301,18 +10297,18 @@ async def generate_video(update, context, state):
 
                     
 
-                    # Метод 4: Отправляем как видео (всегда как видео, даже если это GIF)
+                    # Метод 4: Отправляем как документ (всегда как документ, даже если это GIF)
 
-                    # Всегда отправляем как видео, даже если это GIF
+                    # Всегда отправляем как документ, даже если это GIF
                     if True:  # Убираем проверку на GIF
 
                         try:
 
-                            await context.bot.send_video(
+                            await context.bot.send_document(
 
                                 chat_id=chat_id,
 
-                                video=video_url,
+                                document=video_url,
 
                                 caption=f"🎬 **Видео готово!**\n\n"
 
@@ -10321,7 +10317,6 @@ async def generate_video(update, context, state):
                                         f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
 
                                         f"✨ Bytedance Seedance 1.0 Pro",
-                                supports_streaming=True,
                                 filename=f"video_{video_quality}_{video_duration}s.mp4",
                                 disable_notification=False,
                                 parse_mode='HTML'
@@ -10329,7 +10324,7 @@ async def generate_video(update, context, state):
 
                             video_sent = True
 
-                            logging.info("Видео успешно отправлено")
+                            logging.info("Видео успешно отправлено как документ")
                             
                             # Очищаем состояние после успешной генерации
                             state['step'] = None
@@ -10402,7 +10397,7 @@ async def generate_video(update, context, state):
 
                             anim_error = e
 
-                            logging.error(f"Не удалось отправить как видео: {anim_error}")
+                            logging.error(f"Не удалось отправить как документ: {anim_error}")
 
         
 
@@ -10416,7 +10411,7 @@ async def generate_video(update, context, state):
 
             if video_error:
 
-                logging.error(f"Ошибка send_video: {video_error}")
+                logging.error(f"Ошибка send_document: {video_error}")
 
             if doc_error:
 
@@ -10428,7 +10423,7 @@ async def generate_video(update, context, state):
 
             if anim_error:
 
-                logging.error(f"Ошибка send_video: {anim_error}")
+                logging.error(f"Ошибка send_document: {anim_error}")
 
             
 
@@ -10562,7 +10557,7 @@ async def generate_video(update, context, state):
 
             if video_error:
 
-                diagnostic_info += f"📹 **Ошибка send_video:** {str(video_error)[:100]}...\n"
+                diagnostic_info += f"📹 **Ошибка send_document:** {str(video_error)[:100]}...\n"
 
             if doc_error:
 
@@ -10574,7 +10569,7 @@ async def generate_video(update, context, state):
 
             if anim_error:
 
-                diagnostic_info += f"🎬 **Ошибка send_video:** {str(anim_error)[:100]}...\n"
+                diagnostic_info += f"🎬 **Ошибка send_document:** {str(anim_error)[:100]}...\n"
 
             
 
@@ -10980,7 +10975,7 @@ async def generate_video(update, context, state):
 
             if 'video_error' in locals() and video_error:
 
-                logging.error(f"     send_video: {video_error}")
+                logging.error(f"     send_document: {video_error}")
 
             if 'doc_error' in locals() and doc_error:
 
@@ -10992,7 +10987,7 @@ async def generate_video(update, context, state):
 
             if 'anim_error' in locals() and anim_error:
 
-                logging.error(f"     send_video: {anim_error}")
+                logging.error(f"     send_document: {anim_error}")
 
         
 
