@@ -9608,13 +9608,13 @@ async def generate_video(update, context, state):
 
         
 
-        # Дополнительная проверка: если URL содержит 'gif', то это не видео
+        # Дополнительная проверка: даже если URL содержит 'gif', отправляем как видео
 
         if 'gif' in video_url.lower():
 
-            is_video_file = False
+            is_video_file = True  # Принудительно считаем GIF как видео
 
-            logging.warning("⚠️ Обнаружен GIF файл в URL! API вернул GIF вместо MP4!")
+            logging.warning("⚠️ Обнаружен GIF файл в URL! API вернул GIF вместо MP4, но отправляем как видео!")
 
         elif 'mp4' in video_url.lower():
 
@@ -9874,7 +9874,13 @@ async def generate_video(update, context, state):
 
                 supports_streaming=True,
 
-                has_spoiler=False
+                has_spoiler=False,
+
+                filename=f"video_{video_quality}_{video_duration}s.mp4",
+
+                disable_notification=False,
+
+                parse_mode='HTML'
 
             )
 
@@ -10171,7 +10177,13 @@ async def generate_video(update, context, state):
                                             f"✨ Bytedance Seedance 1.0 Pro",
 
                                             supports_streaming=True,
-                                            has_spoiler=False
+                                            has_spoiler=False,
+
+                                            filename=f"video_{video_quality}_{video_duration}s.mp4",
+
+                                            disable_notification=False,
+
+                                            parse_mode='HTML'
 
                                         )
                                     
@@ -10309,7 +10321,10 @@ async def generate_video(update, context, state):
                                         f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
 
                                         f"✨ Bytedance Seedance 1.0 Pro",
-                                supports_streaming=True
+                                supports_streaming=True,
+                                filename=f"video_{video_quality}_{video_duration}s.mp4",
+                                disable_notification=False,
+                                parse_mode='HTML'
                             )
 
                             video_sent = True
