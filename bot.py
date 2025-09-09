@@ -10289,31 +10289,32 @@ async def generate_video(update, context, state):
 
                     
 
-                    # Метод 4: Пробуем отправить как анимацию (если это GIF)
+                    # Метод 4: Отправляем как видео (всегда как видео, даже если это GIF)
 
-                    if file_extension == 'gif' or 'gif' in video_url.lower():
+                    # Всегда отправляем как видео, даже если это GIF
+                    if True:  # Убираем проверку на GIF
 
                         try:
 
-                            await context.bot.send_animation(
+                            await context.bot.send_video(
 
                                 chat_id=chat_id,
 
-                                animation=video_url,
+                                video=video_url,
 
-                                caption=f"🎬 **Анимация готова!**\n\n"
+                                caption=f"🎬 **Видео готово!**\n\n"
 
                                         f"{prompt_caption}\n"
 
                                         f"⚡ {video_quality} | ⏱️ {video_duration}с\n"
 
-                                        f"✨ Bytedance Seedance 1.0 Pro"
-
+                                        f"✨ Bytedance Seedance 1.0 Pro",
+                                supports_streaming=True
                             )
 
                             video_sent = True
 
-                            logging.info("Анимация успешно отправлена")
+                            logging.info("Видео успешно отправлено")
                             
                             # Очищаем состояние после успешной генерации
                             state['step'] = None
@@ -10386,7 +10387,7 @@ async def generate_video(update, context, state):
 
                             anim_error = e
 
-                            logging.error(f"Не удалось отправить как анимацию: {anim_error}")
+                            logging.error(f"Не удалось отправить как видео: {anim_error}")
 
         
 
@@ -10412,7 +10413,7 @@ async def generate_video(update, context, state):
 
             if anim_error:
 
-                logging.error(f"Ошибка send_animation: {anim_error}")
+                logging.error(f"Ошибка send_video: {anim_error}")
 
             
 
@@ -10558,7 +10559,7 @@ async def generate_video(update, context, state):
 
             if anim_error:
 
-                diagnostic_info += f"🎭 **Ошибка send_animation:** {str(anim_error)[:100]}...\n"
+                diagnostic_info += f"🎬 **Ошибка send_video:** {str(anim_error)[:100]}...\n"
 
             
 
@@ -10976,7 +10977,7 @@ async def generate_video(update, context, state):
 
             if 'anim_error' in locals() and anim_error:
 
-                logging.error(f"     send_animation: {anim_error}")
+                logging.error(f"     send_video: {anim_error}")
 
         
 
