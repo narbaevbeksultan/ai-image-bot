@@ -34,6 +34,9 @@ THREAD_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=100)
 # Создаем пул HTTP соединений для aiohttp
 HTTP_SESSION = None
 
+# Конфигурация функций
+CONTENT_CREATION_ENABLED = False  # Временно отключена функция "Создать контент"
+
 # Flask для callback сервера
 from flask import Flask, request, jsonify
 from betatransfer_api import betatransfer_api
@@ -1124,8 +1127,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 💡 Быстрый старт:
 
-• Нажмите "🎨 Создать контент" для создания под определенный формат
-
 • Нажмите "🖼️ Создать изображения" для быстрой генерации изображений
 
 • Нажмите "🎬 Создать видео" для генерации видео
@@ -1148,27 +1149,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     
 
-    keyboard = [
+    keyboard = []
 
-        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+    # Добавляем кнопку "Создать контент" только если функция включена
+    if CONTENT_CREATION_ENABLED:
+        keyboard.append([InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")])
 
-        [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")],
-
-        [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
-
-        [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
-
-        [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
-
-        [InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")],
-
-        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
-
-        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
-
-    ]
+    keyboard.append([InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")])
+    keyboard.append([InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")])
+    keyboard.append([InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")])
+    keyboard.append([InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")])
+    keyboard.append([InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")])
+    keyboard.append([InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")])
+    keyboard.append([InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")])
+    keyboard.append([InlineKeyboardButton("📞 Поддержка", callback_data="support")])
 
     
 
@@ -1572,27 +1566,20 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     
 
-    keyboard = [
+    keyboard = []
 
-        [InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")],
+    # Добавляем кнопку "Создать контент" только если функция включена
+    if CONTENT_CREATION_ENABLED:
+        keyboard.append([InlineKeyboardButton("🎨 Создать контент", callback_data="create_content")])
 
-        [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")],
-
-        [InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")],
-
-        [InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")],
-
-        [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
-
-        [InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")],
-
-        [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-
-        [InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")],
-
-        [InlineKeyboardButton("📞 Поддержка", callback_data="support")]
-
-    ]
+    keyboard.append([InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_simple_images")])
+    keyboard.append([InlineKeyboardButton("🎬 Создать видео", callback_data="video_generation")])
+    keyboard.append([InlineKeyboardButton("✏️ Редактировать изображение", callback_data="edit_image")])
+    keyboard.append([InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")])
+    keyboard.append([InlineKeyboardButton("📊 Моя статистика", callback_data="user_stats")])
+    keyboard.append([InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")])
+    keyboard.append([InlineKeyboardButton("ℹ️ О боте", callback_data="about_bot")])
+    keyboard.append([InlineKeyboardButton("📞 Поддержка", callback_data="support")])
 
     
 
@@ -1713,13 +1700,13 @@ async def show_how_to_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     
 
-    keyboard = [
+    keyboard = []
 
-        [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+    # Добавляем кнопку "Начать создание" только если функция включена
+    if CONTENT_CREATION_ENABLED:
+        keyboard.append([InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")])
 
-        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
-
-    ]
+    keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="main_menu")])
 
     
 
@@ -3237,9 +3224,13 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             # Нет доступа - ни бесплатных генераций, ни кредитов
             keyboard = [
                 [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")],
-                [InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")],
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
             ]
+            
+            # Добавляем кнопку "Создать изображения" только если функция включена
+            if CONTENT_CREATION_ENABLED:
+                keyboard.append([InlineKeyboardButton("🖼️ Создать изображения", callback_data="create_content")])
+            
+            keyboard.append([InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")])
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await context.bot.send_message(
