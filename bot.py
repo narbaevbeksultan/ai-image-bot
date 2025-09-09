@@ -6817,7 +6817,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             [InlineKeyboardButton("🖥️ YouTube/Обычное (16:9)", callback_data="aspect_ratio:16:9")],
 
-            [InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")]
+            [InlineKeyboardButton("🔙 Назад", callback_data="video_generation")]
 
         ]
 
@@ -6869,7 +6869,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 reply_markup=InlineKeyboardMarkup([[
 
-                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                    InlineKeyboardButton("🔙 Назад", callback_data="video_generation")
 
                 ]])
 
@@ -6891,7 +6891,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 reply_markup=InlineKeyboardMarkup([[
 
-                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                    InlineKeyboardButton("🔙 Назад", callback_data="video_generation")
 
                 ]])
 
@@ -7953,7 +7953,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 reply_markup=InlineKeyboardMarkup([[
 
-                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                    InlineKeyboardButton("🔙 Назад", callback_data="video_generation")
 
                 ]])
 
@@ -7969,7 +7969,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 reply_markup=InlineKeyboardMarkup([[
 
-                    InlineKeyboardButton("🔙 Назад", callback_data="back_to_main_options")
+                    InlineKeyboardButton("🔙 Назад", callback_data="video_generation")
 
                 ]])
 
