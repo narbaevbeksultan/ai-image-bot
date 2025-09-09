@@ -3338,6 +3338,20 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         
 
+        # Проверяем валидность URL изображения
+        if not original_image_url.startswith(('http://', 'https://')):
+            logging.error(f"Неверный URL изображения: {original_image_url}")
+            if send_text:
+                keyboard = [
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ]
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="❌ Неверный URL изображения",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            return None
+
         # Загружаем изображение
 
         logging.info(f"Загружаем изображение с URL: {original_image_url}")
@@ -3360,6 +3374,20 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                     return
                 
                 image_data = await response.read()
+
+            # Проверяем, что данные изображения не пустые
+            if not image_data:
+                logging.error("Получены пустые данные изображения")
+                if send_text:
+                    keyboard = [
+                        [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                    ]
+                    await context.bot.send_message(
+                        chat_id=chat_id,
+                        text="❌ Получены пустые данные изображения",
+                        reply_markup=InlineKeyboardMarkup(keyboard)
+                    )
+                return None
 
             if response.status_code != 200:
 
@@ -3385,7 +3413,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 return None
 
-            logging.info(f"Изображение успешно загружено, размер: {len(response.content)} байт")
+            logging.info(f"Изображение успешно загружено, размер: {len(image_data)} байт")
 
         except requests.exceptions.Timeout:
 
@@ -3411,9 +3439,9 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
             return None
 
-        except Exception as e:
+        except aiohttp.ClientError as e:
 
-            logging.error(f"Ошибка загрузки изображения: {e}")
+            logging.error(f"Ошибка HTTP клиента при загрузке изображения: {e}")
 
             if send_text:
 
@@ -3427,7 +3455,31 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                     chat_id=chat_id,
 
-                    text="❌ Ошибка при загрузке исходного изображения",
+                    text=f"❌ Ошибка сети при загрузке изображения: {str(e)[:100]}...",
+
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+
+                )
+
+            return None
+
+        except Exception as e:
+
+            logging.error(f"Неожиданная ошибка при загрузке изображения: {e}")
+
+            if send_text:
+
+                keyboard = [
+
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+                ]
+
+                await context.bot.send_message(
+
+                    chat_id=chat_id,
+
+                    text=f"❌ Ошибка при загрузке исходного изображения: {str(e)[:100]}...",
 
                     reply_markup=InlineKeyboardMarkup(keyboard)
 
@@ -3453,7 +3505,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
             # Записываем данные в файл асинхронно
             await loop.run_in_executor(
                 THREAD_POOL,
-                lambda: open(temp_file_path, 'wb').write(response.content)
+                lambda: open(temp_file_path, 'wb').write(image_data)
             )
 
             
@@ -3643,7 +3695,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
                 if edited_response.status_code == 200:
 
-                    logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_response.content)} байт")
+                    logging.info(f"Успешно загружено отредактированное изображение, размер: {len(edited_image_data)} байт")
 
                     # СПИСЫВАЕМ БЕСПЛАТНУЮ ГЕНЕРАЦИЮ ИЛИ КРЕДИТЫ
                     logging.info(f"DEBUG: user_id={user_id}, generation_type={generation_type}")
@@ -3731,7 +3783,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
                             # Записываем данные в файл асинхронно
                             await loop.run_in_executor(
                                 THREAD_POOL,
-                                lambda: open(temp_edited_path, 'wb').write(edited_response.content)
+                                lambda: open(temp_edited_path, 'wb').write(edited_image_data)
                             )
 
                             
@@ -8532,19 +8584,34 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if update.message.photo:
 
-            # Получаем файл изображения
+            try:
+                # Получаем файл изображения
 
-            photo = update.message.photo[-1]  # Берем самое большое изображение
+                photo = update.message.photo[-1]  # Берем самое большое изображение
 
-            file = await context.bot.get_file(photo.file_id)
+                file = await context.bot.get_file(photo.file_id)
 
-            
+                
 
-            # Сохраняем URL изображения
+                # Проверяем, что файл получен успешно
+                if not file or not file.file_url:
+                    await update.message.reply_text(
+                        "❌ Ошибка при получении изображения. Попробуйте отправить изображение еще раз."
+                    )
+                    return
 
-            USER_STATE[user_id]['selected_image_url'] = file.file_path
+                # Сохраняем URL изображения
 
-            USER_STATE[user_id]['step'] = 'enter_edit_prompt'
+                USER_STATE[user_id]['selected_image_url'] = file.file_url
+
+                USER_STATE[user_id]['step'] = 'enter_edit_prompt'
+
+            except Exception as e:
+                logging.error(f"Ошибка при получении файла изображения: {e}")
+                await update.message.reply_text(
+                    "❌ Ошибка при обработке изображения. Попробуйте отправить изображение еще раз."
+                )
+                return
 
             
 
