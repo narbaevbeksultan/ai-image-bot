@@ -7385,97 +7385,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Запускаем генерацию контента в фоне
         asyncio.create_task(generate_content_async(update, context, state))
 
-        
-
-        # Генерируем контент с помощью OpenAI
-
-
-        
-
-        try:
-
-            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-            # Используем асинхронный вызов для предотвращения блокировки
-            loop = asyncio.get_event_loop()
-            messages = [
-                        {"role": "system", "content": "Ты эксперт по созданию уникального контента для социальных сетей. Твоя задача - создавать качественный, нешаблонный контент, который точно описывает тему и привлекает внимание. Избегай общих фраз, используй конкретные детали."},
-                        {"role": "user", "content": content_prompt}
-            ]
-            gpt_reply = await openai_chat_completion_async(messages, "gpt-4o-mini", 1000, 0.8)
-
-        except Exception as e:
-
-            # Fallback на простой контент если OpenAI недоступен
-
-            if user_format in ['instagram reels', 'tiktok', 'youtube shorts']:
-
-                gpt_reply = f"[Кадр 1: {topic} - общий вид] Откройте для себя {topic}! [Кадр 2: детали {topic}] Уникальные особенности и преимущества. [Кадр 3: атмосфера {topic}] Создайте незабываемые впечатления."
-
-            else:
-
-                gpt_reply = f"Откройте для себя {topic}! Уникальные особенности и преимущества ждут вас. Создайте незабываемые впечатления и получите максимум удовольствия. #{topic.replace(' ', '')} #качество #впечатления"
-
-
-
-        
-
-        await update.message.reply_text(gpt_reply)
-
-        user_format = state.get('format', '').lower()
-
-        
-
-        # Для обычных форматов предлагаем выбрать количество изображений
-
-        if user_format not in ['изображения']:
-
-            # Определяем количество сцен из текста
-
-            scenes = await extract_scenes_from_script(gpt_reply, user_format)
-
-            scene_count = len(scenes)
-
-            
-
-            # Предлагаем количество изображений на основе сцен
-
-            keyboard = []
-
-            if scene_count <= 3:
-
-                keyboard.append([InlineKeyboardButton(f"Все сцены ({scene_count} изображений)", callback_data=f"generate_with_count:{scene_count}")])
-
-            else:
-
-                keyboard.append([InlineKeyboardButton(f"Первые 3 сцены (3 изображения)", callback_data="generate_with_count:3")])
-
-                keyboard.append([InlineKeyboardButton(f"Все сцены ({scene_count} изображений)", callback_data=f"generate_with_count:{scene_count}")])
-
-            
-
-            keyboard.append([InlineKeyboardButton("Выбрать другое количество", callback_data="custom_count_after_text")])
-
-            keyboard.append([InlineKeyboardButton("Уточнить, что должно быть на картинке", callback_data="custom_image_prompt")])
-
-            keyboard.append([InlineKeyboardButton("Сбросить и начать заново", callback_data="reset")])
-
-            
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            await update.message.reply_text(
-
-                f"Сценарий готов! Найдено {scene_count} сцен.\n\nСколько изображений сгенерировать?",
-
-                reply_markup=reply_markup
-
-            )
-
-            state['last_scenes'] = scenes
-
-        else:
-
             # Для "Изображения" - старые кнопки
 
             keyboard = [
@@ -9079,12 +8988,12 @@ async def generate_content(update, context, state):
         
         # Предлагаем выбрать количество изображений
         keyboard = [
-            [InlineKeyboardButton("1 изображение", callback_data="image_count:1")],
-            [InlineKeyboardButton("2 изображения", callback_data="image_count:2")],
-            [InlineKeyboardButton("3 изображения", callback_data="image_count:3")],
-            [InlineKeyboardButton("4 изображения", callback_data="image_count:4")],
-            [InlineKeyboardButton("5 изображений", callback_data="image_count:5")],
-            [InlineKeyboardButton("Выбрать другое количество", callback_data="image_count:custom")]
+            [InlineKeyboardButton("1 изображение", callback_data="generate_with_count:1")],
+            [InlineKeyboardButton("2 изображения", callback_data="generate_with_count:2")],
+            [InlineKeyboardButton("3 изображения", callback_data="generate_with_count:3")],
+            [InlineKeyboardButton("4 изображения", callback_data="generate_with_count:4")],
+            [InlineKeyboardButton("5 изображений", callback_data="generate_with_count:5")],
+            [InlineKeyboardButton("Выбрать другое количество", callback_data="custom_count_after_text")]
         ]
         
         keyboard.extend([
