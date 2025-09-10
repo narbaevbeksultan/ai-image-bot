@@ -941,5 +941,41 @@ class AnalyticsDB:
                 'completed_revenue': 0
             }
 
+    def get_pending_payments(self):
+        """Получает все pending платежи для проверки статуса"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        SELECT user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at
+                        FROM payments 
+                        WHERE status = 'pending' AND betatransfer_id IS NOT NULL
+                        ORDER BY created_at ASC
+                    ''')
+                else:
+                    cursor.execute('''
+                        SELECT user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at
+                        FROM payments 
+                        WHERE status = 'pending' AND betatransfer_id IS NOT NULL
+                        ORDER BY created_at ASC
+                    ''')
+                
+                columns = [description[0] for description in cursor.description]
+                payments = []
+                
+                for row in cursor.fetchall():
+                    if self.db_type == "postgresql":
+                        payment = dict(zip(columns, row))
+                    else:
+                        payment = dict(zip(columns, row))
+                    payments.append(payment)
+                
+                return payments
+                
+        except Exception as e:
+            logging.error(f"Ошибка получения pending платежей: {e}")
+            return []
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
