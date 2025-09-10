@@ -516,8 +516,8 @@ class AnalyticsDB:
                         'last_updated': result[2]
                     }
                 else:
-                    # Создаем запись по умолчанию
-                    self.init_user_limits(user_id)
+                    # НЕ создаем запись автоматически!
+                    # Просто возвращаем значения по умолчанию
                     return {
                         'free_generations_used': 0,
                         'total_free_generations': 3,
@@ -614,11 +614,22 @@ class AnalyticsDB:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
+                
+                # Сначала пытаемся обновить существующую запись
                 cursor.execute('''
                     UPDATE user_limits 
                     SET free_generations_used = free_generations_used + 1
                     WHERE user_id = ?
                 ''', (user_id,))
+                
+                # Если записи не было, создаем новую
+                if cursor.rowcount == 0:
+                    cursor.execute('''
+                        INSERT INTO user_limits 
+                        (user_id, free_generations_used, total_free_generations, last_updated)
+                        VALUES (?, 1, 3, CURRENT_TIMESTAMP)
+                    ''', (user_id,))
+                
                 conn.commit()
                 return True
         except Exception as e:
@@ -707,8 +718,8 @@ class AnalyticsDB:
                         'total_used': result[2]
                     }
                 else:
-                    # Создаем запись по умолчанию
-                    self.init_user_credits(user_id)
+                    # НЕ создаем запись автоматически!
+                    # Просто возвращаем значения по умолчанию
                     return {'balance': 0, 'total_purchased': 0, 'total_used': 0}
         except Exception as e:
             logging.error(f"Ошибка получения кредитов пользователя: {e}")
@@ -735,12 +746,20 @@ class AnalyticsDB:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
-                # Добавляем кредиты
+                # Сначала пытаемся обновить существующую запись
                 cursor.execute('''
                     UPDATE user_credits 
                     SET credits_balance = credits_balance + ?, total_purchased = total_purchased + ?
                     WHERE user_id = ?
                 ''', (amount, amount, user_id))
+                
+                # Если записи не было, создаем новую
+                if cursor.rowcount == 0:
+                    cursor.execute('''
+                        INSERT INTO user_credits 
+                        (user_id, credits_balance, total_purchased, total_used)
+                        VALUES (?, ?, ?, 0)
+                    ''', (user_id, amount, amount))
                 
                 # Логируем транзакцию
                 cursor.execute('''
@@ -765,8 +784,17 @@ class AnalyticsDB:
                 cursor.execute('SELECT credits_balance FROM user_credits WHERE user_id = ?', (user_id,))
                 result = cursor.fetchone()
                 
-                if not result or result[0] < amount:
-                    return False
+                if not result:
+                    # Если записи нет, создаем с нулевым балансом
+                    cursor.execute('''
+                        INSERT INTO user_credits 
+                        (user_id, credits_balance, total_purchased, total_used)
+                        VALUES (?, 0, 0, 0)
+                    ''', (user_id,))
+                    return False  # Недостаточно кредитов
+                
+                if result[0] < amount:
+                    return False  # Недостаточно кредитов
                 
                 # Списываем кредиты
                 cursor.execute('''
