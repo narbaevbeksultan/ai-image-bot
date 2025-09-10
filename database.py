@@ -1079,5 +1079,35 @@ class AnalyticsDB:
             logging.error(f"Ошибка создания транзакции с платежом: {e}")
             return False
 
+    def get_payment_by_betatransfer_id(self, betatransfer_id: str) -> Optional[Dict]:
+        """Получение информации о платеже по betatransfer_id"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        SELECT * FROM payments 
+                        WHERE betatransfer_id = %s
+                    ''', (betatransfer_id,))
+                else:
+                    cursor.execute('''
+                        SELECT * FROM payments 
+                        WHERE betatransfer_id = ?
+                    ''', (betatransfer_id,))
+                
+                row = cursor.fetchone()
+                if row:
+                    if self.db_type == "postgresql":
+                        columns = [description[0] for description in cursor.description]
+                        return dict(zip(columns, row))
+                    else:
+                        columns = ['id', 'user_id', 'amount', 'currency', 'status', 'betatransfer_id', 
+                                  'order_id', 'credit_amount', 'payment_method', 'created_at', 'completed_at']
+                        return dict(zip(columns, row))
+                return None
+        except Exception as e:
+            logging.error(f"Ошибка получения платежа по betatransfer_id: {e}")
+            return None
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()

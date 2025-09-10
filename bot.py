@@ -639,6 +639,14 @@ async def analytics_db_create_credit_transaction_with_payment_async(user_id: int
         lambda: analytics_db.create_credit_transaction_with_payment(user_id, amount, description, payment_id)
     )
 
+async def analytics_db_get_payment_by_betatransfer_id_async(betatransfer_id: str):
+    """Асинхронная обертка для analytics_db.get_payment_by_betatransfer_id"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_payment_by_betatransfer_id(betatransfer_id)
+    )
+
 async def analytics_db_update_payment_status_async(payment_id: str, status: str):
     """Асинхронная обертка для analytics_db.update_payment_status"""
     loop = asyncio.get_event_loop()
@@ -864,8 +872,8 @@ async def payment_callback():
         
         # Если платеж успешен, зачисляем кредиты
         if status == "completed":
-            # Получаем информацию о заказе из базы
-            payment_record = await analytics_db_get_payment_by_order_id_async(order_id)
+            # Получаем информацию о платеже из базы по betatransfer_id
+            payment_record = await analytics_db_get_payment_by_betatransfer_id_async(payment_id)
             if payment_record:
                 user_id = payment_record.get("user_id")
                 credit_amount = payment_record.get("credit_amount")
@@ -889,6 +897,8 @@ async def payment_callback():
                     )
                 except Exception as e:
                     logging.error(f"Ошибка отправки уведомления пользователю {user_id}: {e}")
+            else:
+                logging.error(f"Платеж {payment_id} не найден в базе данных")
                 
                 # Отправляем уведомление пользователю
                 notification_message = (
