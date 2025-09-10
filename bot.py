@@ -879,6 +879,18 @@ async def payment_callback():
                 logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
                 
                 # Отправляем уведомление пользователю
+                try:
+                    await bot.send_message(
+                        chat_id=user_id,
+                        text=f"✅ **Платеж успешно обработан!**\n\n"
+                             f"💰 Зачислено кредитов: {credit_amount}\n"
+                             f"💳 Сумма: {amount} {currency}\n"
+                             f"🆔 ID платежа: {payment_id}"
+                    )
+                except Exception as e:
+                    logging.error(f"Ошибка отправки уведомления пользователю {user_id}: {e}")
+                
+                # Отправляем уведомление пользователю
                 notification_message = (
                     f"✅ **Кредиты зачислены!**\n\n"
                     f"🪙 **Получено:** {credit_amount:,} кредитов\n"
@@ -8879,16 +8891,68 @@ async def send_images_async(update, context, state, prompt_type='auto', user_pro
             text="❌ **Ошибка при генерации изображений**\n\nПопробуйте еще раз или обратитесь в поддержку."
         )
 
+def check_payment_status_sync(update, context):
+    """Синхронная проверка статуса платежа"""
+    try:
+        if not hasattr(update, 'callback_query') or not update.callback_query:
+            return
+        
+        # Извлекаем payment_id из callback_data
+        payment_id = update.callback_query.data.split(':')[1]
+        
+        # Получаем информацию о платеже синхронно
+        payment_info = analytics_db.get_payment_by_order_id(payment_id)
+        
+        if not payment_info:
+            update.callback_query.answer("❌ Платеж не найден")
+            return
+        
+        status = payment_info.get('status', 'unknown')
+        amount = payment_info.get('amount', 0)
+        currency = payment_info.get('currency', 'RUB')
+        credit_amount = payment_info.get('credit_amount', 0)
+        
+        if status == 'completed':
+            message = (
+                f"✅ **Платеж успешно обработан!**\n\n"
+                f"💰 Зачислено кредитов: {credit_amount:,}\n"
+                f"💳 Сумма: {amount} {currency}\n"
+                f"🆔 ID платежа: {payment_id}"
+            )
+        elif status == 'pending':
+            message = (
+                f"⏳ **Платеж в обработке**\n\n"
+                f"💳 Сумма: {amount} {currency}\n"
+                f"🆔 ID платежа: {payment_id}\n\n"
+                f"Пожалуйста, подождите несколько минут..."
+            )
+        else:
+            message = (
+                f"❌ **Платеж не обработан**\n\n"
+                f"💳 Сумма: {amount} {currency}\n"
+                f"🆔 ID платежа: {payment_id}\n"
+                f"📊 Статус: {status}"
+            )
+        
+        update.callback_query.answer()
+        update.callback_query.edit_message_text(
+            text=message,
+            parse_mode='Markdown'
+        )
+        
+    except Exception as e:
+        logging.error(f"Ошибка при проверке статуса платежа: {e}")
+        if hasattr(update, 'callback_query') and update.callback_query:
+            update.callback_query.answer("❌ Ошибка при проверке статуса платежа")
+
 async def check_payment_status_async(update, context):
     """Асинхронная обертка для проверки статуса платежа"""
     try:
-        asyncio.create_task(check_payment_status_async(update, context))
+        asyncio.create_task(check_payment_status_sync(update, context))
     except Exception as e:
         logging.error(f"Ошибка в асинхронной проверке статуса платежа: {e}")
         if hasattr(update, 'callback_query') and update.callback_query:
             await update.callback_query.answer("❌ Ошибка при проверке статуса платежа")
-        elif hasattr(update, 'message') and update.message:
-            await update.message.reply_text("❌ Ошибка при проверке статуса платежа")
 
 async def handle_credit_purchase_async(update, context):
     """Асинхронная обертка для покупки кредитов"""
