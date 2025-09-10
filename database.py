@@ -977,5 +977,45 @@ class AnalyticsDB:
             logging.error(f"Ошибка получения pending платежей: {e}")
             return []
 
+    def create_payment_with_credits(self, user_id: int, amount: float, currency: str = "UAH", 
+                                   payment_id: str = None, order_id: str = None, 
+                                   credit_amount: int = None) -> bool:
+        """
+        Создает запись о платеже с указанием количества кредитов
+        
+        Args:
+            user_id: ID пользователя
+            amount: Сумма платежа
+            currency: Валюта
+            payment_id: ID платежа в Betatransfer
+            order_id: Уникальный ID заказа
+            credit_amount: Количество кредитов
+            
+        Returns:
+            True если создание успешно, False иначе
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if self.db_type == "postgresql":
+                    cursor.execute("""
+                        INSERT INTO payments 
+                        (user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at)
+                        VALUES (%s, %s, %s, 'pending', %s, %s, %s, CURRENT_TIMESTAMP)
+                    """, (user_id, amount, currency, payment_id, order_id or '', credit_amount or 0))
+                else:
+                    cursor.execute("""
+                        INSERT INTO payments 
+                        (user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at)
+                        VALUES (?, ?, ?, 'pending', ?, ?, ?, CURRENT_TIMESTAMP)
+                    """, (user_id, amount, currency, payment_id, order_id or '', credit_amount or 0))
+                
+                conn.commit()
+                return True
+                
+        except Exception as e:
+            logging.error(f"Ошибка создания платежа с кредитами: {e}")
+            return False
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
