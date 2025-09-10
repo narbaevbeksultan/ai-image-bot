@@ -498,7 +498,7 @@ async def openai_chat_completion_async(messages: list, model: str = "gpt-4o-mini
         logging.error(f"Ошибка при выполнении OpenAI chat completion: {e}")
         raise
 
-# Асинхронные обертки для операций с базой данных
+# Асинхронные обертки для операций с базой данных проба
 async def analytics_db_add_user_async(user_id: int, username: str = None, first_name: str = None, last_name: str = None):
     """Асинхронная обертка для analytics_db.add_user"""
     loop = asyncio.get_event_loop()
