@@ -1017,5 +1017,67 @@ class AnalyticsDB:
             logging.error(f"Ошибка создания платежа с кредитами: {e}")
             return False
 
+    def get_credit_transaction_by_payment_id(self, payment_id: str):
+        """Проверяет, есть ли уже транзакция кредитов для данного платежа"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        SELECT id FROM credit_transactions 
+                        WHERE payment_id = (SELECT id FROM payments WHERE betatransfer_id = %s)
+                    ''', (payment_id,))
+                else:
+                    cursor.execute('''
+                        SELECT id FROM credit_transactions 
+                        WHERE payment_id = (SELECT id FROM payments WHERE betatransfer_id = ?)
+                    ''', (payment_id,))
+                
+                result = cursor.fetchone()
+                return result is not None
+                
+        except Exception as e:
+            logging.error(f"Ошибка проверки транзакции по payment_id: {e}")
+            return False
+
+    def create_credit_transaction_with_payment(self, user_id: int, amount: int, description: str, payment_id: str):
+        """Создает транзакцию кредитов с привязкой к платежу"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Получаем ID платежа по betatransfer_id
+                if self.db_type == "postgresql":
+                    cursor.execute('SELECT id FROM payments WHERE betatransfer_id = %s', (payment_id,))
+                else:
+                    cursor.execute('SELECT id FROM payments WHERE betatransfer_id = ?', (payment_id,))
+                
+                payment_db_id = cursor.fetchone()
+                
+                if payment_db_id:
+                    payment_db_id = payment_db_id[0]
+                else:
+                    payment_db_id = None
+                
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        INSERT INTO credit_transactions 
+                        (user_id, transaction_type, amount, description, payment_id, created_at)
+                        VALUES (%s, 'purchase', %s, %s, %s, CURRENT_TIMESTAMP)
+                    ''', (user_id, amount, description, payment_db_id))
+                else:
+                    cursor.execute('''
+                        INSERT INTO credit_transactions 
+                        (user_id, transaction_type, amount, description, payment_id, created_at)
+                        VALUES (?, 'purchase', ?, ?, ?, CURRENT_TIMESTAMP)
+                    ''', (user_id, amount, description, payment_db_id))
+                
+                conn.commit()
+                return True
+                
+        except Exception as e:
+            logging.error(f"Ошибка создания транзакции с платежом: {e}")
+            return False
+
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
