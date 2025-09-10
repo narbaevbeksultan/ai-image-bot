@@ -136,6 +136,9 @@ class AnalyticsDB:
                 # Миграция: добавляем недостающие колонки в таблицу user_limits
                 self._migrate_user_limits_table(cursor)
                 
+                # Миграция: исправляем существующие записи пользователей
+                self._migrate_user_data_fix(cursor)
+                
                 conn.commit()
                 logging.info("База данных успешно инициализирована")
                 
@@ -1219,6 +1222,108 @@ class AnalyticsDB:
         except Exception as e:
             logging.error(f"Ошибка получения информации о пользователе по ID: {e}")
             return None
+
+    def _migrate_user_data_fix(self, cursor):
+        """Миграция: исправляет существующие записи пользователей"""
+        try:
+            # Проверяем, есть ли таблица для отслеживания миграций
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS migrations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    migration_name TEXT UNIQUE,
+                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Проверяем, была ли уже применена эта миграция
+            cursor.execute('''
+                SELECT COUNT(*) FROM migrations WHERE migration_name = 'user_data_persistence_fix'
+            ''')
+            migration_applied = cursor.fetchone()[0] > 0
+            
+            if migration_applied:
+                logging.info("Миграция user_data_persistence_fix уже применена")
+                return
+            
+            logging.info("Применяем миграцию user_data_persistence_fix...")
+            
+            # Получаем всех пользователей, у которых есть записи в user_limits
+            cursor.execute('''
+                SELECT user_id, free_generations_used, total_free_generations 
+                FROM user_limits
+            ''')
+            existing_limits = cursor.fetchall()
+            
+            # Получаем всех пользователей, у которых есть записи в user_credits
+            cursor.execute('''
+                SELECT user_id, credits_balance, total_purchased, total_used 
+                FROM user_credits
+            ''')
+            existing_credits = cursor.fetchall()
+            
+            logging.info(f"Найдено записей user_limits: {len(existing_limits)}")
+            logging.info(f"Найдено записей user_credits: {len(existing_credits)}")
+            
+            # Создаем временные таблицы с правильной структурой
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_limits_new (
+                    user_id INTEGER PRIMARY KEY,
+                    free_generations_used INTEGER DEFAULT 0,
+                    total_free_generations INTEGER DEFAULT 3,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (user_id)
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_credits_new (
+                    user_id INTEGER PRIMARY KEY,
+                    credits_balance INTEGER DEFAULT 0,
+                    total_purchased INTEGER DEFAULT 0,
+                    total_used INTEGER DEFAULT 0,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (user_id)
+                )
+            ''')
+            
+            # Копируем данные в новые таблицы
+            for user_id, free_used, total_free in existing_limits:
+                cursor.execute('''
+                    INSERT INTO user_limits_new (user_id, free_generations_used, total_free_generations, last_updated)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                ''', (user_id, free_used, total_free))
+            
+            for user_id, balance, purchased, used in existing_credits:
+                cursor.execute('''
+                    INSERT INTO user_credits_new (user_id, credits_balance, total_purchased, total_used, last_updated)
+                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ''', (user_id, balance, purchased, used))
+            
+            # Удаляем старые таблицы
+            cursor.execute('DROP TABLE IF EXISTS user_limits')
+            cursor.execute('DROP TABLE IF EXISTS user_credits')
+            
+            # Переименовываем новые таблицы
+            cursor.execute('ALTER TABLE user_limits_new RENAME TO user_limits')
+            cursor.execute('ALTER TABLE user_credits_new RENAME TO user_credits')
+            
+            # Отмечаем миграцию как примененную
+            cursor.execute('''
+                INSERT INTO migrations (migration_name) VALUES ('user_data_persistence_fix')
+            ''')
+            
+            logging.info("✅ Миграция user_data_persistence_fix успешно применена")
+            logging.info(f"✅ Сохранено {len(existing_limits)} записей user_limits")
+            logging.info(f"✅ Сохранено {len(existing_credits)} записей user_credits")
+            
+        except Exception as e:
+            logging.error(f"Ошибка применения миграции user_data_persistence_fix: {e}")
+            # В случае ошибки пытаемся восстановить старые таблицы
+            try:
+                cursor.execute('DROP TABLE IF EXISTS user_limits_new')
+                cursor.execute('DROP TABLE IF EXISTS user_credits_new')
+            except:
+                pass
 
 # Глобальный экземпляр базы данных
 analytics_db = AnalyticsDB()
