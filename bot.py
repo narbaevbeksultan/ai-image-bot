@@ -236,6 +236,63 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 logging.error(f"Ошибка при генерации изображения {idx} через Bytedance: {e}")
                 return (idx, False, None, None, f"Ошибка Bytedance: {e}")
         
+        elif selected_model == 'Bytedance (Seedream-4)':
+            try:
+                if send_text:
+                    await send_text(f"🚀 Генерирую через Bytedance Seedream-4...\n\n💡 Совет: Seedream-4 поддерживает 4K генерацию и редактирование изображений")
+                
+                # Проверяем API токен
+                if not os.environ.get('REPLICATE_API_TOKEN'):
+                    return (idx, False, None, None, "API токен Replicate не найден")
+                
+                # Запускаем генерацию через Bytedance Seedream-4
+                try:
+                    output = await replicate_run_async(
+                        "bytedance/seedream-4",
+                        {"prompt": prompt_with_style, **replicate_params},
+                        timeout=180
+                    )
+                except Exception as e:
+                    logging.error(f"Bytedance Seedream-4 недоступен: {e}")
+                    return (idx, False, None, None, f"Ошибка Bytedance Seedream-4: {e}")
+                
+                # Обработка ответа от Replicate API
+                image_url = None
+                
+                if hasattr(output, 'url'):
+                    if callable(output.url):
+                        image_url = output.url()
+                    else:
+                        image_url = output.url
+                elif hasattr(output, '__iter__') and not isinstance(output, str):
+                    try:
+                        output_list = list(output)
+                        if output_list:
+                            image_url = output_list[0]
+                    except Exception as e:
+                        return (idx, False, None, None, f"Ошибка обработки итератора: {e}")
+                else:
+                    image_url = output
+                
+                if not image_url:
+                    return (idx, False, None, None, "Не удалось получить изображение от Bytedance Seedream-4")
+                
+                if isinstance(image_url, bytes):
+                    try:
+                        image_url = image_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        return (idx, False, None, None, "Получены бинарные данные вместо URL от Bytedance Seedream-4")
+                
+                if not isinstance(image_url, str) or not image_url.startswith('http'):
+                    return (idx, False, None, None, "Неверный тип URL от Bytedance Seedream-4")
+                
+                caption = f'Вариант {idx}'
+                return (idx, True, image_url, caption, None)
+                
+            except Exception as e:
+                logging.error(f"Ошибка при генерации изображения {idx} через Bytedance Seedream-4: {e}")
+                return (idx, False, None, None, f"Ошибка Bytedance Seedream-4: {e}")
+        
         elif selected_model == 'Google Imagen 4 Ultra':
             try:
                 if send_text:
@@ -1106,6 +1163,8 @@ IMAGE_GEN_MODELS = [
 
     'Bytedance (Seedream-3)',
 
+    'Bytedance (Seedream-4)',
+
     'Google Imagen 4 Ultra',
 
     'Luma Photon',
@@ -1133,6 +1192,8 @@ MODEL_DESCRIPTIONS = {
     'Ideogram': 'текст и логотипы',
 
     'Bytedance (Seedream-3)': 'высокое качество',
+
+    'Bytedance (Seedream-4)': '4K генерация',
 
     'Google Imagen 4 Ultra': 'детализация',
 
@@ -1363,6 +1424,18 @@ def get_replicate_size_for_model(model_name, format_type):
     if model_name == 'Bytedance (Seedream-3)':
 
         # Bytedance принимает только "small", "regular", "big"
+
+        if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
+
+            return "big"  # Для вертикальных форматов используем максимальный размер
+
+        else:
+
+            return "regular"  # Для остальных форматов
+
+    elif model_name == 'Bytedance (Seedream-4)':
+
+        # Bytedance Seedream-4 поддерживает 4K генерацию и различные размеры
 
         if format_type in ['instagramstories', 'instagramreels', 'tiktok', 'youtubeshorts']:
 
@@ -1733,6 +1806,8 @@ async def show_how_to_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
    ⚡ Bytedance (Seedream-3) (высокое качество, реалистичность)
 
+   🚀 Bytedance (Seedream-4) (4K генерация, редактирование)
+
    🔬 Google Imagen 4 Ultra (детализация и сложные сцены)
 
    🏗️ Luma Photon (кинематографичность и атмосфера)
@@ -1834,6 +1909,8 @@ async def show_about_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 • Ideogram (хорошо работает с текстом и логотипами)
 
 • Bytedance (Seedream-3) (высокое качество, реалистичность)
+
+• Bytedance (Seedream-4) (4K генерация, редактирование)
 
 • Google Imagen 4 Ultra (детализация и сложные сцены)
 
@@ -1943,6 +2020,8 @@ async def show_model_selection(update: Update, context: ContextTypes.DEFAULT_TYP
 
         [InlineKeyboardButton("⚡ Bytedance Seedream-3 (нативная 2K генерация, быстрая)", callback_data="image_gen_model:Bytedance (Seedream-3)")],
 
+        [InlineKeyboardButton("🚀 Bytedance Seedream-4 (4K генерация, редактирование)", callback_data="image_gen_model:Bytedance (Seedream-4)")],
+
         [InlineKeyboardButton("🔬 Google Imagen 4 Ultra (максимальное качество, детали)", callback_data="image_gen_model:Google Imagen 4 Ultra")],
 
         [InlineKeyboardButton("🏗️ Luma Photon (креативные возможности, высокое качество)", callback_data="image_gen_model:Luma Photon")],
@@ -2010,6 +2089,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
    ⚡ Bytedance (Seedream-3) (высокое качество, реалистичность)
 
+   🚀 Bytedance (Seedream-4) (4K генерация, редактирование)
+
    🔬 Google Imagen 4 Ultra (детализация и сложные сцены)
 
    🏗️ Luma Photon (кинематографичность и атмосфера)
@@ -2058,7 +2139,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Рекомендуется использовать нейтральные слова: "женщина" вместо "красивая", "девушка" вместо "сексуальная"
 
-• Для портретов лучше выбрать Ideogram, Bytedance или Google Imagen
+• Для портретов лучше выбрать Ideogram, Bytedance (Seedream-3/4) или Google Imagen
 
 
 
@@ -2296,6 +2377,72 @@ async def test_ideogram(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Ошибка при тестировании Ideogram: {e}")
 
 
+
+async def test_seedream4(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Тестирует Bytedance Seedream-4 API"""
+    try:
+        await update.message.reply_text("🧪 Тестирую Bytedance Seedream-4...")
+        
+        # Проверяем API токен
+        api_token = os.environ.get('REPLICATE_API_TOKEN')
+        if not api_token:
+            await update.message.reply_text("❌ API токен Replicate не найден")
+            return
+        
+        # Тестируем Bytedance Seedream-4
+        try:
+            loop = asyncio.get_event_loop()
+            output = await replicate_run_async(
+                "bytedance/seedream-4",
+                {"prompt": "simple test image, high quality"},
+                timeout=30
+            )
+            
+            # Обработка ответа от Replicate API
+            image_url = None
+            
+            if hasattr(output, 'url'):
+                image_url = output.url()
+            elif hasattr(output, '__iter__') and not isinstance(output, str):
+                try:
+                    output_list = list(output)
+                    if output_list:
+                        image_url = output_list[0]
+                except Exception as e:
+                    await update.message.reply_text(f"❌ Ошибка обработки итератора: {e}")
+                    return
+            else:
+                image_url = output
+            
+            if not image_url:
+                await update.message.reply_text("❌ Bytedance Seedream-4 вернул пустой результат")
+                return
+            
+            if isinstance(image_url, bytes):
+                await update.message.reply_text("❌ Получены бинарные данные вместо URL от Bytedance Seedream-4")
+                return
+            
+            if not isinstance(image_url, str) or not image_url.startswith('http'):
+                await update.message.reply_text("❌ Получен неверный URL от Bytedance Seedream-4")
+                return
+            
+            # Отправляем изображение
+            await update.message.reply_photo(
+                photo=image_url,
+                caption="✅ Bytedance Seedream-4 работает! Изображение сгенерировано."
+            )
+            
+        except asyncio.TimeoutError:
+            await update.message.reply_text("❌ Bytedance Seedream-4: таймаут (30 сек)\n\nМодель работает медленно или недоступна.")
+        except Exception as error:
+            error_msg = str(error)
+            if "insufficient credits" in error_msg.lower():
+                await update.message.reply_text("❌ Недостаточно кредитов для Bytedance Seedream-4")
+            else:
+                await update.message.reply_text(f"❌ Ошибка Bytedance Seedream-4: {error_msg}")
+        
+    except Exception as e:
+        await update.message.reply_text(f"❌ Ошибка при тестировании Bytedance Seedream-4: {e}")
 
 async def test_image_send(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -2735,6 +2882,8 @@ async def ideogram_tips_command(update: Update, context: ContextTypes.DEFAULT_TY
 Если Ideogram не дает желаемых результатов:
 
 - **Bytedance (Seedream-3)** - для фотореалистичных изображений
+
+- **Bytedance (Seedream-4)** - для 4K генерации и редактирования
 
 - **Google Imagen 4 Ultra** - для максимального качества и детализации
 
@@ -4131,6 +4280,20 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
                 ][:max_scenes]
 
+            elif selected_model == 'Bytedance (Seedream-4)':
+
+                # Для Bytedance Seedream-4 - 4K генерация, редактирование, универсальность
+
+                prompts = [
+
+                    f"{topic}, ultra high quality, 4K resolution, professional photography, detailed composition, modern aesthetic",
+
+                    f"{topic}, premium quality, sharp focus, clean design, sophisticated style, high resolution",
+
+                    f"{topic}, excellent quality, clear details, professional result, contemporary design, elegant composition, 4K"
+
+                ][:max_scenes]
+
             elif selected_model == 'Google Imagen 4 Ultra':
 
                 # Для Google Imagen 4 Ultra - максимальное качество и детали
@@ -4855,7 +5018,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             "💡 **Рекомендации:**\n"
 
-            "• Для портретов лучше использовать Ideogram или Bytedance\n"
+            "• Для портретов лучше использовать Ideogram или Bytedance (Seedream-3/4)\n"
 
             "• Для пейзажей и архитектуры подходят все модели"
 
@@ -4976,6 +5139,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 Если Ideogram не дает желаемых результатов:
 
 - **Bytedance (Seedream-3)** - для фотореалистичных изображений
+
+- **Bytedance (Seedream-4)** - для 4K генерации и редактирования
 
 - **Google Imagen 4 Ultra** - для максимального качества и детализации
 
@@ -11373,7 +11538,7 @@ async def show_credit_packages(update: Update, context: ContextTypes.DEFAULT_TYP
 
     text += "🖼️ **Изображения (за 1 изображение):**\n"
 
-    text += "• Ideogram, Bytedance, Luma: 10 кредитов\n"
+    text += "• Ideogram, Bytedance (Seedream-3), Bytedance (Seedream-4), Luma: 10 кредитов\n"
 
 
     text += "• Google Imagen 4 Ultra: 16 кредитов\n"
@@ -11896,6 +12061,8 @@ def main():
     app.add_handler(CommandHandler('check_replicate', check_replicate))
 
     app.add_handler(CommandHandler('test_ideogram', test_ideogram))
+
+    app.add_handler(CommandHandler('test_seedream4', test_seedream4))
 
     app.add_handler(CommandHandler('test_image_send', test_image_send))
 

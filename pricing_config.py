@@ -39,6 +39,7 @@ CREDIT_PACKAGES = {
 GENERATION_COSTS = {
     'Ideogram': 10,                    # 10 кредитов за генерацию
     'Bytedance (Seedream-3)': 10,     # 10 кредитов за генерацию
+    'Bytedance (Seedream-4)': 10,     # 10 кредитов за генерацию
     'Luma Photon': 10,                 # 10 кредитов за генерацию
     'Bria 3.2': 12,                   # 12 кредитов за генерацию
     'Google Imagen 4 Ultra': 16,      # 16 кредитов за генерацию
