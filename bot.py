@@ -8854,9 +8854,16 @@ async def generate_content_async(update, context, state):
         else:
             return
             
+        keyboard = [
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="generate_content")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❌ **Ошибка при генерации контента**\n\nПопробуйте еще раз или обратитесь в поддержку."
+            text="❌ **Ошибка при генерации контента**\n\nПопробуйте еще раз или обратитесь в поддержку.",
+            reply_markup=reply_markup
         )
 
 async def edit_image_with_flux_async(update, context, state, original_image_url, edit_prompt):
@@ -8873,9 +8880,16 @@ async def edit_image_with_flux_async(update, context, state, original_image_url,
         else:
             return
             
+        keyboard = [
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="edit_image")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❌ **Ошибка при редактировании изображения**\n\nПопробуйте еще раз или обратитесь в поддержку."
+            text="❌ **Ошибка при редактировании изображения**\n\nПопробуйте еще раз или обратитесь в поддержку.",
+            reply_markup=reply_markup
         )
 
 async def send_images_async(update, context, state, prompt_type='auto', user_prompt=None, scenes=None):
@@ -8892,9 +8906,16 @@ async def send_images_async(update, context, state, prompt_type='auto', user_pro
         else:
             return
             
+        keyboard = [
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="generate_images")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❌ **Ошибка при генерации изображений**\n\nПопробуйте еще раз или обратитесь в поддержку."
+            text="❌ **Ошибка при генерации изображений**\n\nПопробуйте еще раз или обратитесь в поддержку.",
+            reply_markup=reply_markup
         )
 
 async def check_payment_status_sync(update, context):
@@ -9012,9 +9033,16 @@ async def generate_video_async(update, context, state):
         else:
             return
             
+        keyboard = [
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="generate_video")],
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❌ **Ошибка при генерации видео**\n\nПопробуйте еще раз или обратитесь в поддержку."
+            text="❌ **Ошибка при генерации видео**\n\nПопробуйте еще раз или обратитесь в поддержку.",
+            reply_markup=reply_markup
         )
 
 async def generate_video(update, context, state):
