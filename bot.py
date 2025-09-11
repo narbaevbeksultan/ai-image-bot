@@ -415,9 +415,6 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
         
         elif selected_model == 'Recraft AI':
             try:
-                if send_text:
-                    await send_text(f"🎨 Генерирую через Recraft AI...\n\n💡 Совет: Recraft AI отлично подходит для дизайна, логотипов и векторной графики")
-                
                 # Проверяем API токен
                 if not os.environ.get('REPLICATE_API_TOKEN'):
                     return (idx, False, None, None, "API токен Replicate не найден")
@@ -427,10 +424,31 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 format_type = state.get('format', 'instagrampost')
                 size = get_replicate_size_for_model('Recraft AI', format_type)
                 
+                # Маппинг пользовательских стилей на допустимые стили Recraft AI
+                image_gen_style = state.get('image_gen_style', '')
+                recraft_style = "any"  # По умолчанию
+                
+                if image_gen_style:
+                    if image_gen_style == 'Минимализм':
+                        recraft_style = "line_art"
+                    elif image_gen_style == 'Иллюстрация':
+                        recraft_style = "engraving"
+                    elif image_gen_style == 'Фотореализм':
+                        recraft_style = "any"
+                    elif image_gen_style == 'Акварель':
+                        recraft_style = "linocut"
+                    elif image_gen_style == 'Масляная живопись':
+                        recraft_style = "engraving"
+                    elif image_gen_style == 'Пиксель-арт':
+                        recraft_style = "line_circuit"
+                
+                if send_text:
+                    await send_text(f"🎨 Генерирую через Recraft AI...\n\n💡 Совет: Recraft AI отлично подходит для дизайна, логотипов и векторной графики\n🎨 Стиль: {recraft_style}")
+                
                 recraft_params = {
                     "prompt": prompt_with_style,
                     "size": size,
-                    "style": "seamless"  # По умолчанию используем seamless стиль
+                    "style": recraft_style
                 }
                 
                 # Запускаем генерацию через Recraft AI
@@ -1240,10 +1258,18 @@ MODEL_TIPS = {
 Отлично работает с бренд-дизайном.
 Поддерживает SVG и векторную графику.
 
+🎨 Доступные стили:
+• any - универсальный стиль
+• line_art - линейная графика
+• engraving - гравюра
+• linocut - линогравюра  
+• line_circuit - схематичная графика
+
 👉 Совет пользователю:
 Идеально для создания логотипов и дизайна.
 Используйте термины дизайна: "logo", "brand", "vector".
-Подходит для коммерческих и брендовых проектов."""
+Подходит для коммерческих и брендовых проектов.
+Стили автоматически маппятся на доступные варианты."""
 
 }
 
