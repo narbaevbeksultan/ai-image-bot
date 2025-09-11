@@ -663,13 +663,6 @@ async def analytics_db_get_payment_by_order_id_async(order_id: str):
         lambda: analytics_db.get_payment_by_order_id(order_id)
     )
 
-async def analytics_db_set_user_credits_async(user_id: int, credits: int):
-    """Асинхронная обертка для analytics_db.set_user_credits"""
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        THREAD_POOL,
-        lambda: analytics_db.set_user_credits(user_id, credits)
-    )
 
 async def analytics_db_create_payment_with_credits_async(user_id: int, amount: float, currency: str = "UAH", 
                                                        payment_id: str = None, order_id: str = None, 
@@ -689,13 +682,6 @@ async def analytics_db_get_user_info_by_id_async(user_id: int):
         lambda: analytics_db.get_user_info_by_id(user_id)
     )
 
-async def analytics_db_get_user_id_by_username_async(username: str):
-    """Асинхронная обертка для analytics_db.get_user_id_by_username"""
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(
-        THREAD_POOL,
-        lambda: analytics_db.get_user_id_by_username(username)
-    )
 
 # Функция для автоматической проверки статуса платежей
 async def check_pending_payments():
@@ -12096,41 +12082,25 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Проверяем аргументы команды
     if not context.args or len(context.args) < 2:
         await update.message.reply_text(
-            "📝 **Использование:** `/add_credits @username количество` или `/add_credits user_id количество`\n"
-            "**Примеры:** `/add_credits @john_doe 100` или `/add_credits 123456789 100`"
+            "📝 **Использование:** `/add_credits user_id количество`\n"
+            "**Пример:** `/add_credits 123456789 100`"
         )
         return
     
-    user_identifier = context.args[0]
     try:
+        user_id = int(context.args[0])
         credits_to_add = int(context.args[1])
         if credits_to_add <= 0:
             await update.message.reply_text("❌ Количество кредитов должно быть положительным числом.")
             return
     except ValueError:
-        await update.message.reply_text("❌ Количество кредитов должно быть числом.")
+        await update.message.reply_text("❌ Неверный формат. Используйте: `/add_credits user_id количество`")
         return
     
-    # Определяем, это username или user_id
-    user_id = None
-    user_info = None
-    
-    if user_identifier.startswith('@'):
-        # Поиск по username
-        username = user_identifier[1:]
-        user_id = await analytics_db_get_user_id_by_username_async(username)
-        if user_id:
-            user_info = await analytics_db_get_user_info_by_id_async(user_id)
-    else:
-        # Попытка поиска по user_id
-        try:
-            user_id = int(user_identifier)
-            user_info = await analytics_db_get_user_info_by_id_async(user_id)
-        except ValueError:
-            pass
-    
-    if not user_id or not user_info:
-        await update.message.reply_text(f"❌ Пользователь {user_identifier} не найден в базе данных.")
+    # Получаем информацию о пользователе
+    user_info = await analytics_db_get_user_info_by_id_async(user_id)
+    if not user_info:
+        await update.message.reply_text(f"❌ Пользователь с ID {user_id} не найден в базе данных.")
         return
     
     # Получаем текущий баланс
@@ -12138,8 +12108,11 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     current_credits = credits_data.get('balance', 0)
     
     # Добавляем кредиты
-    new_credits = current_credits + credits_to_add
-    await analytics_db_set_user_credits_async(user_id, new_credits)
+    await analytics_db_add_credits_async(user_id, credits_to_add, description=f"Админ добавил {credits_to_add} кредитов")
+    
+    # Получаем новый баланс
+    new_credits_data = analytics_db.get_user_credits(user_id)
+    new_credits = new_credits_data.get('balance', 0)
     
     # Формируем информацию о пользователе
     username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
@@ -12181,36 +12154,24 @@ async def check_credits_command(update: Update, context: ContextTypes.DEFAULT_TY
     # Проверяем аргументы команды
     if not context.args or len(context.args) < 1:
         await update.message.reply_text(
-            "📝 **Использование:** `/check_credits @username` или `/check_credits user_id`\n"
-            "**Примеры:** `/check_credits @john_doe` или `/check_credits 123456789`"
+            "📝 **Использование:** `/check_credits user_id`\n"
+            "**Пример:** `/check_credits 123456789`"
         )
         return
     
-    user_identifier = context.args[0]
-    
-    # Определяем, это username или user_id
-    user_id = None
-    user_info = None
-    
-    if user_identifier.startswith('@'):
-        # Поиск по username
-        username = user_identifier[1:]
-        user_id = await analytics_db_get_user_id_by_username_async(username)
-        if user_id:
-            user_info = await analytics_db_get_user_info_by_id_async(user_id)
-    else:
-        # Попытка поиска по user_id
-        try:
-            user_id = int(user_identifier)
-            user_info = await analytics_db_get_user_info_by_id_async(user_id)
-        except ValueError:
-            pass
-    
-    if not user_id or not user_info:
-        await update.message.reply_text(f"❌ Пользователь {user_identifier} не найден в базе данных.")
+    try:
+        user_id = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("❌ Неверный формат. Используйте: `/check_credits user_id`")
         return
     
     # Получаем информацию о пользователе
+    user_info = await analytics_db_get_user_info_by_id_async(user_id)
+    if not user_info:
+        await update.message.reply_text(f"❌ Пользователь с ID {user_id} не найден в базе данных.")
+        return
+    
+    # Получаем информацию о кредитах
     credits_data = analytics_db.get_user_credits(user_id)
     current_credits = credits_data.get('balance', 0)
     free_generations = analytics_db.get_free_generations_left(user_id)
@@ -12240,49 +12201,35 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Проверяем аргументы команды
     if not context.args or len(context.args) < 2:
         await update.message.reply_text(
-            "📝 **Использование:** `/set_credits @username количество` или `/set_credits user_id количество`\n"
-            "**Примеры:** `/set_credits @john_doe 500` или `/set_credits 123456789 500`"
+            "📝 **Использование:** `/set_credits user_id количество`\n"
+            "**Пример:** `/set_credits 123456789 500`"
         )
         return
     
-    user_identifier = context.args[0]
     try:
+        user_id = int(context.args[0])
         credits_to_set = int(context.args[1])
         if credits_to_set < 0:
             await update.message.reply_text("❌ Количество кредитов не может быть отрицательным.")
             return
     except ValueError:
-        await update.message.reply_text("❌ Количество кредитов должно быть числом.")
+        await update.message.reply_text("❌ Неверный формат. Используйте: `/set_credits user_id количество`")
         return
     
-    # Определяем, это username или user_id
-    user_id = None
-    user_info = None
-    
-    if user_identifier.startswith('@'):
-        # Поиск по username
-        username = user_identifier[1:]
-        user_id = await analytics_db_get_user_id_by_username_async(username)
-        if user_id:
-            user_info = await analytics_db_get_user_info_by_id_async(user_id)
-    else:
-        # Попытка поиска по user_id
-        try:
-            user_id = int(user_identifier)
-            user_info = await analytics_db_get_user_info_by_id_async(user_id)
-        except ValueError:
-            pass
-    
-    if not user_id or not user_info:
-        await update.message.reply_text(f"❌ Пользователь {user_identifier} не найден в базе данных.")
+    # Получаем информацию о пользователе
+    user_info = await analytics_db_get_user_info_by_id_async(user_id)
+    if not user_info:
+        await update.message.reply_text(f"❌ Пользователь с ID {user_id} не найден в базе данных.")
         return
     
     # Получаем старый баланс
     credits_data = analytics_db.get_user_credits(user_id)
     old_credits = credits_data.get('balance', 0)
     
-    # Устанавливаем новые кредиты
-    await analytics_db_set_user_credits_async(user_id, credits_to_set)
+    # Устанавливаем новые кредиты (используем разность с существующим методом add_credits)
+    difference = credits_to_set - old_credits
+    if difference != 0:
+        await analytics_db_add_credits_async(user_id, difference, description=f"Админ установил {credits_to_set} кредитов (было: {old_credits})")
     
     # Формируем информацию о пользователе
     username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
@@ -12297,8 +12244,8 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"👤 **Пользователь:** {name_display}\n"
         f"🆔 **ID:** {user_id}\n"
         f"📝 **Username:** {username_display}\n"
-        f"💳 **Новый баланс:** {credits_to_set} кредитов\n"
-        f"📊 **Было:** {old_credits} кредитов"
+        f"🔄 **Было:** {old_credits} кредитов\n"
+        f"💳 **Стало:** {credits_to_set} кредитов"
     )
 
 
