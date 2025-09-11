@@ -1713,7 +1713,7 @@ async def show_how_to_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Добавляем кнопку "Начать создание" только если функция включена
     if CONTENT_CREATION_ENABLED:
-        keyboard.append([InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")])
+        keyboard.append([InlineKeyboardButton("🎨 Начать создание", callback_data="main_menu")])
 
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="main_menu")])
 
@@ -1800,7 +1800,7 @@ async def show_about_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Начать создание", callback_data="main_menu")],
 
         [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
 
@@ -2006,7 +2006,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Начать создание", callback_data="main_menu")],
 
         [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
@@ -2674,7 +2674,7 @@ async def ideogram_tips_command(update: Update, context: ContextTypes.DEFAULT_TY
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Начать создание", callback_data="main_menu")],
 
         [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
@@ -4921,7 +4921,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [
 
-            [InlineKeyboardButton("🎨 Начать создание", callback_data="create_content")],
+            [InlineKeyboardButton("🎨 Начать создание", callback_data="main_menu")],
 
             [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
