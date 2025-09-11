@@ -693,7 +693,7 @@ async def check_pending_payments():
         if not pending_payments:
             return
         
-        logging.info(f"Проверяем {len(pending_payments)} pending платежей")
+        logging.info(f"🔍 Проверяем {len(pending_payments)} pending платежей")
         
         for payment in pending_payments:
             payment_id = payment.get('betatransfer_id')
@@ -716,7 +716,7 @@ async def check_pending_payments():
                     continue
                 
                 payment_status = status_result.get('status')
-                logging.info(f"Платеж {payment_id} имеет статус: {payment_status}")
+                logging.info(f"🔍 Платеж {payment_id} (Order: {order_id}) имеет статус: {payment_status}")
                 
                 # Если платеж завершен, зачисляем кредиты
                 if payment_status == 'success':

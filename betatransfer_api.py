@@ -85,13 +85,26 @@ class BetatransferAPI:
         }
         
         try:
+            logging.info(f"🔍 Создаем платеж: {amount} {currency}, Order ID: {order_id}")
+            
             # Отправляем как form-data согласно документации
             response = requests.post(endpoint, data=payload, headers=headers)
             
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            
+            # Логируем результат создания платежа
+            if 'id' in result:
+                logging.info(f"🔍 Платеж создан успешно:")
+                logging.info(f"   ID платежа: {result['id']}")
+                logging.info(f"   Сумма: {result.get('amount', amount)} {result.get('currency', currency)}")
+                logging.info(f"   Статус: {result.get('status', 'created')}")
+            else:
+                logging.warning(f"🔍 Платеж создан, но без ID: {result}")
+            
+            return result
         except requests.exceptions.RequestException as e:
-            logging.error(f"Ошибка HTTP запроса при создании платежа: {str(e)}")
+            logging.error(f"❌ Ошибка HTTP запроса при создании платежа: {str(e)}")
             if hasattr(e, 'response') and e.response is not None:
                 logging.error(f"Статус ответа: {e.response.status_code}, Тело: {e.response.text}")
             return {"error": str(e)}
@@ -106,9 +119,10 @@ class BetatransferAPI:
         Returns:
             Dict с информацией о статусе
         """
+        logging.info(f"🔍 get_payment_status вызван с ID: {payment_id}")
+        
         # Формируем данные для подписи
         data = {'id': payment_id}
-        
         signature = self._generate_signature(data)
         
         # URL с токеном согласно документации
@@ -122,21 +136,29 @@ class BetatransferAPI:
         }
         
         try:
+            logging.info(f"🔍 Отправляем запрос статуса платежа {payment_id}")
             response = requests.post(endpoint, data=data, headers=headers)
             
             response.raise_for_status()
             result = response.json()
             
-            # Логируем только важную информацию о статусе
+            # Логируем детали ответа
             status = result.get('status', 'unknown')
-            logging.info(f"Статус платежа {payment_id}: {status}")
+            amount = result.get('amount', 'N/A')
+            currency = result.get('currency', 'N/A')
+            order_id = result.get('orderId', 'N/A')
+            
+            logging.info(f"🔍 Получен ответ для платежа {payment_id}:")
+            logging.info(f"   Статус: {status}")
+            logging.info(f"   Сумма: {amount} {currency}")
+            logging.info(f"   Order ID: {order_id}")
             
             return result
         except requests.exceptions.RequestException as e:
-            logging.error(f"Ошибка запроса статуса платежа {payment_id}: {e}")
+            logging.error(f"❌ Ошибка HTTP запроса статуса платежа {payment_id}: {e}")
             return {"error": str(e)}
         except Exception as e:
-            logging.error(f"Общая ошибка при получении статуса платежа {payment_id}: {e}")
+            logging.error(f"❌ Общая ошибка при получении статуса платежа {payment_id}: {e}")
             return {"error": str(e)}
     
     def verify_callback_signature(self, data: Dict, signature: str) -> bool:
