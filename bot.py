@@ -4731,7 +4731,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 reply_markup=InlineKeyboardMarkup([[
 
-                    InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content"),
 
                     InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
 
@@ -4807,7 +4806,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [
 
-            [InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content")],
 
             [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
