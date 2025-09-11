@@ -1073,6 +1073,46 @@ class AnalyticsDB:
             logging.error(f"Ошибка получения pending платежей: {e}")
             return []
 
+    def get_old_pending_payments(self, hours: int = 24):
+        """Получает старые pending платежи для очистки"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        SELECT user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at
+                        FROM payments 
+                        WHERE status = 'pending' 
+                        AND betatransfer_id IS NOT NULL
+                        AND created_at < NOW() - INTERVAL '%s hours'
+                        ORDER BY created_at ASC
+                    ''', (hours,))
+                else:
+                    cursor.execute('''
+                        SELECT user_id, amount, currency, status, betatransfer_id, order_id, credit_amount, created_at
+                        FROM payments 
+                        WHERE status = 'pending' 
+                        AND betatransfer_id IS NOT NULL
+                        AND created_at < datetime('now', '-%d hours')
+                        ORDER BY created_at ASC
+                    ''', (hours,))
+                
+                columns = [description[0] for description in cursor.description]
+                payments = []
+                
+                for row in cursor.fetchall():
+                    if self.db_type == "postgresql":
+                        payment = dict(zip(columns, row))
+                    else:
+                        payment = dict(zip(columns, row))
+                    payments.append(payment)
+                
+                return payments
+                
+        except Exception as e:
+            logging.error(f"Ошибка получения старых pending платежей: {e}")
+            return []
+
     def create_payment_with_credits(self, user_id: int, amount: float, currency: str = "UAH", 
                                    payment_id: str = None, order_id: str = None, 
                                    credit_amount: int = None) -> bool:

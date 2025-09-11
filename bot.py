@@ -614,6 +614,14 @@ async def analytics_db_get_pending_payments_async():
         lambda: analytics_db.get_pending_payments()
     )
 
+async def analytics_db_get_old_pending_payments_async(hours: int = 24):
+    """Асинхронная обертка для analytics_db.get_old_pending_payments"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        THREAD_POOL,
+        lambda: analytics_db.get_old_pending_payments(hours)
+    )
+
 async def analytics_db_get_credit_transaction_by_payment_id_async(payment_id: str):
     """Асинхронная обертка для analytics_db.get_credit_transaction_by_payment_id"""
     loop = asyncio.get_event_loop()
@@ -9126,6 +9134,24 @@ async def pending_payments_command_async(update, context):
         if hasattr(update, 'message') and update.message:
             await update.message.reply_text("❌ Ошибка при получении pending платежей")
 
+async def cleanup_payments_command_async(update, context):
+    """Асинхронная обертка для просмотра старых платежей (админ)"""
+    try:
+        await cleanup_payments_command(update, context)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронном просмотре старых платежей: {e}")
+        if hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при получении старых платежей")
+
+async def cleanup_confirm_command_async(update, context):
+    """Асинхронная обертка для подтверждения очистки (админ)"""
+    try:
+        await cleanup_confirm_command(update, context)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронной очистке платежей: {e}")
+        if hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при очистке платежей")
+
 async def generate_video_async(update, context, state):
     """Асинхронная обертка для генерации видео"""
     try:
@@ -11913,6 +11939,8 @@ def main():
     app.add_handler(CommandHandler('check_credits', check_credits_command_async))
     app.add_handler(CommandHandler('set_credits', set_credits_command_async))
     app.add_handler(CommandHandler('pending_payments', pending_payments_command_async))
+    app.add_handler(CommandHandler('cleanup_payments', cleanup_payments_command_async))
+    app.add_handler(CommandHandler('cleanup_confirm', cleanup_confirm_command_async))
 
     app.add_handler(CallbackQueryHandler(button_handler))
 
@@ -12411,6 +12439,174 @@ async def pending_payments_command(update: Update, context: ContextTypes.DEFAULT
     except Exception as e:
         logging.error(f"Ошибка при получении pending платежей: {e}")
         await update.message.reply_text(f"❌ **Ошибка при получении pending платежей:**\n\n{str(e)}")
+
+
+async def cleanup_payments_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для просмотра старых pending платежей (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    try:
+        # Получаем старые pending платежи (старше 24 часов)
+        old_payments = await analytics_db_get_old_pending_payments_async(24)
+        
+        if not old_payments:
+            await update.message.reply_text(
+                "✅ **Старых pending платежей не найдено!**\n\n"
+                "Все pending платежи созданы менее 24 часов назад."
+            )
+            return
+        
+        # Формируем сообщение
+        message = f"🧹 **Найдено {len(old_payments)} старых платежей (старше 24 часов):**\n\n"
+        
+        for i, payment in enumerate(old_payments, 1):
+            user_id = payment.get('user_id', 'N/A')
+            amount = payment.get('amount', 0)
+            currency = payment.get('currency', 'UAH')
+            credit_amount = payment.get('credit_amount', 0)
+            created_at = payment.get('created_at', 'N/A')
+            betatransfer_id = payment.get('betatransfer_id', 'N/A')
+            order_id = payment.get('order_id', 'N/A')
+            
+            # Получаем информацию о пользователе
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
+            if user_info:
+                username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
+                name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() or "Без имени"
+            else:
+                username_display = "Пользователь не найден"
+                name_display = "N/A"
+            
+            # Форматируем дату
+            if created_at and created_at != 'N/A':
+                try:
+                    from datetime import datetime
+                    if isinstance(created_at, str):
+                        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    formatted_date = created_at.strftime("%d.%m.%Y %H:%M")
+                    
+                    # Вычисляем возраст платежа
+                    now = datetime.now()
+                    if isinstance(created_at, str):
+                        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    age_hours = int((now - created_at).total_seconds() / 3600)
+                except:
+                    formatted_date = str(created_at)
+                    age_hours = "N/A"
+            else:
+                formatted_date = "N/A"
+                age_hours = "N/A"
+            
+            message += f"**{i}. Платеж #{order_id}**\n"
+            message += f"👤 **Пользователь:** {name_display}\n"
+            message += f"🆔 **ID:** {user_id}\n"
+            message += f"📝 **Username:** {username_display}\n"
+            message += f"💰 **Сумма:** {amount} {currency}\n"
+            message += f"🪙 **Кредиты:** {credit_amount}\n"
+            message += f"📅 **Создан:** {formatted_date}\n"
+            message += f"⏰ **Возраст:** {age_hours} часов\n"
+            message += f"🔗 **Betatransfer ID:** {betatransfer_id}\n\n"
+        
+        message += "**Используйте `/cleanup_confirm` для подтверждения очистки**"
+        
+        # Если сообщение слишком длинное, разбиваем на части
+        if len(message) > 4000:
+            # Отправляем первую часть
+            await update.message.reply_text(message[:4000])
+            # Отправляем остальные части
+            remaining = message[4000:]
+            while remaining:
+                chunk = remaining[:4000]
+                await update.message.reply_text(chunk)
+                remaining = remaining[4000:]
+        else:
+            await update.message.reply_text(message)
+            
+        # Логируем операцию
+        logging.info(f"Админ {update.effective_user.id} просмотрел старые pending платежи ({len(old_payments)} шт.)")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при получении старых pending платежей: {e}")
+        await update.message.reply_text(f"❌ **Ошибка при получении старых pending платежей:**\n\n{str(e)}")
+
+
+async def cleanup_confirm_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для подтверждения очистки старых платежей (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    try:
+        print("🧹 [CLEANUP] Начинаем очистку старых платежей...")
+        logging.info("🧹 [CLEANUP] Начинаем очистку старых платежей...")
+        
+        # Получаем старые pending платежи
+        old_payments = await analytics_db_get_old_pending_payments_async(24)
+        
+        if not old_payments:
+            await update.message.reply_text("✅ **Старых платежей не найдено!**\n\nВсе pending платежи созданы менее 24 часов назад.")
+            return
+        
+        print(f"🧹 [CLEANUP] Найдено {len(old_payments)} старых платежей для очистки")
+        logging.info(f"🧹 [CLEANUP] Найдено {len(old_payments)} старых платежей для очистки")
+        
+        cleaned_count = 0
+        
+        for payment in old_payments:
+            payment_id = payment.get('betatransfer_id')
+            user_id = payment.get('user_id')
+            amount = payment.get('amount', 0)
+            currency = payment.get('currency', 'UAH')
+            order_id = payment.get('order_id', 'N/A')
+            
+            try:
+                # Помечаем как timeout
+                await analytics_db_update_payment_status_async(payment_id, 'timeout')
+                
+                print(f"⏰ [CLEANUP] Платеж {payment_id} (Order: {order_id}) помечен как timeout")
+                logging.info(f"⏰ [CLEANUP] Платеж {payment_id} (Order: {order_id}) помечен как timeout")
+                
+                # Уведомляем пользователя
+                timeout_message = (
+                    f"⏰ **Время оплаты истекло**\n\n"
+                    f"💰 **Сумма:** {amount} {currency}\n"
+                    f"📦 **Платеж:** {order_id}\n\n"
+                    f"Для пополнения баланса создайте новый платеж."
+                )
+                
+                await send_telegram_notification(user_id, timeout_message)
+                print(f"📱 [CLEANUP] Уведомление отправлено пользователю {user_id}")
+                logging.info(f"📱 [CLEANUP] Уведомление отправлено пользователю {user_id}")
+                
+                cleaned_count += 1
+                
+            except Exception as e:
+                print(f"💥 [CLEANUP] Ошибка очистки платежа {payment_id}: {e}")
+                logging.error(f"💥 [CLEANUP] Ошибка очистки платежа {payment_id}: {e}")
+                continue
+        
+        print(f"✅ [CLEANUP] Очистка завершена. Обработано {cleaned_count} платежей")
+        logging.info(f"✅ [CLEANUP] Очистка завершена. Обработано {cleaned_count} платежей")
+        
+        # Отправляем подтверждение админу
+        await update.message.reply_text(
+            f"✅ **Очистка завершена!**\n\n"
+            f"🧹 **Обработано платежей:** {cleaned_count}\n"
+            f"⏰ **Статус изменен на:** timeout\n"
+            f"📱 **Уведомления отправлены** пользователям\n\n"
+            f"Используйте `/pending_payments` для проверки результата."
+        )
+        
+    except Exception as e:
+        print(f"💥 [CLEANUP] Критическая ошибка очистки: {e}")
+        logging.error(f"💥 [CLEANUP] Критическая ошибка очистки: {e}")
+        await update.message.reply_text(f"❌ **Ошибка очистки:**\n\n{str(e)}")
 
 
 if __name__ == '__main__':
