@@ -545,6 +545,75 @@ class AnalyticsDB:
             logging.error(f"Ошибка получения бесплатных генераций: {e}")
             return 0
     
+    def increment_free_generations(self, user_id: int):
+        """Увеличивает счетчик использованных бесплатных генераций"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Сначала проверяем, есть ли еще бесплатные генерации
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        SELECT free_generations_used, total_free_generations
+                        FROM user_limits 
+                        WHERE user_id = %s
+                    ''', (user_id,))
+                else:
+                    cursor.execute('''
+                        SELECT free_generations_used, total_free_generations
+                        FROM user_limits 
+                        WHERE user_id = ?
+                    ''', (user_id,))
+                
+                result = cursor.fetchone()
+                
+                if result:
+                    used, total = result[0], result[1]
+                    if used >= total:
+                        # Бесплатные генерации закончились
+                        return False
+                else:
+                    # Если записи нет, создаем новую с 1 использованной генерацией
+                    if self.db_type == "postgresql":
+                        cursor.execute('''
+                            INSERT INTO user_limits 
+                            (user_id, free_generations_used, total_free_generations, last_updated)
+                            VALUES (%s, 1, 3, CURRENT_TIMESTAMP)
+                        ''', (user_id,))
+                    else:
+                        cursor.execute('''
+                            INSERT INTO user_limits 
+                            (user_id, free_generations_used, total_free_generations, last_updated)
+                            VALUES (?, 1, 3, CURRENT_TIMESTAMP)
+                        ''', (user_id,))
+                    
+                    conn.commit()
+                    return True
+                
+                # Обновляем счетчик использованных генераций
+                if self.db_type == "postgresql":
+                    cursor.execute('''
+                        UPDATE user_limits 
+                        SET free_generations_used = free_generations_used + 1
+                        WHERE user_id = %s AND free_generations_used < total_free_generations
+                    ''', (user_id,))
+                else:
+                    cursor.execute('''
+                        UPDATE user_limits 
+                        SET free_generations_used = free_generations_used + 1
+                        WHERE user_id = ? AND free_generations_used < total_free_generations
+                    ''', (user_id,))
+                
+                if cursor.rowcount == 0:
+                    # Не удалось обновить - возможно, лимит исчерпан
+                    return False
+                
+                conn.commit()
+                return True
+        except Exception as e:
+            logging.error(f"Ошибка увеличения счетчика бесплатных генераций: {e}")
+            return False
+    
     # Методы для работы с кредитами
     def get_user_credits(self, user_id: int) -> Dict:
         """Получение баланса кредитов пользователя"""

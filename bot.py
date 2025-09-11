@@ -4377,9 +4377,15 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         # Списываем кредиты или увеличиваем счетчик бесплатных генераций
         if generation_type == "free":
             # Списываем по количеству реально созданных изображений
+            free_generations_used = 0
             for i in range(processed_count):
                 if await analytics_db_get_free_generations_left_async(user_id) > 0:
-                    await analytics_db_increment_free_generations_async(user_id)
+                    if await analytics_db_increment_free_generations_async(user_id):
+                        free_generations_used += 1
+                        logging.info(f"Пользователь {user_id} использовал бесплатную генерацию {free_generations_used}")
+                    else:
+                        logging.error(f"Ошибка списания бесплатной генерации для пользователя {user_id}")
+                        break
                 else:
                     # Если бесплатные закончились, переключаемся на кредиты
                     generation_type = "credits"
@@ -4387,12 +4393,15 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
     
             # Если переключились на кредиты, списываем их
             if generation_type == "credits":
-                remaining_count = processed_count - i
-                total_cost = generation_cost * remaining_count
-                await analytics_db_use_credits_async(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}")
-                logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {remaining_count} изображений")
+                remaining_count = processed_count - free_generations_used
+                if remaining_count > 0:
+                    total_cost = generation_cost * remaining_count
+                    if await analytics_db_use_credits_async(user_id, total_cost, f"Генерация {remaining_count} изображений через {selected_model}"):
+                        logging.info(f"Пользователь {user_id} использовал {total_cost} кредитов за {remaining_count} изображений")
+                    else:
+                        logging.error(f"Ошибка списания кредитов для пользователя {user_id}")
             else:
-                logging.info(f"Пользователь {user_id} использовал {processed_count} бесплатных генераций")
+                logging.info(f"Пользователь {user_id} использовал {free_generations_used} бесплатных генераций")
         
         elif generation_type == "credits":
             # Списываем кредиты за каждое изображение
