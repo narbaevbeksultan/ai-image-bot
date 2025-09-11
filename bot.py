@@ -5059,17 +5059,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         current_step = state.get('step', '')
 
-        if current_step in ['custom_image_prompt', 'custom_image_style', 'simple_image_prompt']:
+        if current_step in ['custom_image_prompt', 'simple_image_prompt']:
 
             # Возвращаемся к предыдущему шагу
 
             if current_step == 'custom_image_prompt':
 
                 await query.edit_message_text("Попробуйте еще раз. Опишите, что должно быть на картинке:")
-
-            elif current_step == 'custom_image_style':
-
-                await query.edit_message_text("Попробуйте еще раз. Опишите стиль генерации изображения:")
 
             elif current_step == 'simple_image_prompt':
 
@@ -5631,7 +5627,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
-            keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
+            keyboard.append([InlineKeyboardButton("🎯 Только мой промпт", callback_data="skip_style")])
 
             keyboard.extend([
 
@@ -5661,7 +5657,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
-            keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
+            keyboard.append([InlineKeyboardButton("🎯 Только мой промпт", callback_data="skip_style")])
 
             keyboard.extend([
 
@@ -5857,7 +5853,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [[InlineKeyboardButton(style, callback_data=f"image_gen_style:{style}")] for style in IMAGE_GEN_STYLES]
 
-        keyboard.append([InlineKeyboardButton("✏️ Написать самому", callback_data="custom_image_style")])
+        keyboard.append([InlineKeyboardButton("🎯 Только мой промпт", callback_data="skip_style")])
 
         keyboard.extend([
 
@@ -6093,11 +6089,40 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await show_main_menu(update, context)
 
-    elif data == "custom_image_style":
+    elif data == "skip_style":
 
-        USER_STATE[user_id]['step'] = 'custom_image_style'
+        # Устанавливаем пустой стиль - ничего не будет добавлено к промпту
+        USER_STATE[user_id]['image_gen_style'] = ''
 
-        await query.edit_message_text("Опишите стиль генерации изображения (например: фотографический, художественный, минималистичный, яркий, темный и т.д.):")
+        # Переходим к следующему шагу в зависимости от формата
+        user_format = USER_STATE[user_id].get('format', '').lower()
+        
+        if user_format == 'изображения':
+            # Для изображений переходим к выбору количества
+            await query.edit_message_text(
+                "Стиль: Только ваш промпт (без добавок)\nСколько изображений сгенерировать?",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("1", callback_data="generate_with_count:1")],
+                    [InlineKeyboardButton("2", callback_data="generate_with_count:2")],
+                    [InlineKeyboardButton("3", callback_data="generate_with_count:3")],
+                    [InlineKeyboardButton("4", callback_data="generate_with_count:4")],
+                    [InlineKeyboardButton("5", callback_data="generate_with_count:5")],
+                    [InlineKeyboardButton("6", callback_data="generate_with_count:6")],
+                    [InlineKeyboardButton("7", callback_data="generate_with_count:7")],
+                    [InlineKeyboardButton("8", callback_data="generate_with_count:8")],
+                    [InlineKeyboardButton("9", callback_data="generate_with_count:9")],
+                    [InlineKeyboardButton("10", callback_data="generate_with_count:10")]
+                ])
+            )
+        else:
+            # Для других форматов переходим к вводу промпта
+            await query.edit_message_text(
+                "Стиль: Только ваш промпт (без добавок)\n\nРасскажите, что должно получиться:",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+                ])
+            )
+            USER_STATE[user_id]['step'] = 'simple_image_prompt'
 
     elif data == "generate_images":
 
@@ -7628,113 +7653,6 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await update.message.reply_text("Пожалуйста, введите корректное число:")
 
-    elif step == 'custom_image_style':
-
-        custom_style = update.message.text.strip()
-
-        if not is_prompt_safe(custom_style):
-
-            keyboard = [
-
-                [InlineKeyboardButton("🔄 Попробовать снова", callback_data="retry_generation")],
-
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-            ]
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            await update.message.reply_text("Описание стиля содержит запрещённые слова. Пожалуйста, измените описание.", reply_markup=reply_markup)
-
-            return
-
-        USER_STATE[user_id]['image_gen_style'] = custom_style
-
-        
-
-        # Проверяем формат для разного поведения
-
-        user_format = state.get('format', '').lower()
-
-        if user_format == 'изображения':
-
-            # Для "Изображения" переходим к выбору количества изображений
-
-            USER_STATE[user_id]['step'] = 'image_count_simple'
-
-            keyboard = [
-
-                [InlineKeyboardButton("1 изображение", callback_data="image_count_simple:1")],
-
-                [InlineKeyboardButton("2 изображения", callback_data="image_count_simple:2")],
-
-                [InlineKeyboardButton("3 изображения", callback_data="image_count_simple:3")],
-
-                [InlineKeyboardButton("4 изображения", callback_data="image_count_simple:4")],
-
-                [InlineKeyboardButton("5 изображений", callback_data="image_count_simple:5")],
-
-                [InlineKeyboardButton("Выбрать другое количество", callback_data="image_count_simple:custom")]
-
-            ]
-
-            keyboard.extend([
-
-                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-
-                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
-
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-            ])
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            await update.message.reply_text(
-
-                f"Стиль генерации выбран: {custom_style}\nСколько изображений сгенерировать?",
-
-                reply_markup=reply_markup
-
-            )
-
-        else:
-
-            # Для остальных форматов переходим к вводу темы
-
-            USER_STATE[user_id]['step'] = STEP_TOPIC
-
-            
-
-            # Создаем подсказки в зависимости от формата
-
-            format_tips = get_format_tips(user_format)
-
-            message_text = f"Стиль генерации выбран: {custom_style}\n\nРасскажите, что должно получиться:\n\n{format_tips}"
-
-            
-
-            # Добавляем кнопки навигации
-
-            keyboard = [
-
-                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
-
-                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
-
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-
-            ]
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            await update.message.reply_text(
-
-                message_text,
-
-                reply_markup=reply_markup
-
-            )
 
     elif step == 'image_count_simple':
 
