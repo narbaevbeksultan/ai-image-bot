@@ -3293,7 +3293,7 @@ async def edit_image_with_flux(update, context, state, original_image_url, edit_
 
         
 
-        # Проверяем входные параметры
+        # Проверяем входные параметры проба
 
         if not original_image_url or not edit_prompt:
 
