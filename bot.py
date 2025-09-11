@@ -687,97 +687,126 @@ async def analytics_db_get_user_info_by_id_async(user_id: int):
 async def check_pending_payments():
     """Проверяет статус всех pending платежей и зачисляет кредиты при завершении"""
     try:
-        # Получаем все pending платежи из базы данных
+        # Получаем pending платежи (максимум 10)
         pending_payments = await analytics_db_get_pending_payments_async()
         
         if not pending_payments:
             return
         
-        logging.info(f"Проверяем {len(pending_payments)} pending платежей")
+        # Ограничиваем количество проверок
+        pending_payments = pending_payments[:10]
         
+        logging.info(f"Проверяем {len(pending_payments)} pending платежей параллельно")
+        
+        # Создаем задачи для всех платежей
+        tasks = []
         for payment in pending_payments:
             payment_id = payment.get('betatransfer_id')
+            if payment_id:
+                task = check_single_payment_async(payment)
+                tasks.append(task)
+        
+        if not tasks:
+            return
+        
+        # Выполняем все запросы параллельно
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Обрабатываем результаты
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logging.error(f"Ошибка проверки платежа {pending_payments[i].get('betatransfer_id')}: {result}")
+                continue
+            
+            payment = pending_payments[i]
+            payment_id = payment.get('betatransfer_id')
             user_id = payment.get('user_id')
-            order_id = payment.get('order_id')
             
-            if not payment_id:
+            if 'error' in result:
+                logging.error(f"Ошибка API для платежа {payment_id}: {result['error']}")
                 continue
             
-            try:
-                # Проверяем статус платежа через Betatransfer API асинхронно
-                loop = asyncio.get_event_loop()
-                status_result = await loop.run_in_executor(
-                    THREAD_POOL,
-                    lambda: betatransfer_api.get_payment_status(payment_id)
-                )
-                
-                if 'error' in status_result:
-                    logging.error(f"Ошибка проверки статуса платежа {payment_id}: {status_result['error']}")
-                    continue
-                
-                payment_status = status_result.get('status')
-                logging.info(f"Платеж {payment_id} имеет статус: {payment_status}")
-                
-                # Если платеж завершен, зачисляем кредиты
-                if payment_status == 'success':
-                    credit_amount = payment.get('credit_amount')
-                    
-                    if credit_amount and credit_amount > 0:
-                        # Проверяем, не зачислены ли уже кредиты за этот платеж
-                        # Ищем транзакцию с этим payment_id
-                        existing_transaction = await analytics_db_get_credit_transaction_by_payment_id_async(payment_id)
-                        
-                        if not existing_transaction:
-                            # Кредиты еще не зачислены, зачисляем
-                            await analytics_db_add_credits_async(user_id, credit_amount)
-                            
-                            # Создаем транзакцию с привязкой к платежу
-                            await analytics_db_create_credit_transaction_with_payment_async(user_id, credit_amount, f"Покупка кредитов (платеж {payment_id})", payment_id)
-                            
-                            # Обновляем статус платежа
-                            await analytics_db_update_payment_status_async(payment_id, 'success')
-                            
-                            # Отправляем уведомление пользователю
-                            notification_message = (
-                                f"✅ **Кредиты зачислены!**\n\n"
-                                f"🪙 **Получено:** {credit_amount:,} кредитов\n"
-                                f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
-                                f"📦 **Платеж:** {payment_id}\n\n"
-                                f"Теперь вы можете использовать кредиты для генерации изображений!"
-                            )
-                            
-                            await send_telegram_notification(user_id, notification_message)
-                            logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
-                        else:
-                            # Кредиты уже зачислены, просто обновляем статус платежа
-                            await analytics_db_update_payment_status_async(payment_id, 'success')
-                            logging.info(f"Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
-                
-                elif payment_status == 'failed':
-                    # Обновляем статус неудачного платежа
-                    await analytics_db_update_payment_status_async(payment_id, 'failed')
-                    logging.info(f"Платеж {payment_id} завершился неудачно")
-                
-                elif payment_status == 'error':
-                    # Обновляем статус ошибочного платежа
-                    await analytics_db_update_payment_status_async(payment_id, 'error')
-                    logging.info(f"Платеж {payment_id} завершился с ошибкой")
-                    
-                    # Уведомляем пользователя об ошибке
-                    error_message = (
-                        f"❌ **Ошибка платежа**\n\n"
-                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
-                        f"📦 **Платеж:** {payment_id}\n\n"
-                        f"Попробуйте создать новый платеж или обратитесь в поддержку."
-                    )
-                    await send_telegram_notification(user_id, error_message)
-                
-            except Exception as e:
-                logging.error(f"Ошибка обработки платежа {payment_id}: {e}")
-                continue
+            payment_status = result.get('status')
+            logging.info(f"Платеж {payment_id} имеет статус: {payment_status}")
+            
+            # Обрабатываем успешный платеж
+            if payment_status == 'success':
+                await process_successful_payment(payment, result)
+            elif payment_status == 'failed':
+                await analytics_db_update_payment_status_async(payment_id, 'failed')
+                logging.info(f"Платеж {payment_id} завершился неудачно")
+            elif payment_status == 'error':
+                await analytics_db_update_payment_status_async(payment_id, 'error')
+                logging.info(f"Платеж {payment_id} завершился с ошибкой")
                 
     except Exception as e:
         logging.error(f"Ошибка проверки pending платежей: {e}")
+
+async def check_single_payment_async(payment):
+    """Проверяет один платеж асинхронно"""
+    try:
+        payment_id = payment.get('betatransfer_id')
+        if not payment_id:
+            return {"error": "No payment ID"}
+        
+        # Проверяем статус платежа через Betatransfer API асинхронно
+        loop = asyncio.get_event_loop()
+        status_result = await loop.run_in_executor(
+            THREAD_POOL,
+            lambda: betatransfer_api.get_payment_status(payment_id)
+        )
+        
+        return status_result
+        
+    except Exception as e:
+        logging.error(f"Ошибка проверки платежа {payment.get('betatransfer_id')}: {e}")
+        return {"error": str(e)}
+
+async def process_successful_payment(payment, status_result):
+    """Обрабатывает успешный платеж"""
+    try:
+        payment_id = payment.get('betatransfer_id')
+        user_id = payment.get('user_id')
+        credit_amount = payment.get('credit_amount')
+        
+        if not credit_amount or credit_amount <= 0:
+            return
+        
+        # Проверяем, не зачислены ли уже кредиты за этот платеж
+        existing_transaction = await analytics_db_get_credit_transaction_by_payment_id_async(payment_id)
+        
+        if not existing_transaction:
+            # Кредиты еще не зачислены, зачисляем
+            await analytics_db_add_credits_async(user_id, credit_amount)
+            
+            # Создаем транзакцию с привязкой к платежу
+            await analytics_db_create_credit_transaction_with_payment_async(
+                user_id, credit_amount, 
+                f"Покупка кредитов (платеж {payment_id})", 
+                payment_id
+            )
+            
+            # Обновляем статус платежа
+            await analytics_db_update_payment_status_async(payment_id, 'success')
+            
+            # Отправляем уведомление пользователю
+            notification_message = (
+                f"✅ **Кредиты зачислены!**\n\n"
+                f"🪙 **Получено:** {credit_amount:,} кредитов\n"
+                f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                f"📦 **Платеж:** {payment_id}\n\n"
+                f"Теперь вы можете использовать кредиты для генерации изображений!"
+            )
+            
+            await send_telegram_notification(user_id, notification_message)
+            logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
+        else:
+            # Кредиты уже зачислены, просто обновляем статус платежа
+            await analytics_db_update_payment_status_async(payment_id, 'success')
+            logging.info(f"Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
+            
+    except Exception as e:
+        logging.error(f"Ошибка обработки успешного платежа {payment.get('betatransfer_id')}: {e}")
 
 # Функция для запуска периодической проверки платежей
 async def start_payment_polling():
