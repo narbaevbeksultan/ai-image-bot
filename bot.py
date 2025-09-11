@@ -6094,35 +6094,88 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Устанавливаем пустой стиль - ничего не будет добавлено к промпту
         USER_STATE[user_id]['image_gen_style'] = ''
 
-        # Переходим к следующему шагу в зависимости от формата
-        user_format = USER_STATE[user_id].get('format', '').lower()
-        
+        # Проверяем формат для разного поведения
+        user_format = state.get('format', '').lower()
+
         if user_format == 'изображения':
-            # Для изображений переходим к выбору количества
+
+            # Для "Изображения" переходим к выбору количества изображений
+
+            USER_STATE[user_id]['step'] = 'image_count_simple'
+
+            keyboard = [
+
+                [InlineKeyboardButton("1 изображение", callback_data="image_count_simple:1")],
+
+                [InlineKeyboardButton("2 изображения", callback_data="image_count_simple:2")],
+
+                [InlineKeyboardButton("3 изображения", callback_data="image_count_simple:3")],
+
+                [InlineKeyboardButton("4 изображения", callback_data="image_count_simple:4")],
+
+                [InlineKeyboardButton("5 изображений", callback_data="image_count_simple:5")],
+
+                [InlineKeyboardButton("Выбрать другое количество", callback_data="image_count_simple:custom")]
+
+            ]
+
+            keyboard.extend([
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ])
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
             await query.edit_message_text(
-                "Стиль: Только ваш промпт (без добавок)\nСколько изображений сгенерировать?",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("1", callback_data="generate_with_count:1")],
-                    [InlineKeyboardButton("2", callback_data="generate_with_count:2")],
-                    [InlineKeyboardButton("3", callback_data="generate_with_count:3")],
-                    [InlineKeyboardButton("4", callback_data="generate_with_count:4")],
-                    [InlineKeyboardButton("5", callback_data="generate_with_count:5")],
-                    [InlineKeyboardButton("6", callback_data="generate_with_count:6")],
-                    [InlineKeyboardButton("7", callback_data="generate_with_count:7")],
-                    [InlineKeyboardButton("8", callback_data="generate_with_count:8")],
-                    [InlineKeyboardButton("9", callback_data="generate_with_count:9")],
-                    [InlineKeyboardButton("10", callback_data="generate_with_count:10")]
-                ])
+
+                f"Стиль генерации: Только ваш промпт (без добавок)\nСколько изображений сгенерировать?",
+
+                reply_markup=reply_markup
+
             )
+
         else:
-            # Для других форматов переходим к вводу промпта
-            await query.edit_message_text(
-                "Стиль: Только ваш промпт (без добавок)\n\nРасскажите, что должно получиться:",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
-                ])
+
+            # Для остальных форматов переходим к вводу темы
+
+            USER_STATE[user_id]['step'] = STEP_TOPIC
+
+            
+
+            # Создаем подсказки в зависимости от формата
+
+            format_tips = get_format_tips(user_format)
+
+            message_text = f"Стиль генерации: Только ваш промпт (без добавок)\n\nРасскажите, что должно получиться:\n\n{format_tips}"
+
+            
+
+            # Добавляем кнопки навигации
+
+            keyboard = [
+
+                [InlineKeyboardButton("❓ Как пользоваться", callback_data="how_to_use")],
+
+                [InlineKeyboardButton("🔙 Назад", callback_data="style_gen_back")],
+
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
+
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            await update.message.reply_text(
+
+                message_text,
+
+                reply_markup=reply_markup
+
             )
-            USER_STATE[user_id]['step'] = 'simple_image_prompt'
 
     elif data == "generate_images":
 
