@@ -2338,9 +2338,9 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Ошибок: {user_stats['total_errors']}
 
-• Первое использование: {user_stats['first_seen'][:10]}
+• Первое использование: {(user_stats['first_seen'].strftime('%Y-%m-%d') if hasattr(user_stats.get('first_seen'), 'strftime') else str(user_stats.get('first_seen'))[:10])}
 
-• Последняя активность: {user_stats['last_activity'][:10]}
+• Последняя активность: {(user_stats['last_activity'].strftime('%Y-%m-%d') if hasattr(user_stats.get('last_activity'), 'strftime') else str(user_stats.get('last_activity'))[:10])}
 
 
 
@@ -4687,9 +4687,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Ошибок: {user_stats['total_errors']}
 
-• Первое использование: {user_stats['first_seen'][:10]}
+• Первое использование: {(user_stats['first_seen'].strftime('%Y-%m-%d') if hasattr(user_stats.get('first_seen'), 'strftime') else str(user_stats.get('first_seen'))[:10])}
 
-• Последняя активность: {user_stats['last_activity'][:10]}
+• Последняя активность: {(user_stats['last_activity'].strftime('%Y-%m-%d') if hasattr(user_stats.get('last_activity'), 'strftime') else str(user_stats.get('last_activity'))[:10])}
 
 
 
