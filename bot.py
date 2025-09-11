@@ -9049,6 +9049,15 @@ async def check_credits_command_async(update, context):
         if hasattr(update, 'message') and update.message:
             await update.message.reply_text("❌ Ошибка при проверке кредитов")
 
+async def pending_payments_command_async(update, context):
+    """Асинхронная обертка для просмотра pending платежей (админ)"""
+    try:
+        await pending_payments_command(update, context)
+    except Exception as e:
+        logging.error(f"Ошибка в асинхронном просмотре pending платежей: {e}")
+        if hasattr(update, 'message') and update.message:
+            await update.message.reply_text("❌ Ошибка при получении pending платежей")
+
 async def generate_video_async(update, context, state):
     """Асинхронная обертка для генерации видео"""
     try:
@@ -11835,6 +11844,7 @@ def main():
     app.add_handler(CommandHandler('add_credits', add_credits_command_async))
     app.add_handler(CommandHandler('check_credits', check_credits_command_async))
     app.add_handler(CommandHandler('set_credits', set_credits_command_async))
+    app.add_handler(CommandHandler('pending_payments', pending_payments_command_async))
 
     app.add_handler(CallbackQueryHandler(button_handler))
 
@@ -12252,6 +12262,85 @@ async def set_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"🔄 **Было:** {old_credits} кредитов\n"
         f"💳 **Стало:** {credits_to_set} кредитов"
     )
+
+
+async def pending_payments_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для просмотра pending платежей (только для админа)"""
+    ADMIN_USER_ID = 7735323051  # Ваш ID
+    
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+        return
+    
+    try:
+        # Получаем все pending платежи
+        pending_payments = await analytics_db_get_pending_payments_async()
+        
+        if not pending_payments:
+            await update.message.reply_text("✅ **Pending платежей нет!**\n\nВсе платежи обработаны или не созданы.")
+            return
+        
+        # Формируем сообщение
+        message = f"📋 **Pending платежи ({len(pending_payments)}):**\n\n"
+        
+        for i, payment in enumerate(pending_payments, 1):
+            user_id = payment.get('user_id', 'N/A')
+            amount = payment.get('amount', 0)
+            currency = payment.get('currency', 'UAH')
+            credit_amount = payment.get('credit_amount', 0)
+            created_at = payment.get('created_at', 'N/A')
+            betatransfer_id = payment.get('betatransfer_id', 'N/A')
+            order_id = payment.get('order_id', 'N/A')
+            
+            # Получаем информацию о пользователе
+            user_info = await analytics_db_get_user_info_by_id_async(user_id)
+            if user_info:
+                username_display = f"@{user_info['username']}" if user_info['username'] else "Без username"
+                name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() or "Без имени"
+            else:
+                username_display = "Пользователь не найден"
+                name_display = "N/A"
+            
+            # Форматируем дату
+            if created_at and created_at != 'N/A':
+                try:
+                    from datetime import datetime
+                    if isinstance(created_at, str):
+                        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    formatted_date = created_at.strftime("%d.%m.%Y %H:%M")
+                except:
+                    formatted_date = str(created_at)
+            else:
+                formatted_date = "N/A"
+            
+            message += f"**{i}. Платеж #{order_id}**\n"
+            message += f"👤 **Пользователь:** {name_display}\n"
+            message += f"🆔 **ID:** {user_id}\n"
+            message += f"📝 **Username:** {username_display}\n"
+            message += f"💰 **Сумма:** {amount} {currency}\n"
+            message += f"🪙 **Кредиты:** {credit_amount}\n"
+            message += f"📅 **Создан:** {formatted_date}\n"
+            message += f"🔗 **Betatransfer ID:** {betatransfer_id}\n\n"
+        
+        # Если сообщение слишком длинное, разбиваем на части
+        if len(message) > 4000:
+            # Отправляем первую часть
+            await update.message.reply_text(message[:4000])
+            # Отправляем остальные части
+            remaining = message[4000:]
+            while remaining:
+                chunk = remaining[:4000]
+                await update.message.reply_text(chunk)
+                remaining = remaining[4000:]
+        else:
+            await update.message.reply_text(message)
+            
+        # Логируем операцию
+        logging.info(f"Админ {update.effective_user.id} просмотрел pending платежи ({len(pending_payments)} шт.)")
+        
+    except Exception as e:
+        logging.error(f"Ошибка при получении pending платежей: {e}")
+        await update.message.reply_text(f"❌ **Ошибка при получении pending платежей:**\n\n{str(e)}")
 
 
 if __name__ == '__main__':
