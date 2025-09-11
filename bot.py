@@ -772,6 +772,20 @@ async def check_pending_payments():
                     await analytics_db_update_payment_status_async(payment_id, 'failed')
                     logging.info(f"Платеж {payment_id} завершился неудачно")
                 
+                elif payment_status == 'error':
+                    # Обновляем статус ошибочного платежа
+                    await analytics_db_update_payment_status_async(payment_id, 'error')
+                    logging.info(f"Платеж {payment_id} завершился с ошибкой")
+                    
+                    # Уведомляем пользователя об ошибке
+                    error_message = (
+                        f"❌ **Ошибка платежа**\n\n"
+                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                        f"📦 **Платеж:** {payment_id}\n\n"
+                        f"Попробуйте создать новый платеж или обратитесь в поддержку."
+                    )
+                    await send_telegram_notification(user_id, error_message)
+                
             except Exception as e:
                 logging.error(f"Ошибка обработки платежа {payment_id}: {e}")
                 continue
