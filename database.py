@@ -328,6 +328,33 @@ class AnalyticsDB:
         '''
         return self.execute_query(query, (user_id, username, first_name, last_name))
     
+    def get_user_info_by_id(self, user_id: int) -> Optional[Dict]:
+        """Получает информацию о пользователе по user_id"""
+        query = '''
+            SELECT user_id, username, first_name, last_name
+            FROM users WHERE user_id = %s
+        ''' if self.db_type == "postgresql" else '''
+            SELECT user_id, username, first_name, last_name
+            FROM users WHERE user_id = ?
+        '''
+        result = self.execute_query(query, (user_id,), fetch_one=True)
+        if not result:
+            return None
+        if self.db_type == "postgresql":
+            return {
+                'user_id': result.get('user_id'),
+                'username': result.get('username'),
+                'first_name': result.get('first_name'),
+                'last_name': result.get('last_name'),
+            }
+        else:
+            return {
+                'user_id': result[0],
+                'username': result[1],
+                'first_name': result[2],
+                'last_name': result[3],
+            }
+    
     def update_user_activity(self, user_id: int):
         """Обновление времени последней активности пользователя"""
         query = '''
