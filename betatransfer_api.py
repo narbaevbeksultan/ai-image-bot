@@ -31,8 +31,13 @@ class BetatransferAPI:
         # Фильтруем None значения перед созданием подписи
         signature_string = ''.join(str(v) for v in data.values() if v is not None) + self.secret_key
         
+        print(f"🔍 Отладка подписи:")
+        print(f"   Данные: {data}")
+        print(f"   Строка для подписи: {signature_string}")
+        
         # Создаем MD5 подпись
         signature = hashlib.md5(signature_string.encode('utf-8')).hexdigest()
+        print(f"   Подпись: {signature}")
         
         return signature
     
@@ -85,16 +90,26 @@ class BetatransferAPI:
         }
         
         try:
+            print(f"🔍 Детали запроса:")
+            print(f"   URL: {endpoint}")
+            print(f"   Заголовки: {headers}")
+            print(f"   Данные: {payload}")
+            
             # Отправляем как form-data согласно документации
-            response = requests.post(endpoint, data=payload, headers=headers, timeout=5)
+            response = requests.post(endpoint, data=payload, headers=headers)
+            
+            print(f"🔍 Детали ответа:")
+            print(f"   Статус: {response.status_code}")
+            print(f"   Заголовки ответа: {dict(response.headers)}")
+            print(f"   Тело ответа: {response.text}")
             
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.Timeout:
-            logging.warning(f"Таймаут при создании платежа")
-            return {"error": "timeout", "status": "timeout"}
         except requests.exceptions.RequestException as e:
-            logging.error(f"Ошибка HTTP запроса при создании платежа: {str(e)}")
+            print(f"❌ Ошибка HTTP запроса: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"   Статус ответа: {e.response.status_code}")
+                print(f"   Тело ответа: {e.response.text}")
             return {"error": str(e)}
     
     def get_payment_status(self, payment_id: str) -> Dict:
@@ -107,35 +122,43 @@ class BetatransferAPI:
         Returns:
             Dict с информацией о статусе
         """
+        print(f"🔍 get_payment_status вызван с ID: {payment_id}")
+        
         # Формируем данные для подписи
         data = {'id': payment_id}
+        print(f"🔍 Данные для подписи: {data}")
         
         signature = self._generate_signature(data)
+        print(f"🔍 Сгенерированная подпись: {signature}")
         
         # URL с токеном согласно документации
         endpoint = f"{self.base_url}/info?token={self.api_key}"
+        print(f"🔍 Endpoint: {endpoint}")
         
         # Добавляем подпись к данным
         data['sign'] = signature
+        print(f"🔍 Данные для отправки: {data}")
         
         headers = {
             "Content-Type": "application/x-www-form-urlencoded"
         }
+        print(f"🔍 Заголовки: {headers}")
         
         try:
-            response = requests.post(endpoint, data=data, headers=headers, timeout=5)
+            print(f"🔍 Отправляем POST запрос...")
+            response = requests.post(endpoint, data=data, headers=headers)
+            print(f"🔍 Получен ответ: {response.status_code}")
+            print(f"🔍 Тело ответа: {response.text}")
             
             response.raise_for_status()
             result = response.json()
+            print(f"🔍 Результат: {result}")
             return result
-        except requests.exceptions.Timeout:
-            logging.warning(f"Таймаут при проверке платежа {payment_id}")
-            return {"error": "timeout", "status": "timeout"}
         except requests.exceptions.RequestException as e:
-            logging.error(f"Ошибка запроса для платежа {payment_id}: {e}")
+            print(f"❌ Ошибка запроса: {e}")
             return {"error": str(e)}
         except Exception as e:
-            logging.error(f"Общая ошибка для платежа {payment_id}: {e}")
+            print(f"❌ Общая ошибка: {e}")
             return {"error": str(e)}
     
     def verify_callback_signature(self, data: Dict, signature: str) -> bool:
@@ -161,8 +184,13 @@ class BetatransferAPI:
         # Создаем MD5 подпись
         expected_signature = hashlib.md5(signature_string.encode('utf-8')).hexdigest()
         
-        # Логируем проверку подписи
-        logging.debug(f"Проверка подписи callback: amount={amount}, orderId={order_id}")
+        # Добавляем отладочную информацию
+        print(f"🔍 Отладочная информация callback:")
+        print(f"   amount: {amount}")
+        print(f"   orderId: {order_id}")
+        print(f"   Строка для подписи: {signature_string}")
+        print(f"   Ожидаемая подпись: {expected_signature}")
+        print(f"   Полученная подпись: {signature}")
         
         return signature == expected_signature
     
