@@ -4273,9 +4273,7 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                 media.append(InputMediaPhoto(media=image_url, caption=caption))
                 processed_count += 1
 
-                print(f"🔍 Добавлено изображение {idx}:")
-                print(f"   image_url: {image_url}")
-                print(f"   длина image_url: {len(str(image_url)) if image_url else 'None'}")
+                # Добавлено изображение в медиа группу
                 print(f"   последний элемент media: {media[-1].media}")
                 print(f"   длина media[-1].media: {len(str(media[-1].media)) if media[-1].media else 'None'}")
             else:
@@ -4287,18 +4285,14 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
     # Удаляем старый последовательный код - он заменен на параллельный выше
     # Оставляем только обработку результатов
     if media and send_media:
-        print(f"🔍 Попытка отправки media группы...")
-        print(f"🔍 Количество изображений: {len(media)}")
-        for i, item in enumerate(media):
-            print(f"🔍 Изображение {i+1}: {item.media}")
-            print(f"🔍 Длина URL: {len(str(item.media)) if item.media else 'None'}")
+        logging.info(f"Отправка медиа группы из {len(media)} изображений")
         
         try:
             # Пытаемся отправить как группу
             await send_media(media=media)
-            print(f"✅ Media группа отправлена успешно")
+            logging.info("Медиа группа отправлена успешно")
         except Exception as group_error:
-            print(f"❌ Ошибка отправки группы: {group_error}")
+            logging.error(f"Ошибка отправки группы: {group_error}")
             # Если группа не отправляется, отправляем по одному
             for i, item in enumerate(media):
                 try:
@@ -4306,9 +4300,9 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
                         await update.message.reply_photo(photo=item.media, caption=item.caption)
                     else:
                         await context.bot.send_photo(chat_id=chat_id, photo=item.media, caption=item.caption)
-                    print(f"✅ Изображение {i+1} отправлено отдельно")
+                    logging.info(f"Изображение {i+1} отправлено отдельно")
                 except Exception as photo_error:
-                    print(f"❌ Ошибка отправки изображения {i+1}: {photo_error}")
+                    logging.error(f"Ошибка отправки изображения {i+1}: {photo_error}")
 
     elif processed_count == 0 and send_text:
 
@@ -11397,7 +11391,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         # Создаем платеж асинхронно
 
-        print(f"🔍 Создаем платеж для пакета: {package}")
+        logging.info(f"Создание платежа для пакета: {package['credits']} кредитов за {package['price']} сом")
 
         loop = asyncio.get_event_loop()
         payment_result = await loop.run_in_executor(
@@ -11410,7 +11404,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
             )
         )
 
-        print(f"🔍 Результат создания платежа: {payment_result}")
+        logging.info(f"Результат создания платежа: {'успешно' if 'error' not in payment_result else 'ошибка'}")
 
         
 
@@ -11426,7 +11420,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         if 'id' not in payment_result:
 
-            print(f"❌ В ответе нет id: {payment_result}")
+            logging.error(f"В ответе нет id: {payment_result}")
 
             await update.callback_query.answer("❌ Ошибка: не получен ID платежа")
 
@@ -11504,9 +11498,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         error_traceback = traceback.format_exc()
 
-        print(f"🔍 Полный traceback ошибки:")
-
-        print(error_traceback)
+        logging.error(f"Полный traceback ошибки создания платежа: {error_traceback}")
 
         logging.error(f"Ошибка создания платежа: {e}")
 
@@ -11520,8 +11512,7 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
     """Проверяет статус платежа"""
     
-    print(f"🔍 Вызвана функция check_payment_status")
-    print(f"🔍 callback_data: {update.callback_query.data}")
+    logging.info(f"Проверка статуса платежа, callback_data: {update.callback_query.data}")
     
     # Извлекаем ID платежа из callback_data
 
@@ -11558,7 +11549,7 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
             # Платеж успешен - активируем подписку или кредиты
 
-            print(f"✅ Платеж завершен со статусом: {status}")
+            logging.info(f"Платеж завершен со статусом: {status}")
             await activate_payment(update, context, payment_status)
 
         elif status == 'pending':
@@ -11579,8 +11570,7 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
         import traceback
         error_traceback = traceback.format_exc()
-        print(f"🔍 Ошибка в check_payment_status:")
-        print(f"🔍 {error_traceback}")
+        logging.error(f"Ошибка в check_payment_status: {error_traceback}")
         logging.error(f"Ошибка проверки статуса платежа: {e}")
         logging.error(f"Traceback: {error_traceback}")
 
@@ -11604,11 +11594,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
         except ValueError:
             amount = 0.0
     
-    print(f"🔍 activate_payment вызвана:")
-    print(f"🔍 user_id: {user_id}")
-    print(f"🔍 payment_id: {payment_id}")
-    print(f"🔍 amount: {amount} (тип: {type(amount)})")
-    print(f"🔍 amount после преобразования: {amount} (тип: {type(amount)})")
+    logging.info(f"Активация платежа: user_id={user_id}, payment_id={payment_id}, amount={amount}")
 
     
 
@@ -11635,12 +11621,10 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
         
 
         # Находим подходящий пакет по цене
-        print(f"🔍 Ищем подходящий пакет для суммы: {amount}")
+        logging.info(f"Поиск подходящего пакета для суммы: {amount}")
 
         for package in CREDIT_PACKAGES.values():
-
-            print(f"🔍 Проверяем пакет: {package['credits']} кредитов за {package['price']} сом")
-            print(f"🔍 Разница: {abs(package['price'] - amount)}")
+            logging.debug(f"Проверка пакета: {package['credits']} кредитов за {package['price']} сом, разница: {abs(package['price'] - amount)}")
             if abs(package['price'] - amount) < 1.0:  # Погрешность 1 сомль
 
                 # Проверяем, не зачислены ли уже кредиты за этот платеж
@@ -11793,8 +11777,7 @@ def main():
         """Обработчик ошибок для логирования"""
         import traceback
         error_traceback = traceback.format_exc()
-        print(f"🔍 Ошибка в боте:")
-        print(f"🔍 {error_traceback}")
+        logging.error(f"Ошибка в боте: {error_traceback}")
         logging.error(f"Exception while handling an update: {context.error}")
         logging.error(f"Traceback: {error_traceback}")
     
@@ -11885,7 +11868,7 @@ def main():
 
             except Exception as e:
 
-                print(f"❌ Ошибка установки webhook: {e}")
+                logging.error(f"Ошибка установки webhook: {e}")
 
                 return
 
@@ -11911,7 +11894,7 @@ def main():
 
             except Exception as e:
 
-                print(f"❌ Ошибка запуска webhook: {e}")
+                logging.error(f"Ошибка запуска webhook: {e}")
 
                 return
 
@@ -11933,7 +11916,7 @@ def main():
 
             except Exception as e:
 
-                print(f"❌ Ошибка получения webhook статуса: {e}")
+                logging.error(f"Ошибка получения webhook статуса: {e}")
 
             
 
@@ -12257,6 +12240,6 @@ if __name__ == '__main__':
         from database import analytics_db
         print("✅ Миграция базы данных завершена")
     except Exception as e:
-        print(f"❌ Ошибка миграции базы данных: {e}")
+        logging.error(f"Ошибка миграции базы данных: {e}")
     
     main()
