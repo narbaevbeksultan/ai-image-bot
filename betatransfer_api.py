@@ -69,9 +69,11 @@ class BetatransferAPI:
             'amount': str(amount),
             'currency': currency,
             'orderId': order_id,
-            'paymentSystem': 'Test1',  # Тестовый метод для проверки
             'payerId': str(payer_id)
         }
+        # Включаем тестовую платежную систему только в тестовом режиме
+        if self.test_mode:
+            payload['paymentSystem'] = 'Test1'
         
         # Добавляем параметры пользователя только если они не пустые
         if payer_email:
