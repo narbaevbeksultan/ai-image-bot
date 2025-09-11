@@ -3754,7 +3754,10 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
 
     user_id = update.effective_user.id
 
-    
+    # Проверяем, что у нас есть способ отправки сообщений
+    if not send_text:
+        logging.error("send_text is None, cannot send messages")
+        return
 
     # Логируем начало генерации
 
@@ -4520,8 +4523,15 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         if send_text:
-
-            await send_text("Хотите создать еще картинки?", reply_markup=reply_markup)
+            try:
+                await send_text("Хотите создать еще картинки?", reply_markup=reply_markup)
+            except Exception as e:
+                logging.error(f"Ошибка отправки сообщения с кнопками: {e}")
+                # Если не удалось отправить с кнопками, отправляем без них
+                try:
+                    await send_text("Хотите создать еще картинки?")
+                except Exception as e2:
+                    logging.error(f"Ошибка отправки простого сообщения: {e2}")
 
     else:
 
@@ -4592,8 +4602,15 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         if send_text:
-
-            await send_text("Хотите другие варианты или уточнить, что должно быть на картинке?", reply_markup=reply_markup)
+            try:
+                await send_text("Хотите другие варианты или уточнить, что должно быть на картинке?", reply_markup=reply_markup)
+            except Exception as e:
+                logging.error(f"Ошибка отправки сообщения с кнопками: {e}")
+                # Если не удалось отправить с кнопками, отправляем без них
+                try:
+                    await send_text("Хотите другие варианты или уточнить, что должно быть на картинке?")
+                except Exception as e2:
+                    logging.error(f"Ошибка отправки простого сообщения: {e2}")
 
 
 
@@ -8897,7 +8914,10 @@ async def send_images_async(update, context, state, prompt_type='auto', user_pro
     try:
         await send_images(update, context, state, prompt_type, user_prompt, scenes)
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
         logging.error(f"Ошибка в асинхронной генерации изображений: {e}")
+        logging.error(f"Полный traceback: {error_traceback}")
         # Отправляем сообщение об ошибке пользователю
         if hasattr(update, 'callback_query') and update.callback_query:
             chat_id = update.callback_query.message.chat_id
