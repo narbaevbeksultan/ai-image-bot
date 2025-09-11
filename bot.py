@@ -465,6 +465,17 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 # Обработка ответа от Replicate API
                 image_url = None
                 
+                # 🔍 ОТЛАДКА В TELEGRAM - что получили от API
+                if send_text:
+                    await send_text(f"🔍 **Recraft AI вернул:**\n\n"
+                                  f"📊 **Тип:** `{type(output).__name__}`\n"
+                                  f"📋 **Содержимое:** `{str(output)[:100]}...`\n"
+                                  f"🔗 **Есть .url():** {'✅' if hasattr(output, 'url') else '❌'}\n"
+                                  f"🆔 **Есть .id:** {'✅' if hasattr(output, 'id') else '❌'}\n"
+                                  f"📈 **Есть .status:** {'✅' if hasattr(output, 'status') else '❌'}\n"
+                                  f"📤 **Есть .output:** {'✅' if hasattr(output, 'output') else '❌'}\n"
+                                  f"📥 **Есть .result:** {'✅' if hasattr(output, 'result') else '❌'}", parse_mode='Markdown')
+                
                 if hasattr(output, 'url'):
                     if callable(output.url):
                         image_url = output.url()
@@ -491,6 +502,10 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                 
                 if not isinstance(image_url, str) or not image_url.startswith('http'):
                     return (idx, False, None, None, "Неверный тип URL от Recraft AI")
+                
+                # 🔍 ОТЛАДКА - финальный URL
+                if send_text:
+                    await send_text(f"🔍 **Финальный URL от Recraft AI:**\n\n`{image_url}`", parse_mode='Markdown')
                 
                 caption = f'Вариант {idx}'
                 return (idx, True, image_url, caption, None)
