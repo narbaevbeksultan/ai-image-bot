@@ -8883,7 +8883,7 @@ async def send_images_async(update, context, state, prompt_type='auto', user_pro
             text="❌ **Ошибка при генерации изображений**\n\nПопробуйте еще раз или обратитесь в поддержку."
         )
 
-def check_payment_status_sync(update, context):
+async def check_payment_status_sync(update, context):
     """Синхронная проверка статуса платежа"""
     try:
         if not hasattr(update, 'callback_query') or not update.callback_query:
@@ -8896,7 +8896,7 @@ def check_payment_status_sync(update, context):
         payment_info = analytics_db.get_payment_by_order_id(payment_id)
         
         if not payment_info:
-            update.callback_query.answer("❌ Платеж не найден")
+            await update.callback_query.answer("❌ Платеж не найден")
             return
         
         status = payment_info.get('status', 'unknown')
@@ -8926,8 +8926,8 @@ def check_payment_status_sync(update, context):
                 f"📊 Статус: {status}"
             )
         
-        update.callback_query.answer()
-        update.callback_query.edit_message_text(
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
             text=message,
             parse_mode='Markdown'
         )
@@ -8935,12 +8935,12 @@ def check_payment_status_sync(update, context):
     except Exception as e:
         logging.error(f"Ошибка при проверке статуса платежа: {e}")
         if hasattr(update, 'callback_query') and update.callback_query:
-            update.callback_query.answer("❌ Ошибка при проверке статуса платежа")
+            await update.callback_query.answer("❌ Ошибка при проверке статуса платежа")
 
 async def check_payment_status_async(update, context):
     """Асинхронная обертка для проверки статуса платежа"""
     try:
-        asyncio.create_task(check_payment_status_sync(update, context))
+        await check_payment_status_sync(update, context)
     except Exception as e:
         logging.error(f"Ошибка в асинхронной проверке статуса платежа: {e}")
         if hasattr(update, 'callback_query') and update.callback_query:
@@ -8949,7 +8949,7 @@ async def check_payment_status_async(update, context):
 async def handle_credit_purchase_async(update, context):
     """Асинхронная обертка для покупки кредитов"""
     try:
-        asyncio.create_task(handle_credit_purchase(update, context))
+        await handle_credit_purchase(update, context)
     except Exception as e:
         logging.error(f"Ошибка в асинхронной покупке кредитов: {e}")
         if hasattr(update, 'callback_query') and update.callback_query:
