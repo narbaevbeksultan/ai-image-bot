@@ -8953,11 +8953,11 @@ async def check_payment_status_sync(update, context):
         if not hasattr(update, 'callback_query') or not update.callback_query:
             return
         
-        # Извлекаем payment_id из callback_data
+        # Извлекаем Betatransfer payment_id из callback_data
         payment_id = update.callback_query.data.split(':')[1]
         
-        # Получаем информацию о платеже синхронно
-        payment_info = analytics_db.get_payment_by_order_id(payment_id)
+        # Получаем информацию о платеже по Betatransfer ID
+        payment_info = analytics_db.get_payment_by_betatransfer_id(payment_id)
         
         if not payment_info:
             await update.callback_query.answer("❌ Платеж не найден")
