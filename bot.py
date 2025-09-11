@@ -12030,8 +12030,20 @@ async def show_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_info = await analytics_db_get_user_info_by_id_async(user_id)
     
     # Формируем информацию о пользователе
-    username_display = f"@{user_info['username']}" if user_info and user_info['username'] else "Без username"
-    name_display = f"{user_info['first_name'] or ''} {user_info['last_name'] or ''}".strip() if user_info else "Пользователь"
+    username_display = "Без username"
+    name_display = "Пользователь"
+
+    if user_info:
+        username_value = user_info.get('username')
+        first_name_value = user_info.get('first_name')
+        last_name_value = user_info.get('last_name')
+
+        if username_value:
+            username_display = f"@{username_value}"
+
+        full_name = f"{first_name_value or ''} {last_name_value or ''}".strip()
+        if full_name:
+            name_display = full_name
     
     support_text = f"""
 📞 **Поддержка**
