@@ -11829,13 +11829,9 @@ async def setup_commands(application):
 
     commands = [
 
-        BotCommand("start", "🚀 Начать работу с ботом / Перезагрузить бота"),
+        BotCommand("start", "🏠 Главное меню"),
 
-        BotCommand("help", "❓ Как пользоваться ботом"),
-
-        BotCommand("stats", "📊 Ваша статистика"),
-
-        BotCommand("ideogram_tips", "🎨 Советы по использованию Ideogram")
+        BotCommand("my_balance", "💳 Мой баланс")
 
     ]
 
@@ -11917,6 +11913,8 @@ def main():
     app.add_handler(CommandHandler('help', help_command))
 
     app.add_handler(CommandHandler('stats', stats_command))
+    
+    app.add_handler(CommandHandler('my_balance', my_balance_command))
 
     app.add_handler(CommandHandler('my_id', my_id_command))  # Временная команда
 
@@ -12254,6 +12252,47 @@ async def add_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
     except Exception as e:
         logging.warning(f"Не удалось отправить уведомление пользователю {user_id}: {e}")
+
+
+async def my_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда для показа баланса пользователя"""
+    user_id = update.effective_user.id
+    
+    try:
+        # Получаем информацию о кредитах
+        credits_data = await analytics_db_get_user_credits_async(user_id)
+        current_credits = credits_data.get('balance', 0)
+        
+        # Получаем информацию о бесплатных генерациях
+        free_generations = await analytics_db_get_free_generations_left_async(user_id)
+        
+        # Формируем сообщение
+        balance_text = f"💳 **Ваш баланс:**\n\n"
+        balance_text += f"🪙 **Кредиты:** {current_credits}\n"
+        balance_text += f"🆓 **Бесплатные генерации:** {free_generations}\n\n"
+        
+        if current_credits > 0:
+            balance_text += "✅ У вас есть кредиты для генерации контента!"
+        elif free_generations > 0:
+            balance_text += "✅ У вас есть бесплатные генерации!"
+        else:
+            balance_text += "❌ У вас закончились бесплатные генерации и кредиты.\n"
+            balance_text += "💡 Купите кредиты для продолжения работы с ботом!"
+        
+        # Создаем клавиатуру с кнопками
+        keyboard = [
+            [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")],
+            [InlineKeyboardButton("🪙 Купить кредиты", callback_data="credit_packages")]
+        ]
+        
+        await update.message.reply_text(
+            balance_text,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        
+    except Exception as e:
+        logging.error(f"Ошибка при получении баланса пользователя {user_id}: {e}")
+        await update.message.reply_text("❌ Ошибка при получении баланса. Попробуйте позже.")
 
 
 async def check_credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
