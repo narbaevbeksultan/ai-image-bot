@@ -3,7 +3,7 @@ import asyncio
 import concurrent.futures
 from typing import Dict, Any
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, BotCommand
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaDocument, BotCommand
 
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 
@@ -443,7 +443,7 @@ async def generate_single_image_async(idx, prompt, state, send_text=None):
                         recraft_style = "line_circuit"
                 
                 if send_text:
-                    await send_text(f"🎨 Генерирую через Recraft AI...\n\n💡 Совет: Recraft AI отлично подходит для дизайна, логотипов и векторной графики\n🎨 Стиль: {recraft_style}")
+                    await send_text(f"🎨 Генерирую через Recraft AI...\n\n💡 Совет: Recraft AI отлично подходит для дизайна, логотипов и векторной графики\n🎨 Стиль: {recraft_style}\n📄 Формат: SVG (векторная графика)")
                 
                 recraft_params = {
                     "prompt": prompt_with_style,
@@ -4613,7 +4613,15 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             if success and image_url:
                 # Успешно сгенерировано изображение
                 images.append(image_url)
-                media.append(InputMediaPhoto(media=image_url, caption=caption))
+                
+                # Проверяем, является ли файл SVG
+                if image_url.lower().endswith('.svg'):
+                    # SVG файлы отправляем как документы
+                    media.append(InputMediaDocument(media=image_url, caption=caption))
+                else:
+                    # Обычные изображения отправляем как фото
+                    media.append(InputMediaPhoto(media=image_url, caption=caption))
+                
                 processed_count += 1
 
                 # Добавлено изображение в медиа группу
@@ -4639,11 +4647,20 @@ async def send_images(update, context, state, prompt_type='auto', user_prompt=No
             # Если группа не отправляется, отправляем по одному
             for i, item in enumerate(media):
                 try:
-                    if hasattr(update, 'message') and update.message:
-                        await update.message.reply_photo(photo=item.media, caption=item.caption)
+                    if isinstance(item, InputMediaDocument):
+                        # Отправляем как документ (SVG файлы)
+                        if hasattr(update, 'message') and update.message:
+                            await update.message.reply_document(document=item.media, caption=item.caption)
+                        else:
+                            await context.bot.send_document(chat_id=chat_id, document=item.media, caption=item.caption)
+                        logging.info(f"SVG документ {i+1} отправлен отдельно")
                     else:
-                        await context.bot.send_photo(chat_id=chat_id, photo=item.media, caption=item.caption)
-                    logging.info(f"Изображение {i+1} отправлено отдельно")
+                        # Отправляем как фото (обычные изображения)
+                        if hasattr(update, 'message') and update.message:
+                            await update.message.reply_photo(photo=item.media, caption=item.caption)
+                        else:
+                            await context.bot.send_photo(chat_id=chat_id, photo=item.media, caption=item.caption)
+                        logging.info(f"Изображение {i+1} отправлено отдельно")
                 except Exception as photo_error:
                     logging.error(f"Ошибка отправки изображения {i+1}: {photo_error}")
 
