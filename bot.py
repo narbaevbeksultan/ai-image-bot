@@ -772,6 +772,20 @@ async def check_pending_payments():
                     )
                     await send_telegram_notification(user_id, error_message)
                 
+                elif payment_status == 'not_paid_timeout':
+                    # Обновляем статус платежа с истекшим временем
+                    await analytics_db_update_payment_status_async(payment_id, 'timeout')
+                    logging.info(f"Платеж {payment_id} истек по времени")
+                    
+                    # Уведомляем пользователя о истечении времени
+                    timeout_message = (
+                        f"⏰ **Время оплаты истекло**\n\n"
+                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                        f"📦 **Платеж:** {payment_id}\n\n"
+                        f"Для пополнения баланса создайте новый платеж."
+                    )
+                    await send_telegram_notification(user_id, timeout_message)
+                
             except Exception as e:
                 logging.error(f"Ошибка обработки платежа {payment_id}: {e}")
                 continue
@@ -8962,6 +8976,13 @@ async def check_payment_status_sync(update, context):
                 f"🆔 ID платежа: {payment_id}\n\n"
                 f"Пожалуйста, подождите несколько минут..."
             )
+        elif status == 'timeout':
+            message = (
+                f"⏰ **Время оплаты истекло**\n\n"
+                f"💳 Сумма: {amount} {currency}\n"
+                f"🆔 ID платежа: {payment_id}\n\n"
+                f"Для пополнения баланса создайте новый платеж."
+            )
         else:
             message = (
                 f"❌ **Платеж не обработан**\n\n"
@@ -11557,11 +11578,12 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.callback_query.answer("⏳ Платеж в обработке, попробуйте позже")
 
         elif status == 'failed':
-
             await update.callback_query.answer("❌ Платеж не прошел")
 
-        else:
+        elif status == 'not_paid_timeout':
+            await update.callback_query.answer("⏰ Время оплаты истекло. Создайте новый платеж.")
 
+        else:
             await update.callback_query.answer(f"ℹ️ Статус платежа: {status}")
 
             
