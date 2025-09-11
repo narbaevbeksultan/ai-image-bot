@@ -687,23 +687,40 @@ async def analytics_db_get_user_info_by_id_async(user_id: int):
 async def check_pending_payments():
     """Проверяет статус всех pending платежей и зачисляет кредиты при завершении"""
     try:
+        print("🔄 [PAYMENT CHECK] Начинаем проверку pending платежей...")
+        logging.info("🔄 [PAYMENT CHECK] Начинаем проверку pending платежей...")
+        
         # Получаем все pending платежи из базы данных
         pending_payments = await analytics_db_get_pending_payments_async()
         
         if not pending_payments:
+            print("✅ [PAYMENT CHECK] Pending платежей не найдено - все платежи обработаны")
+            logging.info("✅ [PAYMENT CHECK] Pending платежей не найдено - все платежи обработаны")
             return
         
-        logging.info(f"🔍 Проверяем {len(pending_payments)} pending платежей")
+        print(f"🔍 [PAYMENT CHECK] Найдено {len(pending_payments)} pending платежей для проверки")
+        logging.info(f"🔍 [PAYMENT CHECK] Найдено {len(pending_payments)} pending платежей для проверки")
         
-        for payment in pending_payments:
+        for i, payment in enumerate(pending_payments, 1):
             payment_id = payment.get('betatransfer_id')
             user_id = payment.get('user_id')
             order_id = payment.get('order_id')
+            amount = payment.get('amount', 0)
+            currency = payment.get('currency', 'UAH')
+            credit_amount = payment.get('credit_amount', 0)
+            
+            print(f"📋 [PAYMENT {i}/{len(pending_payments)}] Обрабатываем платеж: {order_id} (ID: {payment_id})")
+            logging.info(f"📋 [PAYMENT {i}/{len(pending_payments)}] Обрабатываем платеж: {order_id} (ID: {payment_id})")
             
             if not payment_id:
+                print(f"⚠️ [PAYMENT {i}] Пропускаем платеж {order_id} - нет Betatransfer ID")
+                logging.warning(f"⚠️ [PAYMENT {i}] Пропускаем платеж {order_id} - нет Betatransfer ID")
                 continue
             
             try:
+                print(f"🌐 [PAYMENT {i}] Запрашиваем статус у Betatransfer API для платежа {payment_id}...")
+                logging.info(f"🌐 [PAYMENT {i}] Запрашиваем статус у Betatransfer API для платежа {payment_id}...")
+                
                 # Проверяем статус платежа через Betatransfer API асинхронно
                 loop = asyncio.get_event_loop()
                 status_result = await loop.run_in_executor(
@@ -712,22 +729,31 @@ async def check_pending_payments():
                 )
                 
                 if 'error' in status_result:
-                    logging.error(f"Ошибка проверки статуса платежа {payment_id}: {status_result['error']}")
+                    print(f"❌ [PAYMENT {i}] Ошибка API Betatransfer: {status_result['error']}")
+                    logging.error(f"❌ [PAYMENT {i}] Ошибка API Betatransfer: {status_result['error']}")
                     continue
                 
                 payment_status = status_result.get('status')
-                logging.info(f"🔍 Платеж {payment_id} (Order: {order_id}) имеет статус: {payment_status}")
+                print(f"📊 [PAYMENT {i}] Статус платежа {payment_id}: {payment_status}")
+                logging.info(f"📊 [PAYMENT {i}] Статус платежа {payment_id}: {payment_status}")
                 
                 # Если платеж завершен, зачисляем кредиты
                 if payment_status == 'success':
-                    credit_amount = payment.get('credit_amount')
+                    print(f"✅ [PAYMENT {i}] Платеж {payment_id} успешно завершен! Сумма: {amount} {currency}, Кредиты: {credit_amount}")
+                    logging.info(f"✅ [PAYMENT {i}] Платеж {payment_id} успешно завершен! Сумма: {amount} {currency}, Кредиты: {credit_amount}")
                     
                     if credit_amount and credit_amount > 0:
+                        print(f"🔍 [PAYMENT {i}] Проверяем, не зачислены ли уже кредиты за этот платеж...")
+                        logging.info(f"🔍 [PAYMENT {i}] Проверяем, не зачислены ли уже кредиты за этот платеж...")
+                        
                         # Проверяем, не зачислены ли уже кредиты за этот платеж
                         # Ищем транзакцию с этим payment_id
                         existing_transaction = await analytics_db_get_credit_transaction_by_payment_id_async(payment_id)
                         
                         if not existing_transaction:
+                            print(f"💰 [PAYMENT {i}] Зачисляем {credit_amount} кредитов пользователю {user_id}...")
+                            logging.info(f"💰 [PAYMENT {i}] Зачисляем {credit_amount} кредитов пользователю {user_id}...")
+                            
                             # Кредиты еще не зачислены, зачисляем
                             await analytics_db_add_credits_async(user_id, credit_amount)
                             
@@ -736,6 +762,9 @@ async def check_pending_payments():
                             
                             # Обновляем статус платежа
                             await analytics_db_update_payment_status_async(payment_id, 'success')
+                            
+                            print(f"📱 [PAYMENT {i}] Отправляем уведомление пользователю {user_id}...")
+                            logging.info(f"📱 [PAYMENT {i}] Отправляем уведомление пользователю {user_id}...")
                             
                             # Отправляем уведомление пользователю
                             notification_message = (
@@ -747,21 +776,31 @@ async def check_pending_payments():
                             )
                             
                             await send_telegram_notification(user_id, notification_message)
-                            logging.info(f"Кредиты зачислены пользователю {user_id}: {credit_amount}")
+                            print(f"🎉 [PAYMENT {i}] Кредиты успешно зачислены пользователю {user_id}: {credit_amount} кредитов")
+                            logging.info(f"🎉 [PAYMENT {i}] Кредиты успешно зачислены пользователю {user_id}: {credit_amount} кредитов")
                         else:
+                            print(f"ℹ️ [PAYMENT {i}] Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
+                            logging.info(f"ℹ️ [PAYMENT {i}] Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
+                            
                             # Кредиты уже зачислены, просто обновляем статус платежа
                             await analytics_db_update_payment_status_async(payment_id, 'success')
-                            logging.info(f"Кредиты уже зачислены за платеж {payment_id}, обновляем только статус")
                 
                 elif payment_status == 'failed':
+                    print(f"❌ [PAYMENT {i}] Платеж {payment_id} завершился неудачно")
+                    logging.info(f"❌ [PAYMENT {i}] Платеж {payment_id} завершился неудачно")
+                    
                     # Обновляем статус неудачного платежа
                     await analytics_db_update_payment_status_async(payment_id, 'failed')
-                    logging.info(f"Платеж {payment_id} завершился неудачно")
                 
                 elif payment_status == 'error':
+                    print(f"⚠️ [PAYMENT {i}] Платеж {payment_id} завершился с ошибкой")
+                    logging.info(f"⚠️ [PAYMENT {i}] Платеж {payment_id} завершился с ошибкой")
+                    
                     # Обновляем статус ошибочного платежа
                     await analytics_db_update_payment_status_async(payment_id, 'error')
-                    logging.info(f"Платеж {payment_id} завершился с ошибкой")
+                    
+                    print(f"📱 [PAYMENT {i}] Отправляем уведомление об ошибке пользователю {user_id}...")
+                    logging.info(f"📱 [PAYMENT {i}] Отправляем уведомление об ошибке пользователю {user_id}...")
                     
                     # Уведомляем пользователя об ошибке
                     error_message = (
@@ -773,9 +812,14 @@ async def check_pending_payments():
                     await send_telegram_notification(user_id, error_message)
                 
                 elif payment_status == 'not_paid_timeout':
+                    print(f"⏰ [PAYMENT {i}] Платеж {payment_id} истек по времени")
+                    logging.info(f"⏰ [PAYMENT {i}] Платеж {payment_id} истек по времени")
+                    
                     # Обновляем статус платежа с истекшим временем
                     await analytics_db_update_payment_status_async(payment_id, 'timeout')
-                    logging.info(f"Платеж {payment_id} истек по времени")
+                    
+                    print(f"📱 [PAYMENT {i}] Отправляем уведомление об истечении времени пользователю {user_id}...")
+                    logging.info(f"📱 [PAYMENT {i}] Отправляем уведомление об истечении времени пользователю {user_id}...")
                     
                     # Уведомляем пользователя о истечении времени
                     timeout_message = (
@@ -786,23 +830,47 @@ async def check_pending_payments():
                     )
                     await send_telegram_notification(user_id, timeout_message)
                 
+                else:
+                    print(f"ℹ️ [PAYMENT {i}] Платеж {payment_id} имеет неизвестный статус: {payment_status}")
+                    logging.info(f"ℹ️ [PAYMENT {i}] Платеж {payment_id} имеет неизвестный статус: {payment_status}")
+                
             except Exception as e:
-                logging.error(f"Ошибка обработки платежа {payment_id}: {e}")
+                print(f"💥 [PAYMENT {i}] Ошибка обработки платежа {payment_id}: {e}")
+                logging.error(f"💥 [PAYMENT {i}] Ошибка обработки платежа {payment_id}: {e}")
                 continue
+        
+        print(f"✅ [PAYMENT CHECK] Проверка завершена. Обработано {len(pending_payments)} платежей")
+        logging.info(f"✅ [PAYMENT CHECK] Проверка завершена. Обработано {len(pending_payments)} платежей")
                 
     except Exception as e:
-        logging.error(f"Ошибка проверки pending платежей: {e}")
+        print(f"💥 [PAYMENT CHECK] Критическая ошибка проверки pending платежей: {e}")
+        logging.error(f"💥 [PAYMENT CHECK] Критическая ошибка проверки pending платежей: {e}")
 
 # Функция для запуска периодической проверки платежей
 async def start_payment_polling():
     """Запускает периодическую проверку статуса платежей"""
+    print("🚀 [PAYMENT POLLING] Запуск системы автоматической проверки платежей...")
+    logging.info("🚀 [PAYMENT POLLING] Запуск системы автоматической проверки платежей...")
+    
     while True:
         try:
+            print("⏰ [PAYMENT POLLING] Начинаем новую проверку платежей...")
+            logging.info("⏰ [PAYMENT POLLING] Начинаем новую проверку платежей...")
+            
             await check_pending_payments()
+            
+            print("😴 [PAYMENT POLLING] Ожидание 45 секунд до следующей проверки...")
+            logging.info("😴 [PAYMENT POLLING] Ожидание 45 секунд до следующей проверки...")
+            
             # Ждем 45 секунд перед следующей проверкой
             await asyncio.sleep(45)
         except Exception as e:
-            logging.error(f"Ошибка в payment polling: {e}")
+            print(f"💥 [PAYMENT POLLING] Ошибка в payment polling: {e}")
+            logging.error(f"💥 [PAYMENT POLLING] Ошибка в payment polling: {e}")
+            
+            print("😴 [PAYMENT POLLING] Ожидание 15 секунд после ошибки...")
+            logging.info("😴 [PAYMENT POLLING] Ожидание 15 секунд после ошибки...")
+            
             # При ошибке ждем меньше времени
             await asyncio.sleep(15)
 
@@ -11963,7 +12031,8 @@ def main():
             
             # Запускаем периодическую проверку платежей
             payment_polling_task = asyncio.create_task(start_payment_polling())
-            print("🔄 Автоматическая проверка платежей запущена (каждые 45 секунд)")
+            print("🔄 [SYSTEM] Автоматическая проверка платежей запущена (каждые 45 секунд)")
+            print("📊 [SYSTEM] В Railway deploy logs будут видны все операции с платежами")
 
             # Держим приложение запущенным
 
@@ -12009,7 +12078,8 @@ def main():
         
         polling_thread = threading.Thread(target=run_payment_polling, daemon=True)
         polling_thread.start()
-        print("🔄 Автоматическая проверка платежей запущена (каждые 45 секунд)")
+        print("🔄 [SYSTEM] Автоматическая проверка платежей запущена (каждые 45 секунд)")
+        print("📊 [SYSTEM] В консоли будут видны все операции с платежами")
 
         try:
             app.run_polling()
