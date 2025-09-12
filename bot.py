@@ -2700,7 +2700,7 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
 
-        [InlineKeyboardButton("🎨 Создать изображение", callback_data="create_content")],
+        [InlineKeyboardButton("🎨 Создать изображение", callback_data="create_simple_images")],
 
         [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
@@ -11136,7 +11136,7 @@ async def generate_video(update, context, state):
 
             [InlineKeyboardButton("🎬 Создать еще видео", callback_data="video_generation")],
 
-            [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_content")],
+            [InlineKeyboardButton("🎨 Создать изображения", callback_data="create_simple_images")],
 
             [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
