@@ -2612,15 +2612,34 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    await analytics_db_update_user_activity_async(user_id)
+    # Обновляем активность с таймаутом
+    try:
+        await asyncio.wait_for(
+            analytics_db_update_user_activity_async(user_id),
+            timeout=5.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout updating user activity for {user_id}")
 
-    await analytics_db_log_action_async(user_id, "stats_command")
+    # Логируем действие с таймаутом
+    try:
+        await asyncio.wait_for(
+            analytics_db_log_action_async(user_id, "stats_command"),
+            timeout=5.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout logging action for {user_id}")
 
-    
-
-    # Получаем статистику пользователя
-
-    user_stats = await analytics_db_get_user_stats_async(user_id)
+    # Получаем статистику пользователя с таймаутом
+    try:
+        user_stats = await asyncio.wait_for(
+            analytics_db_get_user_stats_async(user_id),
+            timeout=10.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout getting user stats for {user_id}")
+        await update.message.reply_text("⚠️ Временные проблемы с базой данных. Попробуйте позже.")
+        return
 
     
 
@@ -2750,17 +2769,45 @@ async def admin_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     
 
-    await analytics_db_update_user_activity_async(user_id)
+    # Обновляем активность с таймаутом
+    try:
+        await asyncio.wait_for(
+            analytics_db_update_user_activity_async(user_id),
+            timeout=5.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout updating user activity for {user_id}")
 
-    await analytics_db_log_action_async(user_id, "admin_stats_command")
+    # Логируем действие с таймаутом
+    try:
+        await asyncio.wait_for(
+            analytics_db_log_action_async(user_id, "admin_stats_command"),
+            timeout=5.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout logging action for {user_id}")
 
-    
+    # Получаем глобальную статистику с таймаутом
+    try:
+        global_stats = await asyncio.wait_for(
+            analytics_db_get_global_stats_async(30),
+            timeout=10.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout getting global stats for admin {user_id}")
+        await update.message.reply_text("⚠️ Временные проблемы с базой данных. Попробуйте позже.")
+        return
 
-    # Получаем глобальную статистику
-
-    global_stats = await analytics_db_get_global_stats_async(30)
-
-    daily_stats = await analytics_db_get_daily_stats_async(7)
+    # Получаем ежедневную статистику с таймаутом
+    try:
+        daily_stats = await asyncio.wait_for(
+            analytics_db_get_daily_stats_async(7),
+            timeout=10.0
+        )
+    except asyncio.TimeoutError:
+        logging.error(f"Timeout getting daily stats for admin {user_id}")
+        await update.message.reply_text("⚠️ Временные проблемы с базой данных. Попробуйте позже.")
+        return
 
     
 
@@ -4980,15 +5027,39 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "user_stats":
 
-        await analytics_db_update_user_activity_async(user_id)
+        # Обновляем активность с таймаутом
+        try:
+            await asyncio.wait_for(
+                analytics_db_update_user_activity_async(user_id),
+                timeout=5.0
+            )
+        except asyncio.TimeoutError:
+            logging.error(f"Timeout updating user activity for {user_id}")
 
-        await analytics_db_log_action_async(user_id, "view_stats_button")
+        # Логируем действие с таймаутом
+        try:
+            await asyncio.wait_for(
+                analytics_db_log_action_async(user_id, "view_stats_button"),
+                timeout=5.0
+            )
+        except asyncio.TimeoutError:
+            logging.error(f"Timeout logging action for {user_id}")
 
-        
-
-        # Получаем статистику пользователя
-
-        user_stats = await analytics_db_get_user_stats_async(user_id)
+        # Получаем статистику пользователя с таймаутом
+        try:
+            user_stats = await asyncio.wait_for(
+                analytics_db_get_user_stats_async(user_id),
+                timeout=10.0
+            )
+        except asyncio.TimeoutError:
+            logging.error(f"Timeout getting user stats for {user_id}")
+            await query.edit_message_text(
+                "⚠️ Временные проблемы с базой данных. Попробуйте позже.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+                ]])
+            )
+            return
 
         
 
@@ -11810,14 +11881,22 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         # Создаем запись о платеже в базе данных с количеством кредитов
         order_id = payment_result.get('order_id', f"order{int(time.time())}")
-        payment_record = await analytics_db_create_payment_with_credits_async(
-            user_id=user_id,
-            amount=package['price'],
-            currency=package['currency'],
-            payment_id=payment_result['id'],
-            order_id=order_id,
-            credit_amount=package['credits']  # Важно! Указываем количество кредитов
-        )
+        try:
+            payment_record = await asyncio.wait_for(
+                analytics_db_create_payment_with_credits_async(
+                    user_id=user_id,
+                    amount=package['price'],
+                    currency=package['currency'],
+                    payment_id=payment_result['id'],
+                    order_id=order_id,
+                    credit_amount=package['credits']  # Важно! Указываем количество кредитов
+                ),
+                timeout=10.0
+            )
+        except asyncio.TimeoutError:
+            logging.error(f"Timeout creating payment record for user {user_id}")
+            await update.callback_query.answer("⚠️ Временные проблемы с базой данных. Попробуйте позже.")
+            return
         
         if not payment_record:
             logging.error(f"Ошибка создания записи о платеже для пользователя {user_id}")
@@ -12494,12 +12573,28 @@ async def my_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_id = update.effective_user.id
     
     try:
-        # Получаем информацию о кредитах
-        credits_data = await analytics_db_get_user_credits_async(user_id)
-        current_credits = credits_data.get('balance', 0)
+        # Получаем информацию о кредитах с таймаутом
+        try:
+            credits_data = await asyncio.wait_for(
+                analytics_db_get_user_credits_async(user_id),
+                timeout=10.0
+            )
+            current_credits = credits_data.get('balance', 0)
+        except asyncio.TimeoutError:
+            logging.error(f"Timeout getting user credits for {user_id}")
+            await update.message.reply_text("⚠️ Временные проблемы с базой данных. Попробуйте позже.")
+            return
         
-        # Получаем информацию о бесплатных генерациях
-        free_generations = await analytics_db_get_free_generations_left_async(user_id)
+        # Получаем информацию о бесплатных генерациях с таймаутом
+        try:
+            free_generations = await asyncio.wait_for(
+                analytics_db_get_free_generations_left_async(user_id),
+                timeout=10.0
+            )
+        except asyncio.TimeoutError:
+            logging.error(f"Timeout getting free generations for {user_id}")
+            await update.message.reply_text("⚠️ Временные проблемы с базой данных. Попробуйте позже.")
+            return
         
         # Формируем сообщение
         balance_text = f"💳 **Ваш баланс:**\n\n"
