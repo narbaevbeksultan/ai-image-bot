@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 from database import analytics_db
 
 # Создаем пул потоков для блокирующих операций
-THREAD_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=100)
+THREAD_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=300)
 
 # Создаем пул HTTP соединений для aiohttp
 HTTP_SESSION = None
