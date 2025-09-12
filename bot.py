@@ -3,7 +3,7 @@ import asyncio
 import concurrent.futures
 from typing import Dict, Any
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaDocument, BotCommand
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, InputMediaDocument
 
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 
@@ -12073,32 +12073,6 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
 
 
-async def setup_commands(application):
-
-    """Устанавливает команды меню для бота"""
-
-    commands = [
-
-        BotCommand("start", "🏠 Главное меню (если застряли)"),
-
-        BotCommand("my_balance", "💳 Мой баланс")
-
-    ]
-
-    
-
-    try:
-
-        await application.bot.set_my_commands(commands)
-
-        logging.info("Команды меню успешно установлены")
-
-    except Exception as e:
-
-        logging.error(f"Ошибка при установке команд меню: {e}")
-
-
-
 def main():
 
     import os
@@ -12141,7 +12115,19 @@ def main():
 
     
 
-    app = ApplicationBuilder().token(TOKEN).build()
+    # Настройки для улучшения стабильности соединения
+    from telegram.request import HTTPXRequest
+    
+    # Создаем кастомный HTTP клиент с увеличенными таймаутами
+    request = HTTPXRequest(
+        connection_pool_size=8,
+        connect_timeout=30.0,
+        read_timeout=30.0,
+        write_timeout=30.0,
+        pool_timeout=30.0
+    )
+    
+    app = ApplicationBuilder().token(TOKEN).request(request).build()
     
     # Добавляем обработчик ошибок
     async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -12200,9 +12186,6 @@ def main():
 
     
 
-    # Устанавливаем команды меню при запуске
-
-    app.post_init = setup_commands
 
     
 
