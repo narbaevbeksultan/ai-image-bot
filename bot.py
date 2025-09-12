@@ -12079,7 +12079,7 @@ async def setup_commands(application):
 
     commands = [
 
-        BotCommand("start", "🏠 Главное меню (назад к началу)"),
+        BotCommand("start", "🏠 Главное меню (если застряли)"),
 
         BotCommand("my_balance", "💳 Мой баланс")
 
