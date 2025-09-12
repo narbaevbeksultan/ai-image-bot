@@ -12089,6 +12089,10 @@ async def setup_commands(application):
 
     try:
 
+        # Принудительно удаляем все старые команды
+        await application.bot.delete_my_commands()
+        
+        # Устанавливаем новые команды
         await application.bot.set_my_commands(commands)
 
         logging.info("Команды меню успешно установлены")
