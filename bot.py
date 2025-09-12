@@ -867,7 +867,7 @@ async def check_pending_payments():
                             notification_message = (
                                 f"✅ **Кредиты зачислены!**\n\n"
                                 f"🪙 **Получено:** {credit_amount:,} кредитов\n"
-                                f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                                f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'KGS')}\n"
                                 f"📦 **Платеж:** {payment_id}\n\n"
                                 f"Теперь вы можете использовать кредиты для генерации изображений!"
                             )
@@ -902,7 +902,7 @@ async def check_pending_payments():
                     # Уведомляем пользователя об ошибке
                     error_message = (
                         f"❌ **Ошибка платежа**\n\n"
-                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'KGS')}\n"
                         f"📦 **Платеж:** {payment_id}\n\n"
                         f"Попробуйте создать новый платеж или обратитесь в поддержку."
                     )
@@ -921,7 +921,7 @@ async def check_pending_payments():
                     # Уведомляем пользователя о истечении времени
                     timeout_message = (
                         f"⏰ **Время оплаты истекло**\n\n"
-                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'RUB')}\n"
+                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'KGS')}\n"
                         f"📦 **Платеж:** {payment_id}\n\n"
                         f"Для пополнения баланса создайте новый платеж."
                     )
@@ -1045,7 +1045,7 @@ async def payment_callback():
         status = payment_info.get("status")
         amount = payment_info.get("amount")
         order_id = payment_info.get("order_id")
-        currency = payment_info.get("currency", "RUB")
+        currency = payment_info.get("currency", "KGS")
         
         logging.info(f"Платеж {payment_id} обработан, статус: {status}")
         
@@ -9285,7 +9285,7 @@ async def check_payment_status_sync(update, context):
         
         status = payment_info.get('status', 'unknown')
         amount = payment_info.get('amount', 0)
-        currency = payment_info.get('currency', 'RUB')
+        currency = payment_info.get('currency', 'KGS')
         credit_amount = payment_info.get('credit_amount', 0)
         
         if status == 'completed':
