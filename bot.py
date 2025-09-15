@@ -927,6 +927,25 @@ async def check_pending_payments():
                     )
                     await send_telegram_notification(user_id, timeout_message)
                 
+                elif payment_status == 'cancelled' or payment_status == 'canceled':
+                    print(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
+                    logging.info(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
+                    
+                    # Обновляем статус отмененного платежа
+                    await analytics_db_update_payment_status_async(payment_id, 'cancelled')
+                    
+                    print(f"📱 [PAYMENT {i}] Отправляем уведомление об отмене пользователю {user_id}...")
+                    logging.info(f"📱 [PAYMENT {i}] Отправляем уведомление об отмене пользователю {user_id}...")
+                    
+                    # Уведомляем пользователя об отмене платежа
+                    cancelled_message = (
+                        f"🚫 **Платеж отменен**\n\n"
+                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'KGS')}\n"
+                        f"📦 **Платеж:** {payment_id}\n\n"
+                        f"Для пополнения баланса создайте новый платеж."
+                    )
+                    await send_telegram_notification(user_id, cancelled_message)
+                
                 else:
                     print(f"ℹ️ [PAYMENT {i}] Платеж {payment_id} имеет неизвестный статус: {payment_status}")
                     logging.info(f"ℹ️ [PAYMENT {i}] Платеж {payment_id} имеет неизвестный статус: {payment_status}")
@@ -1073,6 +1092,32 @@ async def payment_callback():
                              f"💰 Зачислено кредитов: {credit_amount}\n"
                              f"💳 Сумма: {amount} {currency}\n"
                              f"🆔 ID платежа: {payment_id}"
+                    )
+                except Exception as e:
+                    logging.error(f"Ошибка отправки уведомления пользователю {user_id}: {e}")
+            else:
+                logging.error(f"Платеж {payment_id} не найден в базе данных")
+        
+        # Если платеж отменен, обновляем статус и уведомляем пользователя
+        elif status == "cancelled" or status == "canceled":
+            # Получаем информацию о платеже из базы по betatransfer_id
+            payment_record = await analytics_db_get_payment_by_betatransfer_id_async(payment_id)
+            if payment_record:
+                user_id = payment_record.get("user_id")
+                
+                # Обновляем статус платежа
+                await analytics_db_update_payment_status_async(payment_id, "cancelled")
+                
+                logging.info(f"Платеж {payment_id} отменен для пользователя {user_id}")
+                
+                # Отправляем уведомление пользователю
+                try:
+                    await bot.send_message(
+                        chat_id=user_id,
+                        text=f"🚫 **Платеж отменен**\n\n"
+                             f"💳 Сумма: {amount} {currency}\n"
+                             f"🆔 ID платежа: {payment_id}\n\n"
+                             f"Для пополнения баланса создайте новый платеж."
                     )
                 except Exception as e:
                     logging.error(f"Ошибка отправки уведомления пользователю {user_id}: {e}")
@@ -9380,6 +9425,13 @@ async def check_payment_status_sync(update, context):
                 f"🆔 ID платежа: {payment_id}\n\n"
                 f"Для пополнения баланса создайте новый платеж."
             )
+        elif status == 'cancelled' or status == 'canceled':
+            message = (
+                f"🚫 **Платеж отменен**\n\n"
+                f"💳 Сумма: {amount} {currency}\n"
+                f"🆔 ID платежа: {payment_id}\n\n"
+                f"Для пополнения баланса создайте новый платеж."
+            )
         else:
             message = (
                 f"❌ **Платеж не обработан**\n\n"
@@ -12014,6 +12066,9 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
         elif status == 'not_paid_timeout':
             await update.callback_query.answer("⏰ Время оплаты истекло. Создайте новый платеж.")
+
+        elif status == 'cancelled' or status == 'canceled':
+            await update.callback_query.answer("🚫 Платеж был отменен. Создайте новый платеж.")
 
         else:
             await update.callback_query.answer(f"ℹ️ Статус платежа: {status}")
