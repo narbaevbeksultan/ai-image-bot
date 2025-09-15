@@ -36,7 +36,7 @@ class BetatransferAPI:
         
         return signature
     
-    def create_payment(self, amount: float, currency: str = "UAH", 
+    def create_payment(self, amount: float, currency: str = "TJS", 
                        description: str = "", order_id: str = None, 
                        payer_email: str = "", payer_name: str = "",
                        payer_id: str = "") -> Dict:
@@ -64,7 +64,7 @@ class BetatransferAPI:
             'amount': str(amount),
             'currency': currency,
             'orderId': order_id,
-            'paymentSystem': 'Card1',  # Настоящий метод для Card1
+            'paymentSystem': 'Card8',  # Настоящий метод для Card8
             'payerId': str(payer_id)
         }
         
