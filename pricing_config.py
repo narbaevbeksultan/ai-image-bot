@@ -3,33 +3,33 @@ CREDIT_PACKAGES = {
     'small': {
         'name': '🪙 Малый пакет',
         'credits': 1200,
-        'price': 515.0,
-        'currency': 'KGS',
-        'price_per_credit': 0.429,
+        'price': 3042.0,
+        'currency': 'KZT',
+        'price_per_credit': 2.535,
         'description': '1200 кредитов для личного тестирования',
-        'original_price': 515.0,
+        'original_price': 3042.0,
         'discount_percent': 0,
         'savings': 0
     },
     'medium': {
         'name': '🪙 Средний пакет',
         'credits': 5000,
-        'price': 2146.0,
-        'currency': 'KGS',
-        'price_per_credit': 0.429,
+        'price': 12675.0,
+        'currency': 'KZT',
+        'price_per_credit': 2.535,
         'description': '5000 кредитов для активных пользователей',
-        'original_price': 2146.0,
+        'original_price': 12675.0,
         'discount_percent': 0,
         'savings': 0
     },
     'large': {
         'name': '🪙 Большой пакет',
         'credits': 10000,
-        'price': 4291.0,
-        'currency': 'KGS',
-        'price_per_credit': 0.429,
+        'price': 25350.0,
+        'currency': 'KZT',
+        'price_per_credit': 2.535,
         'description': '10000 кредитов для профессионалов',
-        'original_price': 4291.0,
+        'original_price': 25350.0,
         'discount_percent': 0,
         'savings': 0
     }
@@ -79,8 +79,8 @@ FREE_LIMITS = {
 }
 
 # Настройки валюты
-CURRENCY_SYMBOL = 'сом'  # Символ сома
-CURRENCY_NAME = 'KGS'  # Код валюты
+CURRENCY_SYMBOL = '₸'  # Символ тенге
+CURRENCY_NAME = 'KZT'  # Код валюты
 
 def get_credit_package_by_type(package_type: str) -> dict:
     """Получение пакета кредитов по типу"""
@@ -99,10 +99,10 @@ def get_generation_cost(model: str, format_type: str = None, video_quality: str 
     format_cost = FORMAT_COSTS.get(format_type, 0)
     return base_cost + format_cost
 
-def format_price(amount: float, currency: str = 'KGS') -> str:
+def format_price(amount: float, currency: str = 'KZT') -> str:
     """Форматирует цену с символом валюты"""
-    if currency == 'KGS':
-        return f"сом {amount:.0f}"  # Без копеек для сомов
+    if currency == 'KZT':
+        return f"₸{amount:.0f}"  # Без копеек для тенге
     elif currency == 'RUB':
         return f"₽{amount:.0f}"  # Без копеек для рублей
     elif currency == 'UAH':
