@@ -927,7 +927,7 @@ async def check_pending_payments():
                     )
                     await send_telegram_notification(user_id, timeout_message)
                 
-                elif payment_status == 'cancelled' or payment_status == 'canceled':
+                elif payment_status == 'cancelled' or payment_status == 'canceled' or payment_status == 'cancel':
                     print(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
                     logging.info(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
                     
@@ -1099,7 +1099,7 @@ async def payment_callback():
                 logging.error(f"Платеж {payment_id} не найден в базе данных")
         
         # Если платеж отменен, обновляем статус и уведомляем пользователя
-        elif status == "cancelled" or status == "canceled":
+        elif status == "cancelled" or status == "canceled" or status == "cancel":
             # Получаем информацию о платеже из базы по betatransfer_id
             payment_record = await analytics_db_get_payment_by_betatransfer_id_async(payment_id)
             if payment_record:
@@ -9425,7 +9425,7 @@ async def check_payment_status_sync(update, context):
                 f"🆔 ID платежа: {payment_id}\n\n"
                 f"Для пополнения баланса создайте новый платеж."
             )
-        elif status == 'cancelled' or status == 'canceled':
+        elif status == 'cancelled' or status == 'canceled' or status == 'cancel':
             message = (
                 f"🚫 **Платеж отменен**\n\n"
                 f"💳 Сумма: {amount} {currency}\n"
@@ -12067,7 +12067,7 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
         elif status == 'not_paid_timeout':
             await update.callback_query.answer("⏰ Время оплаты истекло. Создайте новый платеж.")
 
-        elif status == 'cancelled' or status == 'canceled':
+        elif status == 'cancelled' or status == 'canceled' or status == 'cancel':
             await update.callback_query.answer("🚫 Платеж был отменен. Создайте новый платеж.")
 
         else:
