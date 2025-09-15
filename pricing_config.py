@@ -37,14 +37,14 @@ CREDIT_PACKAGES = {
 
 # Стоимость генерации за кредит для разных моделей
 GENERATION_COSTS = {
-    'Ideogram': 9,                     # 9 кредитов за генерацию
-    'Bytedance (Seedream-3)': 9,      # 9 кредитов за генерацию
-    'Bytedance (Seedream-4)': 9,      # 9 кредитов за генерацию
-    'Luma Photon': 9,                  # 9 кредитов за генерацию
+    'Ideogram': 10,                    # 10 кредитов за генерацию
+    'Bytedance (Seedream-3)': 10,     # 10 кредитов за генерацию
+    'Bytedance (Seedream-4)': 10,     # 10 кредитов за генерацию
+    'Luma Photon': 10,                 # 10 кредитов за генерацию
     'Bria 3.2': 12,                   # 12 кредитов за генерацию
     'Google Imagen 4 Ultra': 16,      # 16 кредитов за генерацию
     'Recraft AI': 20,                  # 20 кредитов за генерацию
-    'FLUX.1 Kontext Pro': 11,         # 11 кредитов за редактирование
+    'FLUX.1 Kontext Pro': 12,         # 12 кредитов за редактирование
     'real-esrgan': 15,                 # 15 кредитов за апскейл
     'gfpgan': 20,                      # 20 кредитов за восстановление лица
     'codeformer': 25,                  # 25 кредитов за восстановление лица
@@ -53,12 +53,12 @@ GENERATION_COSTS = {
 
 # Стоимость генераций видео Bytedance (в кредитах)
 VIDEO_GENERATION_COSTS = {
-    'Bytedance 480p 5s': 36,
-    'Bytedance 720p 5s': 70,
-    'Bytedance 1080p 5s': 171,
-    'Bytedance 480p 10s': 70,
-    'Bytedance 720p 10s': 137,
-    'Bytedance 1080p 10s': 340
+    'Bytedance 480p 5s': 37,
+    'Bytedance 720p 5s': 73,
+    'Bytedance 1080p 5s': 183,
+    'Bytedance 480p 10s': 73,
+    'Bytedance 720p 10s': 146,
+    'Bytedance 1080p 10s': 365
 }
 
 # Стоимость генераций по форматам (дополнительно к модели)
