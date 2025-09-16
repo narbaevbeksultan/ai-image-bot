@@ -9604,24 +9604,29 @@ async def generate_video(update, context, state):
     video_quality = state.get('video_quality', '480p')
     video_duration = state.get('video_duration', 5)
     
-    # Рассчитываем стоимость видео
-    video_cost = 0
-    if video_duration == 5:
-        if video_quality == "480p":
-            video_cost = 37
-        elif video_quality == "720p":
-            video_cost = 71
-        elif video_quality == "1080p":
-            video_cost = 172
-    elif video_duration == 10:
-        if video_quality == "480p":
-            video_cost = 71
-        elif video_quality == "720p":
-            video_cost = 138
-        elif video_quality == "1080p":
-            video_cost = 342
-    else:
-        video_cost = 37  # Базовая цена для других длительностей
+    # Рассчитываем стоимость видео используя pricing_config
+    try:
+        from pricing_config import get_generation_cost
+        video_cost = get_generation_cost('Bytedance (Seedream-3)', video_quality=video_quality, video_duration=f"{video_duration}s")
+    except ImportError:
+        # Fallback если модуль не импортирован - используем старые цены
+        video_cost = 0
+        if video_duration == 5:
+            if video_quality == "480p":
+                video_cost = 37
+            elif video_quality == "720p":
+                video_cost = 73
+            elif video_quality == "1080p":
+                video_cost = 183
+        elif video_duration == 10:
+            if video_quality == "480p":
+                video_cost = 73
+            elif video_quality == "720p":
+                video_cost = 146
+            elif video_quality == "1080p":
+                video_cost = 365
+        else:
+            video_cost = 37  # Базовая цена для других длительностей
 
     # Видео доступно только за кредиты, НЕ за бесплатные генерации
     if user_credits['balance'] < video_cost:
@@ -10527,24 +10532,29 @@ async def generate_video(update, context, state):
             
             # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
             if user_id:
-                # Определяем стоимость видео на основе качества и длительности
-                if video_duration == 5:
-                    if video_quality == "480p":
+                # Определяем стоимость видео используя pricing_config
+                try:
+                    from pricing_config import get_generation_cost
+                    base_cost = get_generation_cost('Bytedance (Seedream-3)', video_quality=video_quality, video_duration=f"{video_duration}s")
+                except ImportError:
+                    # Fallback если модуль не импортирован - используем старые цены
+                    if video_duration == 5:
+                        if video_quality == "480p":
+                            base_cost = 37
+                        elif video_quality == "720p":
+                            base_cost = 73
+                        elif video_quality == "1080p":
+                            base_cost = 183
+                    elif video_duration == 10:
+                        if video_quality == "480p":
+                            base_cost = 73
+                        elif video_quality == "720p":
+                            base_cost = 146
+                        elif video_quality == "1080p":
+                            base_cost = 365
+                    else:
+                        # Для других длительностей используем базовую цену 480p 5s
                         base_cost = 37
-                    elif video_quality == "720p":
-                        base_cost = 71
-                    elif video_quality == "1080p":
-                        base_cost = 172
-                elif video_duration == 10:
-                    if video_quality == "480p":
-                        base_cost = 71
-                    elif video_quality == "720p":
-                        base_cost = 138
-                    elif video_quality == "1080p":
-                        base_cost = 342
-                else:
-                    # Для других длительностей используем базовую цену 480p 5s
-                    base_cost = 37
                 
                 if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                     logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
@@ -10630,24 +10640,29 @@ async def generate_video(update, context, state):
                 
                 # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
                 if user_id:
-                    # Определяем стоимость видео на основе качества и длительности
-                    if video_duration == 5:
-                        if video_quality == "480p":
+                    # Определяем стоимость видео используя pricing_config
+                    try:
+                        from pricing_config import get_generation_cost
+                        base_cost = get_generation_cost('Bytedance (Seedream-3)', video_quality=video_quality, video_duration=f"{video_duration}s")
+                    except ImportError:
+                        # Fallback если модуль не импортирован - используем старые цены
+                        if video_duration == 5:
+                            if video_quality == "480p":
+                                base_cost = 37
+                            elif video_quality == "720p":
+                                base_cost = 73
+                            elif video_quality == "1080p":
+                                base_cost = 183
+                        elif video_duration == 10:
+                            if video_quality == "480p":
+                                base_cost = 73
+                            elif video_quality == "720p":
+                                base_cost = 146
+                            elif video_quality == "1080p":
+                                base_cost = 365
+                        else:
+                            # Для других длительностей используем базовую цену 480p 5s
                             base_cost = 37
-                        elif video_quality == "720p":
-                            base_cost = 71
-                        elif video_quality == "1080p":
-                            base_cost = 172
-                    elif video_duration == 10:
-                        if video_quality == "480p":
-                            base_cost = 71
-                        elif video_quality == "720p":
-                            base_cost = 138
-                        elif video_quality == "1080p":
-                            base_cost = 342
-                    else:
-                        # Для других длительностей используем базовую цену 480p 5s
-                        base_cost = 37
                     
                     if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                         logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
@@ -10892,24 +10907,29 @@ async def generate_video(update, context, state):
                                 
                                 # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
                                 if user_id:
-                                    # Определяем стоимость видео на основе качества и длительности
-                                    if video_duration == 5:
-                                        if video_quality == "480p":
+                                    # Определяем стоимость видео используя pricing_config
+                                    try:
+                                        from pricing_config import get_generation_cost
+                                        base_cost = get_generation_cost('Bytedance (Seedream-3)', video_quality=video_quality, video_duration=f"{video_duration}s")
+                                    except ImportError:
+                                        # Fallback если модуль не импортирован - используем старые цены
+                                        if video_duration == 5:
+                                            if video_quality == "480p":
+                                                base_cost = 37
+                                            elif video_quality == "720p":
+                                                base_cost = 73
+                                            elif video_quality == "1080p":
+                                                base_cost = 183
+                                        elif video_duration == 10:
+                                            if video_quality == "480p":
+                                                base_cost = 73
+                                            elif video_quality == "720p":
+                                                base_cost = 146
+                                            elif video_quality == "1080p":
+                                                base_cost = 365
+                                        else:
+                                            # Для других длительностей используем базовую цену 480p 5s
                                             base_cost = 37
-                                        elif video_quality == "720p":
-                                            base_cost = 71
-                                        elif video_quality == "1080p":
-                                            base_cost = 172
-                                    elif video_duration == 10:
-                                        if video_quality == "480p":
-                                            base_cost = 71
-                                        elif video_quality == "720p":
-                                            base_cost = 138
-                                        elif video_quality == "1080p":
-                                            base_cost = 342
-                                    else:
-                                        # Для других длительностей используем базовую цену 480p 5s
-                                        base_cost = 37
                                     
                                     if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                                         logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")
@@ -10977,24 +10997,29 @@ async def generate_video(update, context, state):
                             
                             # СПИСЫВАЕМ КРЕДИТЫ ЗА ВИДЕО
                             if user_id:
-                                # Определяем стоимость видео на основе качества и длительности
-                                if video_duration == 5:
-                                    if video_quality == "480p":
+                                # Определяем стоимость видео используя pricing_config
+                                try:
+                                    from pricing_config import get_generation_cost
+                                    base_cost = get_generation_cost('Bytedance (Seedream-3)', video_quality=video_quality, video_duration=f"{video_duration}s")
+                                except ImportError:
+                                    # Fallback если модуль не импортирован - используем старые цены
+                                    if video_duration == 5:
+                                        if video_quality == "480p":
+                                            base_cost = 37
+                                        elif video_quality == "720p":
+                                            base_cost = 73
+                                        elif video_quality == "1080p":
+                                            base_cost = 183
+                                    elif video_duration == 10:
+                                        if video_quality == "480p":
+                                            base_cost = 73
+                                        elif video_quality == "720p":
+                                            base_cost = 146
+                                        elif video_quality == "1080p":
+                                            base_cost = 365
+                                    else:
+                                        # Для других длительностей используем базовую цену 480p 5s
                                         base_cost = 37
-                                    elif video_quality == "720p":
-                                        base_cost = 71
-                                    elif video_quality == "1080p":
-                                        base_cost = 172
-                                elif video_duration == 10:
-                                    if video_quality == "480p":
-                                        base_cost = 71
-                                    elif video_quality == "720p":
-                                        base_cost = 138
-                                    elif video_quality == "1080p":
-                                        base_cost = 342
-                                else:
-                                    # Для других длительностей используем базовую цену 480p 5s
-                                    base_cost = 37
                                 
                                 if await analytics_db_use_credits_async(user_id, base_cost, f"Генерация видео {video_quality} {video_duration}с через Bytedance Seedance 1.0 Pro"):
                                     logging.info(f"Пользователь {user_id} использовал {base_cost} кредитов за видео")

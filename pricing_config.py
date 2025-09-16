@@ -91,7 +91,9 @@ def get_generation_cost(model: str, format_type: str = None, video_quality: str 
     """Получение стоимости генерации"""
     # Проверяем, это видео Bytedance
     if model == 'Bytedance (Seedream-3)' and video_quality and video_duration:
-        video_key = f'Bytedance {video_quality} {video_duration}'
+        # Убираем 's' из video_duration если есть
+        duration_clean = video_duration.replace('s', '') if video_duration.endswith('s') else video_duration
+        video_key = f'Bytedance {video_quality} {duration_clean}s'
         if video_key in VIDEO_GENERATION_COSTS:
             return VIDEO_GENERATION_COSTS[video_key]
     
