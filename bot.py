@@ -11998,7 +11998,7 @@ async def handle_credit_purchase(update: Update, context: ContextTypes.DEFAULT_T
 
         text += f"🪙 **Кредитов:** {package['credits']}\n"
 
-        text += f"💰 **Сумма:** {format_price(package['price'], package.get('currency', 'TJS'))}\n"
+        text += f"💰 **Сумма:** {format_price(package['price'], package.get('currency', 'RUB'))}\n"
 
         text += f"📝 **Описание:** {package['description']}\n\n"
 
@@ -12198,7 +12198,7 @@ async def activate_payment(update: Update, context: ContextTypes.DEFAULT_TYPE, p
 
                     text += f"🪙 **Получено кредитов:** {package['credits']}\n"
 
-                    text += f"💰 **Сумма:** {format_price(amount, package.get('currency', 'TJS'))}\n"
+                    text += f"💰 **Сумма:** {format_price(amount, package.get('currency', 'RUB'))}\n"
 
                     text += f"📦 **Пакет:** {package['credits']} кредитов\n\n"
 
