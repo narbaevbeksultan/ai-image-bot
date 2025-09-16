@@ -935,6 +935,10 @@ async def check_pending_payments():
                     )
                     await send_telegram_notification(user_id, timeout_message)
                 
+                elif payment_status == 'not_paid':
+                    print(f"⏳ [PAYMENT {i}] Платеж {payment_id} еще не оплачен")
+                    logging.info(f"⏳ [PAYMENT {i}] Платеж {payment_id} еще не оплачен")
+                    # Статус в БД остается 'pending'; уведомление не отправляем, чтобы не спамить
                 elif payment_status == 'cancelled' or payment_status == 'canceled' or payment_status == 'cancel':
                     print(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
                     logging.info(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
@@ -12101,6 +12105,9 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
 
         elif status == 'not_paid_timeout':
             await update.callback_query.answer("⏰ Время оплаты истекло. Создайте новый платеж.")
+        
+        elif status == 'not_paid':
+            await update.callback_query.answer("⏳ Платёж пока не выполнен. Перейдите по ссылке на оплату и после оплаты нажмите «Проверить статус».")
 
         elif status == 'cancelled' or status == 'canceled' or status == 'cancel':
             await update.callback_query.answer("🚫 Платеж был отменен. Создайте новый платеж.")
