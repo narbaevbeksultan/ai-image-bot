@@ -936,9 +936,25 @@ async def check_pending_payments():
                     await send_telegram_notification(user_id, timeout_message)
                 
                 elif payment_status == 'not_paid':
-                    print(f"⏳ [PAYMENT {i}] Платеж {payment_id} еще не оплачен")
-                    logging.info(f"⏳ [PAYMENT {i}] Платеж {payment_id} еще не оплачен")
-                    # Статус в БД остается 'pending'; уведомление не отправляем, чтобы не спамить
+                    print(f"⏳ [PAYMENT {i}] Платеж {payment_id} не найден у провайдера (not_paid)")
+                    logging.info(f"⏳ [PAYMENT {i}] Платеж {payment_id} не найден у провайдера (not_paid)")
+                    
+                    # Переводим платеж в ручную проверку, чтобы он не оставался в pending
+                    await analytics_db_update_payment_status_async(payment_id, 'manual_review')
+                    
+                    # Уведомляем пользователя и просим связаться с поддержкой
+                    not_paid_message = (
+                        f"⏳ **Оплата пока не найдена**\n\n"
+                        f"💰 **Сумма:** {payment.get('amount')} {payment.get('currency', 'KGS')}\n"
+                        f"📦 **Платеж:** {payment_id}\n\n"
+                        f"Возможны задержка банка, неверная сумма или холд. Чтобы мы проверили платеж, пожалуйста, напишите в поддержку: @aiimagebotmanager и приложите:\n"
+                        f"• Скрин/чек оплаты\n"
+                        f"• Номер платежа: {payment_id}\n"
+                        f"• Ваш ID (команда /my_id)\n"
+                        f"• Сумму и время оплаты\n\n"
+                        f"Мы проверим и при необходимости откроем диспут. Кредиты будут зачислены вручную."
+                    )
+                    await send_telegram_notification(user_id, not_paid_message)
                 elif payment_status == 'cancelled' or payment_status == 'canceled' or payment_status == 'cancel':
                     print(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
                     logging.info(f"🚫 [PAYMENT {i}] Платеж {payment_id} был отменен")
@@ -12104,10 +12120,10 @@ async def check_payment_status(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.callback_query.answer("❌ Платеж не прошел")
 
         elif status == 'not_paid_timeout':
-            await update.callback_query.answer("⏰ Время оплаты истекло. Создайте новый платеж.")
+            await update.callback_query.answer("⏰ Время оплаты истекло. Если вы уже произвели оплату, но кредиты не поступили на баланс, напишите в поддержку @aiimagebotmanager.")
         
         elif status == 'not_paid':
-            await update.callback_query.answer("⏳ Платёж пока не выполнен. Перейдите по ссылке на оплату и после оплаты нажмите «Проверить статус».")
+            await update.callback_query.answer("⏳ Платёж пока не найден. Напишите в поддержку @aiimagebotmanager и приложите чек.")
 
         elif status == 'cancelled' or status == 'canceled' or status == 'cancel':
             await update.callback_query.answer("🚫 Платеж был отменен. Создайте новый платеж.")
