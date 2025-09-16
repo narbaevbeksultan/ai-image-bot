@@ -3,33 +3,33 @@ CREDIT_PACKAGES = {
     'small': {
         'name': '🪙 Малый пакет',
         'credits': 2500,
-        'price': 1000.0,
-        'currency': 'RUB',
-        'price_per_credit': 0.4,
+        'price': 118.0,
+        'currency': 'TJS',
+        'price_per_credit': 0.047,
         'description': '2500 кредитов для личного тестирования',
-        'original_price': 1000.0,
+        'original_price': 118.0,
         'discount_percent': 0,
         'savings': 0
     },
     'medium': {
         'name': '🪙 Средний пакет',
         'credits': 5000,
-        'price': 2000.0,
-        'currency': 'RUB',
-        'price_per_credit': 0.4,
+        'price': 236.0,
+        'currency': 'TJS',
+        'price_per_credit': 0.048,
         'description': '5000 кредитов для активных пользователей',
-        'original_price': 2000.0,
+        'original_price': 236.0,
         'discount_percent': 0,
         'savings': 0
     },
     'large': {
         'name': '🪙 Большой пакет',
         'credits': 10000,
-        'price': 5000.0,
-        'currency': 'RUB',
-        'price_per_credit': 0.5,
+        'price': 472.0,
+        'currency': 'TJS',
+        'price_per_credit': 0.048,
         'description': '10000 кредитов для профессионалов',
-        'original_price': 5000.0,
+        'original_price': 472.0,
         'discount_percent': 0,
         'savings': 0
     }
@@ -80,8 +80,8 @@ FREE_LIMITS = {
 }
 
 # Настройки валюты
-CURRENCY_SYMBOL = '₽'  # Символ рубля
-CURRENCY_NAME = 'RUB'  # Код валюты
+CURRENCY_SYMBOL = 'сомони'  # Символ сомони
+CURRENCY_NAME = 'TJS'  # Код валюты
 
 def get_credit_package_by_type(package_type: str) -> dict:
     """Получение пакета кредитов по типу"""
@@ -102,7 +102,7 @@ def get_generation_cost(model: str, format_type: str = None, video_quality: str 
     format_cost = FORMAT_COSTS.get(format_type, 0)
     return base_cost + format_cost
 
-def format_price(amount: float, currency: str = 'RUB') -> str:
+def format_price(amount: float, currency: str = 'TJS') -> str:
     """Форматирует цену с символом валюты"""
     if currency == 'TJS':
         return f"{amount:.0f} сомони"  # Без копеек для сомони
