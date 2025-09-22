@@ -2,34 +2,34 @@
 CREDIT_PACKAGES = {
     'small': {
         'name': '🪙 Малый пакет',
-        'credits': 2500,
-        'price': 118.0,
-        'currency': 'TJS',
-        'price_per_credit': 0.047,
-        'description': '2500 кредитов для личного тестирования',
-        'original_price': 118.0,
+        'credits': 1300,
+        'price': 506.0,
+        'currency': 'KGS',
+        'price_per_credit': 0.389,
+        'description': '1300 кредитов для личного тестирования',
+        'original_price': 506.0,
         'discount_percent': 0,
         'savings': 0
     },
     'medium': {
         'name': '🪙 Средний пакет',
         'credits': 5000,
-        'price': 236.0,
-        'currency': 'TJS',
-        'price_per_credit': 0.048,
+        'price': 1948.0,
+        'currency': 'KGS',
+        'price_per_credit': 0.39,
         'description': '5000 кредитов для активных пользователей',
-        'original_price': 236.0,
+        'original_price': 1948.0,
         'discount_percent': 0,
         'savings': 0
     },
     'large': {
         'name': '🪙 Большой пакет',
         'credits': 10000,
-        'price': 472.0,
-        'currency': 'TJS',
-        'price_per_credit': 0.048,
+        'price': 3895.0,
+        'currency': 'KGS',
+        'price_per_credit': 0.3895,
         'description': '10000 кредитов для профессионалов',
-        'original_price': 472.0,
+        'original_price': 3895.0,
         'discount_percent': 0,
         'savings': 0
     }
@@ -80,8 +80,8 @@ FREE_LIMITS = {
 }
 
 # Настройки валюты
-CURRENCY_SYMBOL = 'сомони'  # Символ сомони
-CURRENCY_NAME = 'TJS'  # Код валюты
+CURRENCY_SYMBOL = 'сом'  # Символ/название сома
+CURRENCY_NAME = 'KGS'  # Код валюты
 
 def get_credit_package_by_type(package_type: str) -> dict:
     """Получение пакета кредитов по типу"""
@@ -102,10 +102,12 @@ def get_generation_cost(model: str, format_type: str = None, video_quality: str 
     format_cost = FORMAT_COSTS.get(format_type, 0)
     return base_cost + format_cost
 
-def format_price(amount: float, currency: str = 'TJS') -> str:
+def format_price(amount: float, currency: str = 'KGS') -> str:
     """Форматирует цену с символом валюты"""
     if currency == 'TJS':
         return f"{amount:.0f} сомони"  # Без копеек для сомони
+    elif currency == 'KGS':
+        return f"{amount:.0f} сом"  # Без тыйынов для сомов
     elif currency == 'RUB':
         return f"₽{amount:.0f}"  # Без копеек для рублей
     elif currency == 'UAH':
