@@ -8575,7 +8575,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard = [
 
-                [InlineKeyboardButton("🔄 Сгенерировать еще", callback_data="create_content")],
+                [InlineKeyboardButton("🔄 Сгенерировать еще", callback_data="generate_more")],
 
                 [InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")]
 
